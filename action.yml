@@ -57,7 +57,6 @@ runs:
           Recurse = [bool]"${{ inputs.recurse }}"
           Depth = [int]"${{ inputs.depth }}"
           FollowSymlinks = [bool]"${{ inputs.follow-symlinks }}"
-          PassThru = $true
         }
 
         $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")

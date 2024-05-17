@@ -18,11 +18,7 @@ param (
 
     [Parameter()]
     [switch]
-    $FollowSymlinks,
-
-    [Parameter()]
-    [switch]
-    $PassThru
+    $FollowSymlinks
 )
 
 # envsubst template pattern, e.g. ${var}
@@ -81,7 +77,4 @@ foreach ($file in $script:files)
     ReplaceTokens -File $file.FullName
 }
 
-if ($PassThru)
-{
-    Write-Output -InputObject $script:filesReplaced
-}
+Write-Output -InputObject $script:filesReplaced
