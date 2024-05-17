@@ -17,8 +17,8 @@ jobs:
         id: test-config
         shell: pwsh
         run: |
-          $prestineTemplate = (Join-Path $PSScriptRoot test stubs prestine template.tpl)
-          $testSubject = (Join-Path $PSScriptRoot test subject.tpl)
+          $prestineTemplate = (Join-Path $pwd test stubs prestine template.tpl)
+          $testSubject = (Join-Path $pwd test subject.tpl)
           Copy-Item -Path $prestineTemplate -Destination $testSubject
 
           Write-Output "path=$testSubject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
@@ -32,8 +32,8 @@ jobs:
         id: assert
         shell: pwsh
         run: |
-          $testSubject = (Join-Path $PSScriptRoot test subject.tpl)
-          $expected = (Join-Path $PSScriptRoot test stubs expected template.tpl)
+          $testSubject = (Join-Path $pwd test subject.tpl)
+          $expected = (Join-Path $pwd test stubs expected template.tpl)
 
           $actualContent = Get-Content -Path $testSubject -Raw
           $expectedContent = Get-Content -Path $expected -Raw
