@@ -21,9 +21,10 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 | ----------------- | ------------------------------------------- | ------- | -------------------------- | -------- | ------- |
 | `path`            | Path to replacement file(s) [^1]            | string  | `template.tpl, ./configs/` | true     | none    |
 | `filter`          | Filter to qualify the `path` parameter [^2] | string  | `*.json`                   | false    | none    |
-| `recurse`         | Recurse directories                         | boolean | `true`                     | false    | false   |
+| `recurse`         | Recurse directories                         | boolean | `false`                    | false    | false   |
 | `depth`           | Depth of recursion                          | number  | `2`                        | false    | none    |
 | `follow-symlinks` | Follow symbolic links                       | boolean | `false`                    | false    | false   |
+| `throw`           | Error if no tokens were replaced            | boolean | `false`                    | false    | false   |
 
 [^1]: Specifies a path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Separate multiple paths with a comma delimiter.
 [^2]: `filter` only supports `*` and `?` wildcards.
