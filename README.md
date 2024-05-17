@@ -15,6 +15,47 @@
 [^1]: Specifies a path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Separate multiple paths with a comma delimiter.
 [^2]: `filter` only supports `*` and `?` wildcards.
 
+## Example usage
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@main
+
+  - name: Replace tokens
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      path: './path/to/template.json'
+    env:
+      name: 'jon'
+
+  - name: Replace tokens using filter
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      path: './path/to/search'
+      filter: '*.json'
+    env:
+      name: 'jon'
+
+  - name: Replace tokens using recursion, 2 directories deep
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      path: './path/to/search'
+      filter: '*.json'
+      recurse: true
+      depth: 2
+    env:
+      name: 'jon'
+
+  - name: Replace tokens in multiple paths
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      path: './first/path/to/search, ./second/path/to/search'
+      filter: '*.json'
+    env:
+      name: 'jon'
+```
+
 ## Similar actions
 
 - [falnyr/replace-env-vars-action](https://github.com/falnyr/replace-env-vars-action/tree/master). Replace env vars in file.
