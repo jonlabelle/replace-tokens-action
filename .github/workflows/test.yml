@@ -17,11 +17,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@main
 
-      - name: Configure test (simple)
-        id: simple
+      - name: Setup test
+        id: test-setup
         shell: pwsh
         run: |
           $expected = (Join-Path $pwd test stubs expected template.tpl)
@@ -33,29 +33,29 @@ jobs:
           Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
-      - name: Show content before (simple)
-        run: cat "${{ steps.simple.outputs.subject-path }}"
+      - name: Show subject before
+        run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Show expected content (simple)
-        run: cat "${{ steps.simple.outputs.expected-path }}"
+      - name: Show expected
+        run: cat "${{ steps.test-setup.outputs.expected-path }}"
 
-      - name: Replace tokens (simple)
+      - name: Perform test
         uses: ./
         with:
-          path: ${{ steps.simple.outputs.subject-path }}
+          path: ${{ steps.test-setup.outputs.subject-path }}
           throw: true
         env:
           NAME: 'jon'
 
-      - name: Show content after (simple)
-        run: cat "${{ steps.simple.outputs.subject-path }}"
+      - name: Show actual
+        run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Assert (simple)
+      - name: Assert
         id: assert
         shell: pwsh
         run: |
-          $expected = "${{ steps.simple.outputs.expected-path }}"
-          $subject = "${{ steps.simple.outputs.subject-path }}"
+          $expected = "${{ steps.test-setup.outputs.expected-path }}"
+          $subject = "${{ steps.test-setup.outputs.subject-path }}"
 
           $contentExpected = Get-Content -Path $expected -Raw
           $contentActual = Get-Content -Path $subject -Raw
