@@ -17,30 +17,39 @@ jobs:
         id: simple
         shell: pwsh
         run: |
-          $prestineTemplate = (Join-Path $pwd test stubs prestine template.tpl)
-          $testSubject = (Join-Path $pwd test subject.tpl)
-          Copy-Item -Path $prestineTemplate -Destination $testSubject
+          $prestine = (Join-Path $pwd test stubs prestine template.tpl)
+          $subject = (Join-Path $pwd test subject.tpl)
+          $expected = (Join-Path $pwd test stubs expected template.tpl)
 
-          Write-Output "path=$testSubject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          Copy-Item -Path $prestine -Destination $subject
+
+          Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
       - name: Show content before (simple)
-        run: cat "${{ steps.simple.outputs.path }}"
+        run: cat "${{ steps.simple.outputs.subject-path }}"
+
+      - name: Show expected content (simple)
+        run: cat "${{ steps.simple.outputs.expected-path }}"
 
       - name: Replace tokens (simple)
         uses: ./
         with:
-          path: ${{ steps.simple.outputs.path }}
+          path: ${{ steps.simple.outputs.subject-path }}
         env:
           NAME: 'jon'
+
+      - name: Show content after (simple)
+        run: cat "${{ steps.simple.outputs.subject-path }}"
 
       - name: Assert (simple)
         id: assert
         shell: pwsh
         run: |
-          $testSubject = (Join-Path $pwd test subject.tpl)
-          $expected = (Join-Path $pwd test stubs expected template.tpl)
+          $subject = "${{ steps.simple.outputs.subject-path }}"
+          $expected = "${{ steps.simple.outputs.expected-path }}"
 
-          $actualContent = Get-Content -Path $testSubject -Raw
+          $actualContent = Get-Content -Path $subject -Raw
           $expectedContent = Get-Content -Path $expected -Raw
 
           if (-not $actualContent -eq $expectedContent) {
@@ -50,6 +59,3 @@ jobs:
             Write-Host '✓ Test passed' -ForegroundColor Green
             exit 0
           }
-
-      - name: Show content after (simple)
-        run: cat "${{ steps.simple.outputs.path }}"
