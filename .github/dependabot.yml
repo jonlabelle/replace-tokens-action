@@ -1,3 +1,4 @@
+---
 version: 2
 
 updates:
@@ -5,12 +6,17 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    target-branch: main
+    reviewers:
+      - jonlabelle
+    commit-message:
+      prefix: 'chore(deps): '
     groups:
-      github-actions-patch-updates:
-        applies-to: version-updates
+      actions-minor:
         update-types:
           - minor
           - patch
     labels:
-      - dependencies
       - github-actions
+      - dependencies
+      - dependabot
