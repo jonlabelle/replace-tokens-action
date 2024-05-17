@@ -1,0 +1,75 @@
+---
+name: Replace tokens
+description: A GitHub action to replace tokens in a file.
+author: Jon LaBelle
+branding:
+  icon: percent
+  color: purple
+inputs:
+  path:
+    description: |
+      Replacement file path(s).
+      Specifies a path to one or more locations.
+      Wildcards are accepted.
+      The default location is the current directory (`.`).
+      Separate multiple paths with a comma delimiter.
+      Example: `./path/to/my/settings.json`
+    required: true
+  filter:
+    description: |
+      Filter to qualify the `path` parameter.
+      Example: `*.json`
+    required: false
+  recurse:
+    description: Whether or not to recurse directories.
+    required: false
+    default: 'false'
+  depth:
+    description: Depth of directory recursion.
+    required: false
+    default: '0'
+  follow-symlinks:
+    description: Whether or not to follow symbolic links.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: replace tokens
+      shell: pwsh
+      run: |
+        function Replace-FileTokens([string] $Path) {
+          $content = Get-Content -Path $Path -Raw
+          $matched = [Regex]::Matches($content, '\$\{([^}]+)\}')
+
+          foreach ($match in $matched) {
+            $varName = $match.Groups[1].Value
+            $replacement = (Get-Item -LiteralPath "Env:$varName").Value
+            $content = $content.Replace($match.Value, $replacement)
+          }
+
+          Set-Content -Path $Path -Value $content
+        }
+
+        $path = "${{ inputs.path }}" -split ',\s*'
+        $filter = "${{ inputs.filter }}"
+        $recurse = [bool]"${{ inputs.recurse }}"
+        $depth = [int]"${{ inputs.depth }}"
+        $followSymlinks = [bool]"${{ inputs.follow-symlinks }}"
+
+        $params = @{
+          Path = $path
+          File = $true
+        }
+
+        if (-not ([string]::IsNullOrWhiteSpace("${{ inputs.filter }}"))) { $params.Add('Filter', $filter) }
+
+        if ($recurse -eq $true)        { $params.Add('Recurse', $recurse) }
+        if ($depth -gt 0)              { $params.Add('Depth',   $depth)   }
+        if ($followSymlinks -eq $true) { $params.Add('FollowSymlink', $followSymlinks) }
+
+        $files = Get-ChildItem @params
+        foreach ($file in $files) {
+          Replace-FileTokens -Path $file.FullName
+        }
