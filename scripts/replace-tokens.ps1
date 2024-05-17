@@ -44,7 +44,13 @@ function ReplaceFileTokens([string] $File)
         if (-not ([string]::IsNullOrWhiteSpace($replacement)))
         {
             $content = $content.Replace($match.Value, $replacement)
-            $script:filesReplaced += $File
+
+            if ($contentModified -eq $false)
+            {
+                # Only add to the replaced file list once
+                $script:filesReplaced += $File
+            }
+
             $contentModified = $true
         }
     }
@@ -73,5 +79,5 @@ foreach ($file in $files)
 
 if ($PassThru)
 {
-    Write-Output -InputObject [string]$script:filesReplaced
+    Write-Output -InputObject $script:filesReplaced
 }
