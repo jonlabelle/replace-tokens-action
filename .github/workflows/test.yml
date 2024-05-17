@@ -48,4 +48,5 @@ jobs:
             exit 0
           }
 
-          cat $testSubject
+      - name: Show replaced content
+        run: cat "${{ steps.test-config.outputs.path }}"
