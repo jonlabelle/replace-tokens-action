@@ -41,7 +41,7 @@ jobs:
           path: ${{ steps.simple.outputs.subject-path }}
           throw: true
         env:
-          NAME222: 'jon'
+          NAME: 'jon'
 
       - name: Show content after (simple)
         run: cat "${{ steps.simple.outputs.subject-path }}"

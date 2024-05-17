@@ -68,6 +68,15 @@ steps:
       filter: '*.json'
     env:
       NAME: 'jon'
+
+  - name: Throw an error if no tokens were replaced
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      path: './path/to/search'
+      filter: '*.json'
+      throw: true
+    env:
+      NAME: 'jon'
 ```
 
 ## Similar actions
