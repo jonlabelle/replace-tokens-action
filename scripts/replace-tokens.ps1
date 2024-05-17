@@ -72,7 +72,7 @@ $script:params = @{
 if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $script:params.Add('Filter', $Filter) }
 if ($Recurse) { $script:params.Add('Recurse', $true) }
 if ($Depth -gt 0) { $script:params.Add('Depth', $Depth) }
-if ($FollowSymlinks -eq $true) { $script:params.Add('FollowSymlink', $true) }
+if ($FollowSymlinks) { $script:params.Add('FollowSymlink', $true) }
 
 $script:files = Get-ChildItem @params
 
