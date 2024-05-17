@@ -59,6 +59,8 @@ runs:
           FollowSymlinks = [bool]"${{ inputs.follow-symlinks }}"
         }
 
+        Write-Output 'Hello world'
+
         $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")
         $result = (& $scriptPath @params)
 
