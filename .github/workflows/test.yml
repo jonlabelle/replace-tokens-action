@@ -27,6 +27,8 @@ jobs:
         uses: ./
         with:
           path: ${{ steps.test-config.outputs.path }}
+        env:
+          name: 'jon'
 
       - name: Assert
         id: assert
