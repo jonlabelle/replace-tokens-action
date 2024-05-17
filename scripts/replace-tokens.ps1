@@ -64,18 +64,19 @@ function ReplaceFileTokens([string] $File)
     }
 }
 
-$params = @{
+$script:params = @{
     Path = $Path
     File = $true
 }
 
-if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $params.Add('Filter', $Filter) }
-if ($Recurse) { $params.Add('Recurse', $true) }
-if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
-if ($FollowSymlinks -eq $true) { $params.Add('FollowSymlink', $true) }
+if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $script:params.Add('Filter', $Filter) }
+if ($Recurse) { $script:params.Add('Recurse', $true) }
+if ($Depth -gt 0) { $script:params.Add('Depth', $Depth) }
+if ($FollowSymlinks -eq $true) { $script:params.Add('FollowSymlink', $true) }
 
-$files = Get-ChildItem @params
-foreach ($file in $files)
+$script:files = Get-ChildItem @params
+
+foreach ($file in $script:files)
 {
     ReplaceFileTokens -File $file.FullName
 }
