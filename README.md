@@ -10,7 +10,8 @@ Tokens must be in the following format to be replaced:
 ${VARIABLE}
 ```
 
-Where `VARIABLE` has a matching environment variable name whose value will be used in token replacement.
+Where `VARIABLE` has a matching environment variable name whose value will be
+used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
 
 ## Inputs
 
