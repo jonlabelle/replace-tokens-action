@@ -24,14 +24,14 @@ jobs:
         id: simple
         shell: pwsh
         run: |
-          $prestine = (Join-Path $pwd test stubs prestine template.tpl)
-          $subject = (Join-Path $pwd test subject.tpl)
           $expected = (Join-Path $pwd test stubs expected template.tpl)
+          $subject = (Join-Path $pwd test subject.tpl)
+          $prestine = (Join-Path $pwd test stubs prestine template.tpl)
 
           Copy-Item -Path $prestine -Destination $subject
 
-          Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
       - name: Show content before (simple)
         run: cat "${{ steps.simple.outputs.subject-path }}"
@@ -54,13 +54,13 @@ jobs:
         id: assert
         shell: pwsh
         run: |
-          $subject = "${{ steps.simple.outputs.subject-path }}"
           $expected = "${{ steps.simple.outputs.expected-path }}"
+          $subject = "${{ steps.simple.outputs.subject-path }}"
 
-          $contentActual = Get-Content -Path $subject -Raw
           $contentExpected = Get-Content -Path $expected -Raw
+          $contentActual = Get-Content -Path $subject -Raw
 
-          if (-not $contentActual -eq $contentExpected) {
+          if (-not $contentExpected -eq $contentActual) {
             Write-Host '✘ Test failed' -ForegroundColor Red
             exit 1
           } else {
