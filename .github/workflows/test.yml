@@ -49,10 +49,10 @@ jobs:
           $subject = "${{ steps.simple.outputs.subject-path }}"
           $expected = "${{ steps.simple.outputs.expected-path }}"
 
-          $actualContent = Get-Content -Path $subject -Raw
-          $expectedContent = Get-Content -Path $expected -Raw
+          $contentActual = Get-Content -Path $subject -Raw
+          $contentExpected = Get-Content -Path $expected -Raw
 
-          if (-not $actualContent -eq $expectedContent) {
+          if (-not $contentActual -eq $contentExpected) {
             Write-Host '✘ Test failed' -ForegroundColor Red
             exit 1
           } else {
