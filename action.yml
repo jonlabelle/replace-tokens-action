@@ -54,7 +54,9 @@ runs:
           foreach ($match in $matched) {
             $varName = $match.Groups[1].Value
             $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Ignore).Value
-            $content = $content.Replace($match.Value, $replacement)
+            if (-not ([string]::IsNullOrWhiteSpace($replacement))) {
+              $content = $content.Replace($match.Value, $replacement)
+            }
           }
 
           Set-Content -Path $Path -Value $content
