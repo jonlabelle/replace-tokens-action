@@ -1,5 +1,5 @@
 ---
-name: replace tokens
+name: replace tokens action
 description: A GitHub action to replace tokens in a file.
 author: Jon LaBelle
 branding:
