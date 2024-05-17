@@ -48,7 +48,10 @@ function ReplaceFileTokens([string] $File)
             if ($contentModified -eq $false)
             {
                 # Only add to the replaced file list once
-                $script:filesReplaced += $File
+                if (-not ($script:filesReplaced.Contains($File)))
+                {
+                    $script:filesReplaced += $File
+                }
             }
 
             $contentModified = $true
