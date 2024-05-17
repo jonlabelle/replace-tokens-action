@@ -33,9 +33,6 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 
 ```yaml
 steps:
-  - name: Checkout repository
-    uses: actions/checkout@main
-
   - name: Replace tokens
     uses: jonlabelle/replace-tokens-action@main
     with:
