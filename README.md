@@ -1,6 +1,6 @@
 # Replace tokens action
 
-> A GitHub action to replace tokens in a file.
+> A GitHub action to replace tokens in a file. Similar to envsubst.
 
 ## Token format
 
