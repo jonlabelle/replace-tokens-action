@@ -11,3 +11,7 @@ quote_type = single
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.ps1]
+indent_size = 4
+tab_width = 4

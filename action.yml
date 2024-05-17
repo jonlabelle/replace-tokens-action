@@ -1,5 +1,5 @@
 ---
-name: Replace tokens
+name: replace tokens
 description: A GitHub action to replace tokens in a file.
 author: Jon LaBelle
 branding:
@@ -47,39 +47,15 @@ runs:
     - name: replace tokens
       shell: pwsh
       run: |
-        function Replace-FileTokens([string] $Path) {
-          $content = Get-Content -Path $Path -Raw
-          $matched = [Regex]::Matches($content, '\$\{([^}]+)\}')
-
-          foreach ($match in $matched) {
-            $varName = $match.Groups[1].Value
-            $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Ignore).Value
-            if (-not ([string]::IsNullOrWhiteSpace($replacement))) {
-              $content = $content.Replace($match.Value, $replacement)
-            }
-          }
-
-          Set-Content -Path $Path -Value $content
-        }
-
-        $path = "${{ inputs.path }}" -split ',\s*'
-        $filter = "${{ inputs.filter }}"
-        $recurse = [bool]"${{ inputs.recurse }}"
-        $depth = [int]"${{ inputs.depth }}"
-        $followSymlinks = [bool]"${{ inputs.follow-symlinks }}"
-
         $params = @{
-          Path = $path
+          Path = "${{ inputs.path }}" -split ',\s*'
           File = $true
+          Filter = "${{ inputs.filter }}"
+          Recurse = [bool]"${{ inputs.recurse }}"
+          Depth = [int]"${{ inputs.depth }}"
+          FollowSymlinks = [bool]"${{ inputs.follow-symlinks }}"
+          PassThru = $true
         }
 
-        if (-not ([string]::IsNullOrWhiteSpace("${{ inputs.filter }}"))) { $params.Add('Filter', $filter) }
-
-        if ($recurse -eq $true)        { $params.Add('Recurse', $recurse) }
-        if ($depth -gt 0)              { $params.Add('Depth',   $depth)   }
-        if ($followSymlinks -eq $true) { $params.Add('FollowSymlink', $followSymlinks) }
-
-        $files = Get-ChildItem @params
-        foreach ($file in $files) {
-          Replace-FileTokens -Path $file.FullName
-        }
+        $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")
+        & $scriptPath @params

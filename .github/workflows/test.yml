@@ -13,8 +13,8 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@main
 
-      - name: Configure tests
-        id: test-config
+      - name: Configure test (simple)
+        id: simple
         shell: pwsh
         run: |
           $prestineTemplate = (Join-Path $pwd test stubs prestine template.tpl)
@@ -23,17 +23,17 @@ jobs:
 
           Write-Output "path=$testSubject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
-      - name: Show content before replaced
-        run: cat "${{ steps.test-config.outputs.path }}"
+      - name: Show content before (simple)
+        run: cat "${{ steps.simple.outputs.path }}"
 
-      - name: Replace tokens
+      - name: Replace tokens (simple)
         uses: ./
         with:
-          path: ${{ steps.test-config.outputs.path }}
+          path: ${{ steps.simple.outputs.path }}
         env:
           name: 'jon'
 
-      - name: Assert
+      - name: Assert (simple)
         id: assert
         shell: pwsh
         run: |
@@ -51,5 +51,5 @@ jobs:
             exit 0
           }
 
-      - name: Show content after replaced
-        run: cat "${{ steps.test-config.outputs.path }}"
+      - name: Show content after (simple)
+        run: cat "${{ steps.simple.outputs.path }}"
