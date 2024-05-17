@@ -1,5 +1,5 @@
 ---
-name: replace tokens action
+name: Replace tokens action
 description: A GitHub action to replace tokens in a file. Similar to envsubst.
 author: Jon LaBelle
 branding:
