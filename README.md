@@ -2,6 +2,16 @@
 
 > A GitHub action to replace tokens in a file.
 
+## Token format
+
+Tokens must be in the following format to be replaced:
+
+```console
+${VARIABLE}
+```
+
+Where `VARIABLE` has a matching environment variable name whose value will be used for token replacement.
+
 ## Inputs
 
 | Name              | Description                                 | Type    | Example                    | Required | Default |
