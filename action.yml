@@ -49,7 +49,6 @@ runs:
       run: |
         $params = @{
           Path = "${{ inputs.path }}" -split ',\s*'
-          File = $true
           Filter = "${{ inputs.filter }}"
           Recurse = [bool]"${{ inputs.recurse }}"
           Depth = [int]"${{ inputs.depth }}"
