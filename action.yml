@@ -53,7 +53,7 @@ runs:
 
           foreach ($match in $matched) {
             $varName = $match.Groups[1].Value
-            $replacement = (Get-Item -LiteralPath "Env:$varName").Value
+            $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Ignore).Value
             $content = $content.Replace($match.Value, $replacement)
           }
 
