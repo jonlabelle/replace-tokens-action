@@ -1,5 +1,7 @@
 ---
 branch: main
+repositoryUrl: https://github.com/jonlabelle/replace-tokens-action
+tagFormat: v${version}
 plugins:
   - '@semantic-release/commit-analyzer'
   - '@semantic-release/release-notes-generator'
