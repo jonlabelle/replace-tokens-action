@@ -10,7 +10,7 @@ Tokens must be in the following format to be replaced:
 ${VARIABLE}
 ```
 
-Where `VARIABLE` has a matching environment variable name whose value will be used for token replacement.
+Where `VARIABLE` has a matching environment variable name whose value will be used in token replacement.
 
 ## Inputs
 
