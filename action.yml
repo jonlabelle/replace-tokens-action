@@ -57,4 +57,5 @@ runs:
         }
 
         $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")
-        & $scriptPath @params
+        $result = (& $scriptPath @params)
+        Write-Output -InputObject $result
