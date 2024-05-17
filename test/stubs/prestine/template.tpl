@@ -1,5 +1,5 @@
-${name}
-	${name}
-		${name}
-	${name}
-${name}
+${NAME}
+    ${NAME}
+        ${NAME}
+    ${NAME}
+${NAME}

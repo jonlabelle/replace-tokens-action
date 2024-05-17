@@ -31,7 +31,7 @@ jobs:
         with:
           path: ${{ steps.simple.outputs.path }}
         env:
-          name: 'jon'
+          NAME: 'jon'
 
       - name: Assert (simple)
         id: assert

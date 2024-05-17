@@ -40,7 +40,7 @@ steps:
     with:
       path: './path/to/template.json'
     env:
-      name: 'jon'
+      NAME: 'jon'
 
   - name: Replace tokens using filter
     uses: jonlabelle/replace-tokens-action@main
@@ -48,7 +48,7 @@ steps:
       path: './path/to/search'
       filter: '*.json'
     env:
-      name: 'jon'
+      NAME: 'jon'
 
   - name: Replace tokens using recursion, 2 directories deep
     uses: jonlabelle/replace-tokens-action@main
@@ -58,7 +58,7 @@ steps:
       recurse: true
       depth: 2
     env:
-      name: 'jon'
+      NAME: 'jon'
 
   - name: Replace tokens in multiple paths
     uses: jonlabelle/replace-tokens-action@main
@@ -66,7 +66,7 @@ steps:
       path: './first/path/to/search, ./second/path/to/search'
       filter: '*.json'
     env:
-      name: 'jon'
+      NAME: 'jon'
 ```
 
 ## Similar actions
