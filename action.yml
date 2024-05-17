@@ -60,11 +60,10 @@ runs:
           PassThru = $true
         }
 
-        $throw = [bool]'${{ inputs.throw }}'
-
         $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")
         $result = (& $scriptPath @params)
 
+        $throw = [bool]'${{ inputs.throw }}'
         if ($throw -and ($result.Count -eq 0)) {
           Write-Error 'No tokens were replaced'
           exit 1
