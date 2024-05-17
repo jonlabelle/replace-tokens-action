@@ -24,7 +24,7 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 | `recurse`         | Recurse directories                         | boolean | `false`                    | false    | false   |
 | `depth`           | Depth of recursion                          | number  | `2`                        | false    | none    |
 | `follow-symlinks` | Follow symbolic links                       | boolean | `false`                    | false    | false   |
-| `throw`           | Error if no tokens were replaced            | boolean | `false`                    | false    | false   |
+| `throw`           | Fail if no tokens were replaced             | boolean | `false`                    | false    | false   |
 
 [^1]: Specifies a path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Separate multiple paths with a comma delimiter.
 [^2]: `filter` only supports `*` and `?` wildcards.

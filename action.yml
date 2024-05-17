@@ -64,7 +64,7 @@ runs:
 
         $throw = [bool]'${{ inputs.throw }}'
         if ($throw -and ($result.Count -eq 0)) {
-          Write-Error 'No tokens were replaced'
+          Write-Error '✘ error: no tokens were replaced'
           exit 1
         }
 
