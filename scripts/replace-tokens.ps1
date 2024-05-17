@@ -30,7 +30,7 @@ $script:envsubstPattern = '\$\{([^}]+)\}'
 
 $script:filesReplaced = @()
 
-function ReplaceFileTokens([string] $File)
+function ReplaceTokens([string] $File)
 {
     $contentModified = $false
     $content = Get-Content -Path $File -Raw
@@ -78,7 +78,7 @@ $script:files = Get-ChildItem @params
 
 foreach ($file in $script:files)
 {
-    ReplaceFileTokens -File $file.FullName
+    ReplaceTokens -File $file.FullName
 }
 
 if ($PassThru)
