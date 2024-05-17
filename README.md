@@ -1,5 +1,7 @@
 # Replace tokens action
 
+[![test](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml)
+
 > A GitHub action to replace tokens in a file. Similar to envsubst.
 
 ## Token format
