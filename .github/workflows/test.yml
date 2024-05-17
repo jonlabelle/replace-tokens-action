@@ -45,3 +45,5 @@ jobs:
             Write-Host '✓ Test passed' -ForegroundColor Green
             exit 0
           }
+
+          cat $testSubject
