@@ -23,6 +23,9 @@ jobs:
 
           Write-Output "path=$testSubject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
+      - name: Show content before replaced
+        run: cat "${{ steps.test-config.outputs.path }}"
+
       - name: Replace tokens
         uses: ./
         with:
