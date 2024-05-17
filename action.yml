@@ -12,24 +12,32 @@ inputs:
       Specifies a path to one or more locations.
       Wildcards are accepted.
       The default location is the current directory (`.`).
-      Separate multiple paths with a comma delimiter.
+      Search multiple paths by separating with a comma.
       Example: `./path/to/my/settings.json`
     required: true
   filter:
     description: |
       Filter to qualify the `path` parameter.
+      Only supports `*` and `?` wildcards.
       Example: `*.json`
     required: false
   recurse:
-    description: Whether or not to recurse directories.
+    description: |
+      Whether or not to recurse directories.
+      The default is `false`, or no directory recursion.
     required: false
     default: 'false'
   depth:
-    description: Depth of directory recursion.
+    description: |
+      Depth of directory recursion.
+      Only valid if the `recurse` option is enabled.
+      There default depth is not set.
     required: false
     default: '0'
   follow-symlinks:
-    description: Whether or not to follow symbolic links.
+    description: |
+      Whether or not to follow symbolic links.
+      The default behavior is not to follow symbolic links.
     required: false
     default: 'false'
 

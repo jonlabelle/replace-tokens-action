@@ -13,5 +13,35 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@main
 
-      - name: run tests
-        run: echo todo
+      - name: Configure tests
+        id: test-config
+        shell: pwsh
+        run: |
+          $prestineTemplate = (Join-Path $PSScriptRoot test stubs prestine template.tpl)
+          $testSubject = (Join-Path $PSScriptRoot test subject.tpl)
+          Copy-Item -Path $prestineTemplate -Destination $testSubject
+
+          Write-Output "path=$testSubject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+
+      - name: Replace tokens
+        uses: ./
+        with:
+          path: ${{ steps.test-config.outputs.path }}
+
+      - name: Assert
+        id: assert
+        shell: pwsh
+        run: |
+          $testSubject = (Join-Path $PSScriptRoot test subject.tpl)
+          $expected = (Join-Path $PSScriptRoot test stubs expected template.tpl)
+
+          $actualContent = Get-Content -Path $testSubject -Raw
+          $expectedContent = Get-Content -Path $expected -Raw
+
+          if (-not $actualContent -eq $expectedContent) {
+            Write-Host '✘ Test failed' -ForegroundColor Red
+            exit 1
+          } else {
+            Write-Host '✓ Test passed' -ForegroundColor Green
+            exit 0
+          }
