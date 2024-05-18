@@ -76,11 +76,6 @@ steps:
       NAME: 'jon'
 ```
 
-## Similar actions
-
-- [falnyr/replace-env-vars-action](https://github.com/falnyr/replace-env-vars-action/tree/master). Replace env vars in file.
-- [cschleiden/replace-tokens](https://github.com/marketplace/actions/replace-tokens). Simple GitHub Action to replace tokens in files.
-
 ## License
 
 [MIT](LICENSE)
