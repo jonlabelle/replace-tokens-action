@@ -18,11 +18,24 @@ param (
 
     [Parameter()]
     [switch]
-    $FollowSymlinks
+    $FollowSymlinks,
+
+    [Parameter()]
+    [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknow token style', IgnoreCase = $true)]
+    [string]
+    $TokenStyle = 'envsubst'
 )
 
-# envsubst template pattern, e.g. ${var}
-$script:envsubstPattern = '\$\{([^}]+)\}'
+$script:envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
+$script:handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
+
+$script:tokenPattern = $null
+switch ($TokenStyle)
+{
+    'envsubst' { $script:tokenPattern = $script:envsubstPattern; break }
+    { ($_ -eq 'handlebars') -or ($_ -eq 'mustache') } { $script:tokenPattern = $script:handlebarsPattern; break }
+    default { $script:tokenPattern = $script:envsubstPattern; break }
+}
 
 $script:filesReplaced = @()
 
@@ -30,7 +43,7 @@ function ReplaceTokens([string] $File)
 {
     $contentModified = $false
     $content = Get-Content -Path $File -Raw
-    $matched = [Regex]::Matches($content, $script:envsubstPattern)
+    $matched = [Regex]::Matches($content, $script:tokenPattern)
 
     foreach ($match in $matched)
     {

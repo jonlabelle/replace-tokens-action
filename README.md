@@ -4,27 +4,29 @@
 
 > A GitHub action to replace tokens in a file. Similar to envsubst.
 
-## Token format
+## Token style
 
-Tokens must be in the following format to be replaced:
+Tokens must be in one of following formats to be replaced:
 
-```console
-${VARIABLE}
-```
+| Name                       | Style          | Examples                   |
+| -------------------------- | -------------- | -------------------------- |
+| `envsubst` (default)       | `${VARIABLE}`  | `${TOKEN}`                 |
+| `handlebars` or `mustache` | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
 
 ## Inputs
 
-| Name              | Description                                  | Type    | Example           | Required | Default |
-| ----------------- | -------------------------------------------- | ------- | ----------------- | -------- | ------- |
-| `paths`           | Path to replacement file(s) [^1]             | string  | `./settings.json` | true     | none    |
-| `filter`          | Filter to qualify the `paths` parameter [^2] | string  | `*.json`          | false    | none    |
-| `recurse`         | Recurse directories                          | boolean | `false`           | false    | false   |
-| `depth`           | Depth of recursion                           | number  | `2`               | false    | none    |
-| `follow-symlinks` | Follow symbolic links                        | boolean | `false`           | false    | false   |
-| `throw`           | Fail if no tokens were replaced              | boolean | `false`           | false    | false   |
+| Name              | Description                                  | Type    | Example           | Required | Default  |
+| ----------------- | -------------------------------------------- | ------- | ----------------- | -------- | -------- |
+| `token-style`     | Name of the token style/format               | string  | `handlebars`      | true     | envsubst |
+| `paths`           | Path to replacement file(s) [^1]             | string  | `./settings.json` | true     | none     |
+| `filter`          | Filter to qualify the `paths` parameter [^2] | string  | `*.json`          | false    | none     |
+| `recurse`         | Recurse directories                          | boolean | `false`           | false    | false    |
+| `depth`           | Depth of recursion                           | number  | `2`               | false    | none     |
+| `follow-symlinks` | Follow symbolic links                        | boolean | `false`           | false    | false    |
+| `throw`           | Fail if no tokens were replaced              | boolean | `false`           | false    | false    |
 
 ## Example usage
 
@@ -53,6 +55,15 @@ steps:
         ./second/path
         ./third/path
       filter: '*.json'
+    env:
+      NAME: jon
+
+  - name: Replace handlebars/mustache style tokens
+    uses: jonlabelle/replace-tokens-action@main
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      token-style: handlebars
     env:
       NAME: jon
 
