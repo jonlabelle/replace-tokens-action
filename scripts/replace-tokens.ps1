@@ -63,6 +63,7 @@ function ReplaceTokens([string] $File)
 $script:params = @{
     Path = $Path
     File = $true
+    ErrorAction = 'Continue'
 }
 
 if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $script:params.Add('Filter', $Filter) }
