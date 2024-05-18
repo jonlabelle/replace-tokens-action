@@ -15,6 +15,13 @@ inputs:
       The default location is the current directory (`.`).
       Example: `./path/to/my/settings.json`
     required: true
+  token-style:
+    description: |
+      The style (or format) of the tokens that will be replaced.
+      Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
+      The default token style is `envsubst`.
+    required: false
+    default: 'envsubst'
   filter:
     description: |
       Filter to qualify the `paths` parameter.
@@ -40,13 +47,6 @@ inputs:
       The default behavior is not to follow symbolic links.
     required: false
     default: 'false'
-  token-style:
-    description: |
-      The style (or format) of the tokens that will be replaced.
-      Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
-      The default token style is `envsubst`.
-    required: false
-    default: 'envsubst'
   throw:
     description: Throw an error if no tokens were replaced.
     required: false
@@ -63,21 +63,21 @@ runs:
 
         $params = @{
           Path = $paths
-          Filter = "${{ inputs.filter }}"
-          Recurse = [bool]"${{ inputs.recurse }}"
-          Depth = [int]"${{ inputs.depth }}"
-          FollowSymlinks = [bool]"${{ inputs.follow-symlinks }}"
+          Filter = '${{ inputs.filter }}'
+          Recurse = [bool]'${{ inputs.recurse }}'
+          Depth = [int]'${{ inputs.depth }}'
+          FollowSymlinks = [bool]'${{ inputs.follow-symlinks }}'
           TokenStyle = '${{ inputs.token-style }}'
         }
 
-        $scriptPath = (Join-Path "${{ github.action_path }}" "scripts" "replace-tokens.ps1")
+        $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')
         $result = (& $scriptPath @params)
 
-        $throw = [bool]"${{ inputs.throw }}"
+        $throw = [bool]'${{ inputs.throw }}'
         if (($throw -eq $true) -and ($result.Count -eq 0)) {
           Write-Error '✘ error: no tokens were replaced'
           exit 1
         }
 
-        Write-Output -InputObject "Replaced tokens in file(s):"
+        Write-Output -InputObject 'Tokens were replaced in the following file(s):'
         Write-Output -InputObject $result
