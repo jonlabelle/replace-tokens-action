@@ -15,6 +15,13 @@ inputs:
       The default location is the current directory (`.`).
       Example: `./path/to/my/settings.json`
     required: true
+  token-style:
+    description: |
+      The style (or format) of the tokens that will be replaced.
+      Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
+      The default token style is `envsubst`.
+    required: false
+    default: 'envsubst'
   filter:
     description: |
       Filter to qualify the `paths` parameter.
@@ -40,13 +47,6 @@ inputs:
       The default behavior is not to follow symbolic links.
     required: false
     default: 'false'
-  token-style:
-    description: |
-      The style (or format) of the tokens that will be replaced.
-      Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
-      The default token style is `envsubst`.
-    required: false
-    default: 'envsubst'
   throw:
     description: Throw an error if no tokens were replaced.
     required: false

@@ -5,6 +5,11 @@ param (
     $Path,
 
     [Parameter()]
+    [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknow token style', IgnoreCase = $true)]
+    [string]
+    $TokenStyle = 'envsubst',
+
+    [Parameter()]
     [string]
     $Filter,
 
@@ -18,12 +23,7 @@ param (
 
     [Parameter()]
     [switch]
-    $FollowSymlinks,
-
-    [Parameter()]
-    [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknow token style', IgnoreCase = $true)]
-    [string]
-    $TokenStyle = 'envsubst'
+    $FollowSymlinks
 )
 
 $script:envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}

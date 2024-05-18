@@ -20,8 +20,8 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 
 | Name              | Description                                  | Type    | Example           | Required | Default  |
 | ----------------- | -------------------------------------------- | ------- | ----------------- | -------- | -------- |
-| `token-style`     | Name of the token style/format               | string  | `handlebars`      | true     | envsubst |
 | `paths`           | Path to replacement file(s) [^1]             | string  | `./settings.json` | true     | none     |
+| `token-style`     | Name of the token style/format               | string  | `handlebars`      | false    | envsubst |
 | `filter`          | Filter to qualify the `paths` parameter [^2] | string  | `*.json`          | false    | none     |
 | `recurse`         | Recurse directories                          | boolean | `false`           | false    | false    |
 | `depth`           | Depth of recursion                           | number  | `2`               | false    | none     |
