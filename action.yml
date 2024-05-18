@@ -10,9 +10,9 @@ inputs:
     description: |
       Replacement file path(s).
       Specifies a path to one or more locations.
+      Specify multiple paths on separate lines using a multiline string `|`.
       Wildcards are accepted.
       The default location is the current directory (`.`).
-      Search multiple paths by separating with a comma.
       Example: `./path/to/my/settings.json`
     required: true
   filter:
@@ -51,8 +51,11 @@ runs:
     - name: replace tokens
       shell: pwsh
       run: |
+        # Split multiline paths
+        $splitPaths = '${{ inputs.path }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
+
         $params = @{
-          Path = "${{ inputs.path }}" -split ',\s*'
+          Path = $splitPaths
           Filter = "${{ inputs.filter }}"
           Recurse = [bool]"${{ inputs.recurse }}"
           Depth = [int]"${{ inputs.depth }}"

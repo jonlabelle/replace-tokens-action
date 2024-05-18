@@ -42,10 +42,13 @@ jobs:
       - name: Perform test
         uses: ./
         with:
-          path: ${{ steps.test-setup.outputs.subject-path }}
+          path: |
+            ${{ steps.test-setup.outputs.subject-path }}
+            ./commitlint.config.js
+            ./LICENSE
           throw: true
         env:
-          NAME: 'jon'
+          NAME: jon
 
       - name: Show actual
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
