@@ -42,7 +42,7 @@ jobs:
       - name: Perform test
         uses: ./
         with:
-          path: |
+          paths: |
             ${{ steps.test-setup.outputs.subject-path }}
             ./commitlint.config.js
             ./LICENSE
