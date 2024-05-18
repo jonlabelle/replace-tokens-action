@@ -6,7 +6,7 @@ branding:
   icon: percent
   color: purple
 inputs:
-  path:
+  paths:
     description: |
       Replacement file path(s).
       Specifies a path to one or more locations.
@@ -17,7 +17,7 @@ inputs:
     required: true
   filter:
     description: |
-      Filter to qualify the `path` parameter.
+      Filter to qualify the `paths` parameter.
       Only supports `*` and `?` wildcards.
       Example: `*.json`
     required: false
@@ -52,10 +52,10 @@ runs:
       shell: pwsh
       run: |
         # Split multiline paths
-        $splitPaths = '${{ inputs.path }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
+        $paths = '${{ inputs.paths }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
 
         $params = @{
-          Path = $splitPaths
+          Path = $paths
           Filter = "${{ inputs.filter }}"
           Recurse = [bool]"${{ inputs.recurse }}"
           Depth = [int]"${{ inputs.depth }}"

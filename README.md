@@ -17,14 +17,14 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 
 ## Inputs
 
-| Name              | Description                                 | Type    | Example           | Required | Default |
-| ----------------- | ------------------------------------------- | ------- | ----------------- | -------- | ------- |
-| `path`            | Path to replacement file(s) [^1]            | string  | `./settings.json` | true     | none    |
-| `filter`          | Filter to qualify the `path` parameter [^2] | string  | `*.json`          | false    | none    |
-| `recurse`         | Recurse directories                         | boolean | `false`           | false    | false   |
-| `depth`           | Depth of recursion                          | number  | `2`               | false    | none    |
-| `follow-symlinks` | Follow symbolic links                       | boolean | `false`           | false    | false   |
-| `throw`           | Fail if no tokens were replaced             | boolean | `false`           | false    | false   |
+| Name              | Description                                  | Type    | Example           | Required | Default |
+| ----------------- | -------------------------------------------- | ------- | ----------------- | -------- | ------- |
+| `paths`           | Path to replacement file(s) [^1]             | string  | `./settings.json` | true     | none    |
+| `filter`          | Filter to qualify the `paths` parameter [^2] | string  | `*.json`          | false    | none    |
+| `recurse`         | Recurse directories                          | boolean | `false`           | false    | false   |
+| `depth`           | Depth of recursion                           | number  | `2`               | false    | none    |
+| `follow-symlinks` | Follow symbolic links                        | boolean | `false`           | false    | false   |
+| `throw`           | Fail if no tokens were replaced              | boolean | `false`           | false    | false   |
 
 ## Example usage
 
@@ -33,14 +33,14 @@ steps:
   - name: Replace tokens
     uses: jonlabelle/replace-tokens-action@main
     with:
-      path: ./path/to/template.json
+      paths: ./path/to/template.json
     env:
       NAME: jon
 
   - name: Replace tokens using a path filter
     uses: jonlabelle/replace-tokens-action@main
     with:
-      path: ./path/to/search
+      paths: ./path/to/search
       filter: '*.json'
     env:
       NAME: jon
@@ -48,7 +48,7 @@ steps:
   - name: Search multiple paths
     uses: jonlabelle/replace-tokens-action@main
     with:
-      path: |
+      paths: |
         ./first/path
         ./second/path
         ./third/path
@@ -59,7 +59,7 @@ steps:
   - name: Replace tokens using recursion, 2 directories deep
     uses: jonlabelle/replace-tokens-action@main
     with:
-      path: ./path/to/search
+      paths: ./path/to/search
       filter: '*.json'
       recurse: true
       depth: 2
@@ -69,7 +69,7 @@ steps:
   - name: Throw an error if no tokens were replaced
     uses: jonlabelle/replace-tokens-action@main
     with:
-      path: ./path/to/search
+      paths: ./path/to/search
       filter: '*.json'
       throw: true
     env:
@@ -80,5 +80,5 @@ steps:
 
 [MIT](LICENSE)
 
-[^1]: Specifies a path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
+[^1]: A path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
 [^2]: `filter` only supports `*` and `?` wildcards.
