@@ -11,49 +11,51 @@ on:
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
+    name: Test ${{ matrix.test }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        test: [envsubst, handlebars]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - name: Checkout repository
+      - name: Checkout repository for ${{ matrix.test }} test on ${{ matrix.os }}
         uses: actions/checkout@main
 
-      - name: Setup test
+      - name: Setup ${{ matrix.test }} test on ${{ matrix.os }}
         id: test-setup
         shell: pwsh
         run: |
-          $expected = (Join-Path $pwd test stubs expected template.tpl)
-          $subject = (Join-Path $pwd test subject.tpl)
-          $prestine = (Join-Path $pwd test stubs prestine template.tpl)
+          $expected = (Join-Path $pwd test stubs expected replaced.tpl)
+          $subject = (Join-Path $pwd test subject-${{ matrix.test }}.tpl)
+          $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.test }}.tpl)
 
           Copy-Item -Path $prestine -Destination $subject
 
           Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
-      - name: Show subject before
+      - name: Show ${{ matrix.test }} test subject before replacement on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Show expected
+      - name: Show expected output for ${{ matrix.test }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.expected-path }}"
 
-      - name: Perform test
+      - name: Perform ${{ matrix.test }} test on ${{ matrix.os }}
         uses: ./
         with:
           paths: |
             ${{ steps.test-setup.outputs.subject-path }}
             ./commitlint.config.js
             ./LICENSE
+          token-style: ${{ matrix.test }}
           throw: true
         env:
           NAME: jon
 
-      - name: Show actual
+      - name: Show actual result ${{ matrix.test }} on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Assert
+      - name: Assert ${{ matrix.test }} test on ${{ matrix.os }}
         id: assert
         shell: pwsh
         run: |
