@@ -1,4 +1,4 @@
-name: 'Semantic PR Check'
+name: semantic pr check
 
 # https://github.com/amannn/action-semantic-pull-request
 
