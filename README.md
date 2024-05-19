@@ -18,33 +18,6 @@
 | `encoding`        | File write [encoding](#encoding)   | string  | false    | `utf8`     | `unicode`         |
 | `no-newline`      | No newline at eof                  | boolean | false    | false      | `true`            |
 
-## Token style
-
-Tokens must be in one of following formats to be replaced:
-
-| Name                       | Style          | Examples                   |
-| -------------------------- | -------------- | -------------------------- |
-| `envsubst` (default)       | `${VARIABLE}`  | `${TOKEN}`                 |
-| `handlebars` or `mustache` | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
-
-Where `VARIABLE` has a matching environment variable name whose value will be
-used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
-
-## Encoding
-
-The default encoding for file write operations is `utf8`, _without_ the byte
-order mark (BOM). The following `encoding` formats are supported.
-
-- `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
-- `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
-- `ascii`: Uses the encoding for the ASCII (7-bit) character set
-- `ansi`: Uses the encoding for the for the current culture's ANSI code page
-- `bigendianunicode`: Encodes in UTF-16 format using the big-endian byte order
-- `bigendianutf32`: Encodes in UTF-32 format using the big-endian byte order
-- `oem`: Uses the default encoding for MS-DOS and console programs
-- `unicode`: Encodes in UTF-16 format using the little-endian byte order
-- `utf32`: Encodes in UTF-32 format
-
 ## Usage
 
 ```yaml
@@ -121,6 +94,33 @@ steps:
     env:
       NAME: jon
 ```
+
+## Token style
+
+Tokens must be in one of following formats to be replaced:
+
+| Name                       | Style          | Examples                   |
+| -------------------------- | -------------- | -------------------------- |
+| `envsubst` (default)       | `${VARIABLE}`  | `${TOKEN}`                 |
+| `handlebars` or `mustache` | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+
+Where `VARIABLE` has a matching environment variable name whose value will be
+used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
+
+## Encoding
+
+The default encoding for file write operations is `utf8`, _without_ the byte
+order mark (BOM). The following `encoding` formats are supported.
+
+- `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
+- `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
+- `ascii`: Uses the encoding for the ASCII (7-bit) character set
+- `ansi`: Uses the encoding for the for the current culture's ANSI code page
+- `bigendianunicode`: Encodes in UTF-16 format using the big-endian byte order
+- `bigendianutf32`: Encodes in UTF-32 format using the big-endian byte order
+- `oem`: Uses the default encoding for MS-DOS and console programs
+- `unicode`: Encodes in UTF-16 format using the little-endian byte order
+- `utf32`: Encodes in UTF-32 format
 
 ## License
 
