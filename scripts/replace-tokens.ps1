@@ -28,7 +28,11 @@ param (
     [Parameter()]
     [ValidateSet('utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', ErrorMessage = 'Unknown encoding', IgnoreCase = $true)]
     [string]
-    $Encoding = 'utf8'
+    $Encoding = 'utf8',
+
+    [Parameter()]
+    [switch]
+    $NoNewline
 )
 
 $script:filesReplaced = @()
@@ -37,7 +41,7 @@ $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
 $handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
 
 $tokenPattern = $null
-$fileEncoding = 'utf8'
+$fileEncoding = $null
 
 switch ($Style)
 {
@@ -62,7 +66,7 @@ switch ($Encoding)
     default { $fileEncoding = $Encoding; break }
 }
 
-function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding)
+function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline)
 {
     $contentModified = $false
 
@@ -93,7 +97,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
 
     if ($contentModified)
     {
-        Set-Content -Path $File -Value $content -Encoding $FileEncoding
+        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline
     }
 }
 
@@ -112,7 +116,7 @@ $files = Get-ChildItem @params
 
 foreach ($file in $files)
 {
-    ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding
+    ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline
 }
 
 Write-Output -InputObject $script:filesReplaced

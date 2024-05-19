@@ -47,6 +47,19 @@ inputs:
       The default behavior is not to follow symbolic links.
     required: false
     default: 'false'
+  encoding:
+    description: |
+      Encoding for file write operations.
+      Acceptable values are: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
+    required: false
+    default: 'utf8'
+  no-newline:
+    description: |
+      Do not insert a newline at the end of the file.
+      The default behavior is to insert a newline at the end of the file.
+    required: false
+    default: 'false'
+
   throw:
     description: Throw an error if no tokens were replaced.
     required: false
@@ -68,6 +81,8 @@ runs:
           Depth = [int]'${{ inputs.depth }}'
           FollowSymlinks = [bool]'${{ inputs.follow-symlinks }}'
           Style = '${{ inputs.style }}'
+          Encoding = '${{ inputs.encoding }}'
+          NoNewline = [bool]'${{ inputs.no-newline }}'
         }
 
         $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')
