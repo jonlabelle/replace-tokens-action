@@ -26,24 +26,32 @@ param (
     $FollowSymlinks
 )
 
-$script:envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
-$script:handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
-
-$script:tokenPattern = $null
-switch ($TokenStyle)
-{
-    'envsubst' { $script:tokenPattern = $script:envsubstPattern; break }
-    { ($_ -eq 'handlebars') -or ($_ -eq 'mustache') } { $script:tokenPattern = $script:handlebarsPattern; break }
-    default { $script:tokenPattern = $script:envsubstPattern; break }
-}
-
 $script:filesReplaced = @()
 
-function ReplaceTokens([string] $File)
+$envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
+$handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
+
+$tokenPattern = $null
+
+switch ($TokenStyle)
+{
+    'envsubst'
+    {
+        $tokenPattern = $envsubstPattern; break
+    }
+    { ($_ -eq 'handlebars') -or ($_ -eq 'mustache') }
+    {
+        $tokenPattern = $handlebarsPattern; break
+    }
+    default { $tokenPattern = $envsubstPattern; break }
+}
+
+function ReplaceTokens([string] $File, [string] $Pattern)
 {
     $contentModified = $false
+
     $content = Get-Content -Path $File -Raw
-    $matched = [Regex]::Matches($content, $script:tokenPattern)
+    $matched = [Regex]::Matches($content, $Pattern)
 
     foreach ($match in $matched)
     {
@@ -73,22 +81,22 @@ function ReplaceTokens([string] $File)
     }
 }
 
-$script:params = @{
+$params = @{
     Path = $Path
     File = $true
     ErrorAction = 'Continue'
 }
 
-if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $script:params.Add('Filter', $Filter) }
-if ($Recurse) { $script:params.Add('Recurse', $true) }
-if ($Depth -gt 0) { $script:params.Add('Depth', $Depth) }
-if ($FollowSymlinks) { $script:params.Add('FollowSymlink', $true) }
+if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $params.Add('Filter', $Filter) }
+if ($Recurse) { $params.Add('Recurse', $true) }
+if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
+if ($FollowSymlinks) { $params.Add('FollowSymlink', $true) }
 
-$script:files = Get-ChildItem @params
+$files = Get-ChildItem @params
 
-foreach ($file in $script:files)
+foreach ($file in $files)
 {
-    ReplaceTokens -File $file.FullName
+    ReplaceTokens -File $file.FullName -Pattern $tokenPattern
 }
 
 Write-Output -InputObject $script:filesReplaced
