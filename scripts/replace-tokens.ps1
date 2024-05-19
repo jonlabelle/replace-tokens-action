@@ -70,7 +70,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
 {
     $contentModified = $false
 
-    $content = Get-Content -Path $File -Raw
+    $content = Get-Content -Path $File -Raw -Encoding $FileEncoding
     $matched = [Regex]::Matches($content, $Pattern)
 
     foreach ($match in $matched)

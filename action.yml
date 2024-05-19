@@ -49,7 +49,8 @@ inputs:
     default: 'false'
   encoding:
     description: |
-      Encoding for file write operations.
+      Encoding for file read/write operations.
+      The default is `utf8`, without the byte order mark (BOM).
       Acceptable values are: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
     required: false
     default: 'utf8'
