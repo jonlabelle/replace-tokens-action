@@ -45,7 +45,7 @@ order mark (BOM). The following `encoding` formats are supported.
 - `unicode`: Encodes in UTF-16 format using the little-endian byte order
 - `utf32`: Encodes in UTF-32 format
 
-## Examples
+## Usage
 
 ```yaml
 steps:
