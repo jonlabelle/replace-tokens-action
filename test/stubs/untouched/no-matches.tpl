@@ -1,5 +1,7 @@
 NAME
+$NAME
 _NAME
+${.NAME}
 ${NAME
 NAME}
 {NAME}}
