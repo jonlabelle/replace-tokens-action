@@ -11,24 +11,25 @@ on:
 
 jobs:
   test:
-    name: Test ${{ matrix.test }} on ${{ matrix.os }}
+    name: Test ${{ matrix.style }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        test: [envsubst, handlebars]
+        style: [envsubst, handlebars]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - name: Checkout repository for ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Checkout repository for ${{ matrix.style }} test on ${{ matrix.os }}
         uses: actions/checkout@main
 
-      - name: Setup ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Setup ${{ matrix.style }} test on ${{ matrix.os }}
         id: test-setup
         shell: pwsh
         run: |
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
-          $subject = (Join-Path $pwd test subject-${{ matrix.test }}.tpl)
-          $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.test }}.tpl)
+          $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
+          $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.style }}.tpl)
           $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
+
           $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
 
           Copy-Item -Path $prestine -Destination $subject
@@ -38,34 +39,34 @@ jobs:
           Write-Output "untouched-path=$untouched" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "untouched-hash=$untouchedHash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
-      - name: Show ${{ matrix.test }} test subject before replacement on ${{ matrix.os }}
+      - name: Show ${{ matrix.style }} test subject before replacement on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Show expected output for ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Show expected output for ${{ matrix.style }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.expected-path }}"
 
-      - name: Show untouched ${{ matrix.test }} test subject before replacement on ${{ matrix.os }}
+      - name: Show untouched ${{ matrix.style }} test subject before replacement on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.untouched-path }}"
 
-      - name: Show expected hash for untouched ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Show expected hash for untouched ${{ matrix.style }} test on ${{ matrix.os }}
         run: echo "${{ steps.test-setup.outputs.untouched-hash }}"
 
-      - name: Perform ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Perform ${{ matrix.style }} test on ${{ matrix.os }}
         uses: ./
         with:
           paths: |
             ${{ steps.test-setup.outputs.subject-path }}
             ${{ steps.test-setup.outputs.untouched-path }}
-          style: ${{ matrix.test }}
+          style: ${{ matrix.style }}
           throw: true
           no-newline: true
         env:
           NAME: jon
 
-      - name: Show actual result for ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Show actual result for ${{ matrix.style }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Assert ${{ matrix.test }} replacement test on ${{ matrix.os }}
+      - name: Assert ${{ matrix.style }} replacement test on ${{ matrix.os }}
         id: assert-replacement
         shell: pwsh
         run: |
@@ -82,10 +83,10 @@ jobs:
             Write-Host '✓ Replacement test passed'
           }
 
-      - name: Show actual result of untouched ${{ matrix.test }} test on ${{ matrix.os }}
+      - name: Show actual result of untouched ${{ matrix.style }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.untouched-path }}"
 
-      - name: Assert ${{ matrix.test }} untouched test on ${{ matrix.os }}
+      - name: Assert ${{ matrix.style }} untouched test on ${{ matrix.os }}
         id: assert-untouched
         shell: pwsh
         run: |
