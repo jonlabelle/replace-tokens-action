@@ -5,7 +5,7 @@ param (
     $Path,
 
     [Parameter()]
-    [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknow token style', IgnoreCase = $true)]
+    [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknown token style', IgnoreCase = $true)]
     [string]
     $Style = 'envsubst',
 
@@ -23,7 +23,12 @@ param (
 
     [Parameter()]
     [switch]
-    $FollowSymlinks
+    $FollowSymlinks,
+
+    [Parameter()]
+    [ValidateSet('utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', ErrorMessage = 'Unknown encoding', IgnoreCase = $true)]
+    [string]
+    $Encoding = 'utf8'
 )
 
 $script:filesReplaced = @()
@@ -32,6 +37,7 @@ $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
 $handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
 
 $tokenPattern = $null
+$fileEncoding = 'utf8'
 
 switch ($Style)
 {
@@ -46,7 +52,17 @@ switch ($Style)
     default { $tokenPattern = $envsubstPattern; break }
 }
 
-function ReplaceTokens([string] $File, [string] $Pattern)
+switch ($Encoding)
+{
+    # Canonicalize utf-8 (no bom) moniker
+    { ($_ -eq 'utf8') -or ($_ -eq 'utf-8') -or ($_ -eq 'utf8NoBOM') }
+    {
+        $fileEncoding = 'utf8NoBOM'; break
+    }
+    default { $fileEncoding = $Encoding; break }
+}
+
+function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding)
 {
     $contentModified = $false
 
@@ -77,7 +93,7 @@ function ReplaceTokens([string] $File, [string] $Pattern)
 
     if ($contentModified)
     {
-        Set-Content -Path $File -Value $content
+        Set-Content -Path $File -Value $content -Encoding $FileEncoding
     }
 }
 
@@ -96,7 +112,7 @@ $files = Get-ChildItem @params
 
 foreach ($file in $files)
 {
-    ReplaceTokens -File $file.FullName -Pattern $tokenPattern
+    ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding
 }
 
 Write-Output -InputObject $script:filesReplaced

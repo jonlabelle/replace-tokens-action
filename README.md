@@ -15,6 +15,7 @@
 | `depth`           | Depth of recursion                 | number  | false    | none       | `2`               |
 | `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`           |
 | `throw`           | Fail if no tokens replaced         | boolean | false    | `false`    | `false`           |
+| `encoding`        | File write [encoding](#encoding)   | string  | false    | `utf8`     | `unicode`         |
 
 ## Token style
 
@@ -28,19 +29,35 @@ Tokens must be in one of following formats to be replaced:
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
 
+## Encoding
+
+The default encoding for file write operations is `utf8`, _without_ the byte
+order mark (BOM). The following `encoding` formats are supported.
+
+- `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
+- `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
+- `utf8NoBOM`: Encodes in UTF-8 format without Byte Order Mark (BOM)
+- `ascii`: Uses the encoding for the ASCII (7-bit) character set
+- `ansi`: Uses the encoding for the for the current culture's ANSI code page
+- `bigendianunicode`: Encodes in UTF-16 format using the big-endian byte order
+- `bigendianutf32`: Encodes in UTF-32 format using the big-endian byte order
+- `oem`: Uses the default encoding for MS-DOS and console programs
+- `unicode`: Encodes in UTF-16 format using the little-endian byte order
+- `utf32`: Encodes in UTF-32 format
+
 ## Examples
 
 ```yaml
 steps:
   - name: Replace tokens
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: ./path/to/template.json
     env:
       NAME: jon
 
   - name: Replace tokens using a path filter
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -48,7 +65,7 @@ steps:
       NAME: jon
 
   - name: Search multiple paths
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: |
         ./first/path
@@ -59,7 +76,7 @@ steps:
       NAME: jon
 
   - name: Replace handlebars/mustache style tokens
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -68,7 +85,7 @@ steps:
       NAME: jon
 
   - name: Replace tokens using recursion, 2 directories deep
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -78,11 +95,20 @@ steps:
       NAME: jon
 
   - name: Throw an error if no tokens were replaced
-    uses: jonlabelle/replace-tokens-action@v1.6.0
+    uses: jonlabelle/replace-tokens-action@v1.7.0
     with:
       paths: ./path/to/search
       filter: '*.json'
       throw: true
+    env:
+      NAME: jon
+
+  - name: Use non-default encoding when writing files
+    uses: jonlabelle/replace-tokens-action@v1.7.0
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      encoding: unicode
     env:
       NAME: jon
 ```
