@@ -14,6 +14,7 @@ jobs:
     name: Test ${{ matrix.style }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         style: [envsubst, handlebars]
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -73,10 +74,10 @@ jobs:
           $expected = "${{ steps.test-setup.outputs.expected-path }}"
           $subject = "${{ steps.test-setup.outputs.subject-path }}"
 
-          $contentExpected = Get-Content -Path $expected -Raw
-          $contentActual = Get-Content -Path $subject -Raw
+          $expectedContent = Get-Content -Path $expected -Raw
+          $actualContent = Get-Content -Path $subject -Raw
 
-          if (-not $contentExpected -eq $contentActual) {
+          if ($expectedContent -ne $actualContent) {
             Write-Error '✘ Replacement test failed'
             exit 1
           } else {
@@ -93,7 +94,7 @@ jobs:
           $expected = "${{ steps.test-setup.outputs.untouched-hash }}"
           $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
 
-          if (-not $expected -eq $actual) {
+          if ($expected -ne $actual) {
             Write-Error '✘ Untouched test failed'
             exit 1
           } else {
