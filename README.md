@@ -20,6 +20,8 @@
 
 ## Usage
 
+See [action.yml](action.yml)
+
 ```yaml
 steps:
   - name: Replace tokens
