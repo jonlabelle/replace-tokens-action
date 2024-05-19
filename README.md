@@ -111,8 +111,7 @@ used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/softwa
 
 ## Encoding
 
-The default encoding for files `utf8`, _without_ the byte order mark (BOM).
-The following `encoding` formats are supported.
+The default file encoding for read/write operations is set to `utf8`, _without_ the byte order mark (BOM). The following additional file `encoding` formats are supported.
 
 - `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
 - `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
