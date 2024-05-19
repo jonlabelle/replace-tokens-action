@@ -6,15 +6,15 @@
 
 ## Inputs
 
-| Name              | Description                                    | Type    | Example           | Required | Default  |
-| ----------------- | ---------------------------------------------- | ------- | ----------------- | -------- | -------- |
-| `paths`           | Path to replacement file(s) [^1]               | string  | `./settings.json` | true     | none     |
-| `style`           | Name of the [token style/format](#token-style) | string  | `handlebars`      | false    | envsubst |
-| `filter`          | Filter to qualify the `paths` parameter [^2]   | string  | `*.json`          | false    | none     |
-| `recurse`         | Recurse directories                            | boolean | `false`           | false    | false    |
-| `depth`           | Depth of recursion                             | number  | `2`               | false    | none     |
-| `follow-symlinks` | Follow symbolic links                          | boolean | `false`           | false    | false    |
-| `throw`           | Fail if no tokens were replaced                | boolean | `false`           | false    | false    |
+| Name              | Description                        | Type    | Required | Default    | Example           |
+| ----------------- | ---------------------------------- | ------- | -------- | ---------- | ----------------- |
+| `paths`           | Replacement file paths [^1]        | string  | true     | none       | `./settings.json` |
+| `style`           | Token [style/format](#token-style) | string  | false    | `envsubst` | `handlebars`      |
+| `filter`          | Filter to qualify `paths` [^2]     | string  | false    | none       | `*.json`          |
+| `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`           |
+| `depth`           | Depth of recursion                 | number  | false    | none       | `2`               |
+| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`           |
+| `throw`           | Fail if no tokens replaced         | boolean | false    | `false`    | `false`           |
 
 ## Token style
 
