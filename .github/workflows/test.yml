@@ -28,11 +28,15 @@ jobs:
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
           $subject = (Join-Path $pwd test subject-${{ matrix.test }}.tpl)
           $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.test }}.tpl)
+          $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
+          $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
 
           Copy-Item -Path $prestine -Destination $subject
 
           Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          Write-Output "untouched-path=$untouched" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          Write-Output "untouched-hash=$untouchedHash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
 
       - name: Show ${{ matrix.test }} test subject before replacement on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
@@ -40,23 +44,28 @@ jobs:
       - name: Show expected output for ${{ matrix.test }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.expected-path }}"
 
+      - name: Show untouched ${{ matrix.test }} test subject before replacement on ${{ matrix.os }}
+        run: cat "${{ steps.test-setup.outputs.untouched-path }}"
+
+      - name: Show expected hash for untouched ${{ matrix.test }} test on ${{ matrix.os }}
+        run: echo "${{ steps.test-setup.outputs.untouched-hash }}"
+
       - name: Perform ${{ matrix.test }} test on ${{ matrix.os }}
         uses: ./
         with:
           paths: |
             ${{ steps.test-setup.outputs.subject-path }}
-            ./commitlint.config.js
-            ./LICENSE
-          token-style: ${{ matrix.test }}
+            ${{ steps.test-setup.outputs.untouched-path }}
+          style: ${{ matrix.test }}
           throw: true
         env:
           NAME: jon
 
-      - name: Show actual result ${{ matrix.test }} on ${{ matrix.os }}
+      - name: Show actual result for ${{ matrix.test }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
 
-      - name: Assert ${{ matrix.test }} test on ${{ matrix.os }}
-        id: assert
+      - name: Assert ${{ matrix.test }} replacement test on ${{ matrix.os }}
+        id: assert-replacement
         shell: pwsh
         run: |
           $expected = "${{ steps.test-setup.outputs.expected-path }}"
@@ -66,9 +75,25 @@ jobs:
           $contentActual = Get-Content -Path $subject -Raw
 
           if (-not $contentExpected -eq $contentActual) {
-            Write-Host '✘ Test failed' -ForegroundColor Red
+            Write-Error '✘ Replacement test failed'
             exit 1
           } else {
-            Write-Host '✓ Test passed' -ForegroundColor Green
-            exit 0
+            Write-Host '✓ Replacement test passed'
+          }
+
+      - name: Show actual result of untouched ${{ matrix.test }} test on ${{ matrix.os }}
+        run: cat "${{ steps.test-setup.outputs.untouched-path }}"
+
+      - name: Assert ${{ matrix.test }} untouched test on ${{ matrix.os }}
+        id: assert-untouched
+        shell: pwsh
+        run: |
+          $expected = "${{ steps.test-setup.outputs.untouched-hash }}"
+          $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
+
+          if (-not $expected -eq $actual) {
+            Write-Error '✘ Untouched test failed'
+            exit 1
+          } else {
+            Write-Host '✓ Untouched test passed'
           }

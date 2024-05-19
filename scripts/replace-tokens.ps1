@@ -7,7 +7,7 @@ param (
     [Parameter()]
     [ValidateSet('envsubst', 'handlebars', 'mustache', ErrorMessage = 'Unknow token style', IgnoreCase = $true)]
     [string]
-    $TokenStyle = 'envsubst',
+    $Style = 'envsubst',
 
     [Parameter()]
     [string]
@@ -33,7 +33,7 @@ $handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.
 
 $tokenPattern = $null
 
-switch ($TokenStyle)
+switch ($Style)
 {
     'envsubst'
     {

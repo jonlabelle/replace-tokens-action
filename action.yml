@@ -15,7 +15,7 @@ inputs:
       The default location is the current directory (`.`).
       Example: `./path/to/my/settings.json`
     required: true
-  token-style:
+  style:
     description: |
       The style (or format) of the tokens that will be replaced.
       Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
@@ -67,7 +67,7 @@ runs:
           Recurse = [bool]'${{ inputs.recurse }}'
           Depth = [int]'${{ inputs.depth }}'
           FollowSymlinks = [bool]'${{ inputs.follow-symlinks }}'
-          TokenStyle = '${{ inputs.token-style }}'
+          Style = '${{ inputs.style }}'
         }
 
         $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')
