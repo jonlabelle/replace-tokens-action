@@ -36,7 +36,6 @@ order mark (BOM). The following `encoding` formats are supported.
 
 - `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
 - `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
-- `utf8NoBOM`: Encodes in UTF-8 format without Byte Order Mark (BOM)
 - `ascii`: Uses the encoding for the ASCII (7-bit) character set
 - `ansi`: Uses the encoding for the for the current culture's ANSI code page
 - `bigendianunicode`: Encodes in UTF-16 format using the big-endian byte order
