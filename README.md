@@ -8,18 +8,18 @@
 
 See [action.yml](action.yml)
 
-| Name              | Description                        | Type    | Required | Default      | Example           |
-| ----------------- | ---------------------------------- | ------- | -------- | ------------ | ----------------- |
-| `paths`           | Replacement file paths [^1]        | string  | true     | none         | `./settings.json` |
-| `style`           | Token [style/format](#token-style) | string  | false    | `handlebars` | `envsubst`        |
-| `filter`          | Filter to qualify `paths` [^2]     | string  | false    | none         | `*.json`          |
-| `exclude`         | Exclude patterns [^3]              | string  | false    | none         | `*dev*.json`      |
-| `recurse`         | Recurse directories                | boolean | false    | `false`      | `false`           |
-| `depth`           | Depth of recursion                 | number  | false    | none         | `2`               |
-| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`      | `false`           |
-| `throw`           | Fail if no tokens replaced         | boolean | false    | `false`      | `false`           |
-| `encoding`        | File [encoding](#encoding)         | string  | false    | `utf8`       | `unicode`         |
-| `no-newline`      | No newline at eof                  | boolean | false    | false        | `true`            |
+| Name              | Description                        | Type    | Required | Default      | Example       |
+| ----------------- | ---------------------------------- | ------- | -------- | ------------ | ------------- |
+| `paths`           | token file paths [^1]              | string  | true     | none         | `./prod.json` |
+| `style`           | [token style/format](#token-style) | string  | false    | `handlebars` | `envsubst`    |
+| `filter`          | filter pattern [^2]                | string  | false    | none         | `*.json`      |
+| `exclude`         | exclusion patterns [^3]            | string  | false    | none         | `*dev*.json`  |
+| `recurse`         | recurse directories                | boolean | false    | `false`      | `false`       |
+| `depth`           | depth of recursion                 | number  | false    | none         | `2`           |
+| `follow-symlinks` | follow symbolic links              | boolean | false    | `false`      | `false`       |
+| `throw`           | if no tokens replaced              | boolean | false    | `false`      | `false`       |
+| `encoding`        | [file encoding](#file-encoding)    | string  | false    | `utf8`       | `unicode`     |
+| `no-newline`      | at end-of-file                     | boolean | false    | false        | `true`        |
 
 ## Examples
 
@@ -108,11 +108,11 @@ steps:
       API_URL: https://example.net/api
 ```
 
-### Exclude certain patterns from results
+### Exclude certain items or patterns from results
 
 ```yaml
 steps:
-  - name: Exclude certain patterns from results
+  - name: Exclude certain items or patterns from results
     uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       # matches: `./src/.env.local` and `./src/.env.production`,
@@ -181,7 +181,7 @@ Tokens must be in one of following formats to be replaced:
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
 
-## Encoding
+## File encoding
 
 The default file encoding for read/write operations is set to `utf8`, _without_ the byte order mark (BOM). The following additional file `encoding` formats are supported.
 
@@ -201,4 +201,4 @@ The default file encoding for read/write operations is set to `utf8`, _without_ 
 
 [^1]: A path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
 [^2]: `filter` only supports `*` and `?` wildcards.
-[^3]: One or more string patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.
+[^3]: One or more string items or patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.

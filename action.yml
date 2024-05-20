@@ -31,7 +31,7 @@ inputs:
     required: false
   exclude:
     description: |
-      One or more string patterns to be matched, and excluded from the results.
+      One or more string items or patterns to be matched, and excluded from the results.
       Wildcard characters are accepted.
       Specify multiple exclusions on separate lines using a multiline string `|`.
       Example: `*dev*.json`
