@@ -69,6 +69,15 @@ steps:
     env:
       NAME: jon
 
+  - name: 'Replace an API key and URL in all .env files (matches: `.env.production`,  `.env`)'
+    uses: jonlabelle/replace-tokens-action@v1.9.0
+    with:
+      paths: ./src
+      filter: '*.env*'
+    env:
+      API_KEY: ${{ secrets.api-key }}
+      API_URL: https://example.net/api
+
   - name: Throw an error if no tokens were replaced
     uses: jonlabelle/replace-tokens-action@v1.9.0
     with:
