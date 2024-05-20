@@ -32,7 +32,11 @@ param (
 
     [Parameter()]
     [switch]
-    $NoNewline
+    $NoNewline,
+
+    [Parameter()]
+    [string[]]
+    $Exclude
 )
 
 $script:filesReplaced = @()
@@ -111,6 +115,7 @@ if (-not ([string]::IsNullOrWhiteSpace($Filter))) { $params.Add('Filter', $Filte
 if ($Recurse) { $params.Add('Recurse', $true) }
 if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
 if ($FollowSymlinks) { $params.Add('FollowSymlink', $true) }
+if (($null -ne $Exclude) -and ($Exclude.Count -gt 0)) { $params.Add('Exclude', $Exclude) }
 
 $files = Get-ChildItem @params
 

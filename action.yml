@@ -29,6 +29,13 @@ inputs:
       Only supports `*` and `?` wildcards.
       Example: `*.json`
     required: false
+  exclude:
+    description: |
+      One or more string patterns to be matched, and excluded from the results.
+      Wildcard characters are accepted.
+      Specify multiple exclusions on separate lines using a multiline string `|`.
+      Example: `*dev*.json`
+    required: false
   recurse:
     description: |
       Whether or not to recurse directories.
@@ -74,6 +81,7 @@ runs:
       run: |
         # Split multiline paths
         $paths = '${{ inputs.paths }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
+        $exclude = '${{ inputs.exclude }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
 
         $params = @{
           Path = $paths
@@ -84,6 +92,7 @@ runs:
           Style = '${{ inputs.style }}'
           Encoding = '${{ inputs.encoding }}'
           NoNewline = [bool]'${{ inputs.no-newline }}'
+          Exclude = $exclude
         }
 
         $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')

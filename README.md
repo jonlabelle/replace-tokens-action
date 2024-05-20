@@ -13,6 +13,7 @@ See [action.yml](action.yml)
 | `paths`           | Replacement file paths [^1]        | string  | true     | none         | `./settings.json` |
 | `style`           | Token [style/format](#token-style) | string  | false    | `handlebars` | `envsubst`        |
 | `filter`          | Filter to qualify `paths` [^2]     | string  | false    | none         | `*.json`          |
+| `exclude`         | Exclude patterns [^3]              | string  | false    | none         | `*dev*.json`      |
 | `recurse`         | Recurse directories                | boolean | false    | `false`      | `false`           |
 | `depth`           | Depth of recursion                 | number  | false    | none         | `2`               |
 | `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`      | `false`           |
@@ -27,7 +28,7 @@ See [action.yml](action.yml)
 ```yaml
 steps:
   - name: Replace tokens in the specified path
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/template.json
     env:
@@ -39,7 +40,7 @@ steps:
 ```yaml
 steps:
   - name: Replace tokens using a path filter
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -52,7 +53,7 @@ steps:
 ```yaml
 steps:
   - name: Search multiple paths
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: |
         ./first/path
@@ -68,7 +69,7 @@ steps:
 ```yaml
 steps:
   - name: Replace envsubst styled tokens, e.g. ${VARIABLE}
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -82,7 +83,7 @@ steps:
 ```yaml
 steps:
   - name: Replace tokens using recursion, 2 directories deep
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -97,11 +98,30 @@ steps:
 ```yaml
 steps:
   - name: Replace an API key and URL in .env files
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       # matches: `./src/.env` and `./src/.env.production`
       paths: ./src
       filter: '*.env*'
+    env:
+      API_KEY: ${{ secrets.api-key }}
+      API_URL: https://example.net/api
+```
+
+### Exclude certain patterns from results
+
+```yaml
+steps:
+  - name: Exclude certain patterns from results
+    uses: jonlabelle/replace-tokens-action@v1.11.0
+    with:
+      # matches: `./src/.env.local` and `./src/.env.production`,
+      # but not `./src/.env` or `./src/.env.development`
+      paths: ./src
+      filter: '*.env*'
+      exclude: |
+        .env
+        .env.development
     env:
       API_KEY: ${{ secrets.api-key }}
       API_URL: https://example.net/api
@@ -112,7 +132,7 @@ steps:
 ```yaml
 steps:
   - name: Throw an error if no tokens were replaced
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -126,7 +146,7 @@ steps:
 ```yaml
 steps:
   - name: Set a non-default encoding option for reading/writing files
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -140,7 +160,7 @@ steps:
 ```yaml
 steps:
   - name: Don't insert a newline at the end of the file
-    uses: jonlabelle/replace-tokens-action@v1.10.0
+    uses: jonlabelle/replace-tokens-action@v1.11.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -181,3 +201,4 @@ The default file encoding for read/write operations is set to `utf8`, _without_ 
 
 [^1]: A path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
 [^2]: `filter` only supports `*` and `?` wildcards.
+[^3]: One or more string patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.
