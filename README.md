@@ -2,9 +2,11 @@
 
 [![test](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml)
 
-> A GitHub action to replace tokens in a file. Similar to envsubst.
+> A GitHub action to replace tokens in a file, similar to envsubst.
 
-## Inputs
+## Usage
+
+See [action.yml](action.yml)
 
 | Name              | Description                        | Type    | Required | Default      | Example           |
 | ----------------- | ---------------------------------- | ------- | -------- | ------------ | ----------------- |
@@ -18,19 +20,24 @@
 | `encoding`        | File [encoding](#encoding)         | string  | false    | `utf8`       | `unicode`         |
 | `no-newline`      | No newline at eof                  | boolean | false    | false        | `true`            |
 
-## Usage
+## Examples
 
-See [action.yml](action.yml)
+### Replace tokens in path
 
 ```yaml
 steps:
-  - name: Replace tokens
+  - name: Replace tokens in the specified path
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/template.json
     env:
       NAME: jon
+```
 
+### Using a path filter
+
+```yaml
+steps:
   - name: Replace tokens using a path filter
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -38,7 +45,12 @@ steps:
       filter: '*.json'
     env:
       NAME: jon
+```
 
+### Search multiple paths
+
+```yaml
+steps:
   - name: Search multiple paths
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -49,8 +61,13 @@ steps:
       filter: '*.json'
     env:
       NAME: jon
+```
 
-  - name: Replace envsubst styled tokens
+### Replace envsubst styled tokens
+
+```yaml
+steps:
+  - name: Replace envsubst styled tokens, e.g. ${VARIABLE}
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
@@ -58,7 +75,12 @@ steps:
       style: envsubst
     env:
       NAME: jon
+```
 
+### Search paths recursively, 2 directories deep
+
+```yaml
+steps:
   - name: Replace tokens using recursion, 2 directories deep
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -68,7 +90,12 @@ steps:
       depth: 2
     env:
       NAME: jon
+```
 
+### Replace an API key and URL in .env files
+
+```yaml
+steps:
   - name: Replace an API key and URL in .env files
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -78,7 +105,12 @@ steps:
     env:
       API_KEY: ${{ secrets.api-key }}
       API_URL: https://example.net/api
+```
 
+### Throw an error if no tokens were replaced
+
+```yaml
+steps:
   - name: Throw an error if no tokens were replaced
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -87,7 +119,12 @@ steps:
       throw: true
     env:
       NAME: jon
+```
 
+### Use custom file encoding
+
+```yaml
+steps:
   - name: Set a non-default encoding option for reading/writing files
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
@@ -96,8 +133,13 @@ steps:
       encoding: unicode
     env:
       NAME: jon
+```
 
-  - name: Don't insert a file newline at the end of the file
+### Don't insert a final newline
+
+```yaml
+steps:
+  - name: Don't insert a newline at the end of the file
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search

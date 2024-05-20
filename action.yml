@@ -1,10 +1,11 @@
 ---
 name: Replace tokens action
-description: A GitHub action to replace tokens in a file. Similar to envsubst.
+description: A GitHub action to replace tokens in a file, similar to envsubst
 author: Jon LaBelle
 branding:
   icon: percent
   color: purple
+
 inputs:
   paths:
     description: |
@@ -60,7 +61,6 @@ inputs:
       The default behavior is to insert a newline at the end of the file.
     required: false
     default: 'false'
-
   throw:
     description: Throw an error if no tokens were replaced.
     required: false
@@ -69,7 +69,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: replace tokens
+    - name: Replace tokens
       shell: pwsh
       run: |
         # Split multiline paths
