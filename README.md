@@ -50,12 +50,12 @@ steps:
     env:
       NAME: jon
 
-  - name: Replace handlebars/mustache style tokens
+  - name: Replace envsubst styled tokens
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
-      style: handlebars
+      style: envsubst
     env:
       NAME: jon
 
@@ -69,9 +69,10 @@ steps:
     env:
       NAME: jon
 
-  - name: 'Replace an API key and URL in all .env files (matches: `.env.production`,  `.env`)'
+  - name: Replace an API key and URL in .env files
     uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
+      # matches: `./src/.env` and `./src/.env.production`
       paths: ./src
       filter: '*.env*'
     env:
