@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        style: [envsubst, handlebars]
+        style: [handlebars, envsubst]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout repository for ${{ matrix.style }} test on ${{ matrix.os }}
@@ -29,8 +29,8 @@ jobs:
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
           $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
           $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.style }}.tpl)
-          $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
 
+          $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
           $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
 
           Copy-Item -Path $prestine -Destination $subject

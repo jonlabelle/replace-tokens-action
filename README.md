@@ -6,17 +6,17 @@
 
 ## Inputs
 
-| Name              | Description                        | Type    | Required | Default    | Example           |
-| ----------------- | ---------------------------------- | ------- | -------- | ---------- | ----------------- |
-| `paths`           | Replacement file paths [^1]        | string  | true     | none       | `./settings.json` |
-| `style`           | Token [style/format](#token-style) | string  | false    | `envsubst` | `handlebars`      |
-| `filter`          | Filter to qualify `paths` [^2]     | string  | false    | none       | `*.json`          |
-| `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`           |
-| `depth`           | Depth of recursion                 | number  | false    | none       | `2`               |
-| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`           |
-| `throw`           | Fail if no tokens replaced         | boolean | false    | `false`    | `false`           |
-| `encoding`        | File [encoding](#encoding)         | string  | false    | `utf8`     | `unicode`         |
-| `no-newline`      | No newline at eof                  | boolean | false    | false      | `true`            |
+| Name              | Description                        | Type    | Required | Default      | Example           |
+| ----------------- | ---------------------------------- | ------- | -------- | ------------ | ----------------- |
+| `paths`           | Replacement file paths [^1]        | string  | true     | none         | `./settings.json` |
+| `style`           | Token [style/format](#token-style) | string  | false    | `handlebars` | `envsubst`        |
+| `filter`          | Filter to qualify `paths` [^2]     | string  | false    | none         | `*.json`          |
+| `recurse`         | Recurse directories                | boolean | false    | `false`      | `false`           |
+| `depth`           | Depth of recursion                 | number  | false    | none         | `2`               |
+| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`      | `false`           |
+| `throw`           | Fail if no tokens replaced         | boolean | false    | `false`      | `false`           |
+| `encoding`        | File [encoding](#encoding)         | string  | false    | `utf8`       | `unicode`         |
+| `no-newline`      | No newline at eof                  | boolean | false    | false        | `true`            |
 
 ## Usage
 
@@ -25,14 +25,14 @@ See [action.yml](action.yml)
 ```yaml
 steps:
   - name: Replace tokens
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/template.json
     env:
       NAME: jon
 
   - name: Replace tokens using a path filter
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -40,7 +40,7 @@ steps:
       NAME: jon
 
   - name: Search multiple paths
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: |
         ./first/path
@@ -51,7 +51,7 @@ steps:
       NAME: jon
 
   - name: Replace handlebars/mustache style tokens
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -60,7 +60,7 @@ steps:
       NAME: jon
 
   - name: Replace tokens using recursion, 2 directories deep
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -70,7 +70,7 @@ steps:
       NAME: jon
 
   - name: 'Replace an API key and URL in all .env files (matches: `.env.production`,  `.env`)'
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./src
       filter: '*.env*'
@@ -79,7 +79,7 @@ steps:
       API_URL: https://example.net/api
 
   - name: Throw an error if no tokens were replaced
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -88,7 +88,7 @@ steps:
       NAME: jon
 
   - name: Set a non-default encoding option for reading/writing files
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -97,7 +97,7 @@ steps:
       NAME: jon
 
   - name: Don't insert a file newline at the end of the file
-    uses: jonlabelle/replace-tokens-action@v1.9.0
+    uses: jonlabelle/replace-tokens-action@v1.10.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -110,10 +110,10 @@ steps:
 
 Tokens must be in one of following formats to be replaced:
 
-| Name                       | Style          | Examples                   |
-| -------------------------- | -------------- | -------------------------- |
-| `envsubst` (default)       | `${VARIABLE}`  | `${TOKEN}`                 |
-| `handlebars` or `mustache` | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+| Name                   | Style          | Examples                   |
+| ---------------------- | -------------- | -------------------------- |
+| `handlebars` (default) | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+| `envsubst`             | `${VARIABLE}`  | `${TOKEN}`                 |
 
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).

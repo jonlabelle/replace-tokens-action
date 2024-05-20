@@ -18,10 +18,10 @@ inputs:
   style:
     description: |
       The style (or format) of the tokens that will be replaced.
-      Accepted values are `envsubst` (ex: `${VARIABLE}`) and `handlebars` (ex: `{{VARIABLE}}`).
-      The default token style is `envsubst`.
+      Accepted values are `handlebars` (ex: `{{ VARIABLE }}`) and `envsubst` (ex: `${VARIABLE}`).
+      The default token style is `handlebars`.
     required: false
-    default: 'envsubst'
+    default: 'handlebars'
   filter:
     description: |
       Filter to qualify the `paths` parameter.
