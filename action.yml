@@ -99,7 +99,7 @@ runs:
 
         $throw = [bool]'${{ inputs.throw }}'
         if (($throw -eq $true) -and ($result.Count -eq 0)) {
-          echo "::error title=✘ error hint::no tokens were replaced"
+          echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and have defined appropriate tokens that can be replaced."
           exit 1
         }
 
