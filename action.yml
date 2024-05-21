@@ -100,7 +100,7 @@ runs:
 
         $throw = [bool]'${{ inputs.throw }}'
         if (($throw -eq $true) -and ($result.Count -eq 0)) {
-          Write-Error '✘ error: no tokens were replaced'
+          echo "::error title=✘ error hint::no tokens were replaced"
           exit 1
         }
 

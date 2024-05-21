@@ -78,7 +78,7 @@ jobs:
           $actualContent = Get-Content -Path $subject -Raw
 
           if ($expectedContent -ne $actualContent) {
-            Write-Error '✘ Replacement test failed'
+            echo "::error title=✘ test failed hint::replacement test failed"
             exit 1
           } else {
             Write-Host '✓ Replacement test passed'
@@ -95,7 +95,7 @@ jobs:
           $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
 
           if ($expected -ne $actual) {
-            Write-Error '✘ Untouched test failed'
+            echo "::error title=✘ test failed hint::untouched test failed"
             exit 1
           } else {
             Write-Host '✓ Untouched test passed'
