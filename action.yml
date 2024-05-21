@@ -8,7 +8,7 @@ branding:
 
 inputs:
   paths:
-    description: |
+    description: >-
       Replacement file path(s).
       Specifies a path to one or more locations.
       Specify multiple paths on separate lines using a multiline string `|`.
@@ -17,53 +17,53 @@ inputs:
       Example: `./path/to/my/settings.json`
     required: true
   style:
-    description: |
+    description: >-
       The style (or format) of the tokens that will be replaced.
       Accepted values are `handlebars` (ex: `{{ VARIABLE }}`) and `envsubst` (ex: `${VARIABLE}`).
       The default token style is `handlebars`.
     required: false
     default: 'handlebars'
   filter:
-    description: |
+    description: >-
       Filter to qualify the `paths` parameter.
       Only supports `*` and `?` wildcards.
       Example: `*.json`
     required: false
   exclude:
-    description: |
+    description: >-
       One or more string items or patterns to be matched, and excluded from the results.
       Wildcard characters are accepted.
       Specify multiple exclusions on separate lines using a multiline string `|`.
       Example: `*dev*.json`
     required: false
   recurse:
-    description: |
+    description: >-
       Whether or not to recurse directories.
       The default is `false`, or no directory recursion.
     required: false
     default: 'false'
   depth:
-    description: |
+    description: >-
       Depth of directory recursion.
       Only valid if the `recurse` option is enabled.
       There default depth is not set.
     required: false
     default: '0'
   follow-symlinks:
-    description: |
+    description: >-
       Whether or not to follow symbolic links.
       The default behavior is not to follow symbolic links.
     required: false
     default: 'false'
   encoding:
-    description: |
+    description: >-
       Encoding for file read/write operations.
       The default is `utf8`, without the byte order mark (BOM).
       Acceptable values are: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
     required: false
     default: 'utf8'
   no-newline:
-    description: |
+    description: >-
       Do not insert a newline at the end of the file.
       The default behavior is to insert a newline at the end of the file.
     required: false
