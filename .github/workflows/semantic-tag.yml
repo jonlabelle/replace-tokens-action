@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@main
         with:
-          node-version: latest
+          node-version: 'lts/*'
 
       - name: Install npm global packages
         run: >-
