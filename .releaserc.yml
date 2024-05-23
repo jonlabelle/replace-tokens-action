@@ -1,4 +1,3 @@
----
 branch: main
 repositoryUrl: https://github.com/jonlabelle/replace-tokens-action
 tagFormat: v${version}

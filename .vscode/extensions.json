@@ -6,6 +6,7 @@
     "fnando.linter",
     "github.vscode-github-actions",
     "ms-vscode.powershell",
+    "redhat.vscode-yaml",
     "streetsidesoftware.code-spell-checker"
   ]
 }
