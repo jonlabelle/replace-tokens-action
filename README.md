@@ -29,7 +29,7 @@ See [action.yml](action.yml)
 ```yaml
 steps:
   - name: Replace tokens in the specified path
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/template.json
     env:
@@ -41,7 +41,7 @@ steps:
 ```yaml
 steps:
   - name: Replace tokens using a path filter
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -54,7 +54,7 @@ steps:
 ```yaml
 steps:
   - name: Search multiple paths
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: |
         ./first/path
@@ -70,7 +70,7 @@ steps:
 ```yaml
 steps:
   - name: Replace envsubst styled tokens, e.g. ${VARIABLE}
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -84,7 +84,7 @@ steps:
 ```yaml
 steps:
   - name: Replace tokens using recursion, 2 directories deep
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -99,7 +99,7 @@ steps:
 ```yaml
 steps:
   - name: Replace an API key and URL in .env files
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       # matches: `./src/.env` and `./src/.env.production`
       paths: ./src
@@ -114,7 +114,7 @@ steps:
 ```yaml
 steps:
   - name: Exclude certain items or patterns from results
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       # matches: `./src/.env.local` and `./src/.env.production`,
       # but not `./src/.env` or `./src/.env.development`
@@ -133,7 +133,7 @@ steps:
 ```yaml
 steps:
   - name: Throw an error if no tokens were replaced
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -147,7 +147,7 @@ steps:
 ```yaml
 steps:
   - name: Set a non-default encoding option for reading/writing files
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -161,7 +161,7 @@ steps:
 ```yaml
 steps:
   - name: Don't insert a newline at the end of the file
-    uses: jonlabelle/replace-tokens-action@v1.11.0
+    uses: jonlabelle/replace-tokens-action@v1.12.0
     with:
       paths: ./path/to/search
       filter: '*.json'

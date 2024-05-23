@@ -80,7 +80,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
     foreach ($match in $matched)
     {
         $varName = $match.Groups[1].Value
-        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Ignore).Value
+        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
 
         if (-not ([string]::IsNullOrWhiteSpace($replacement)))
         {
