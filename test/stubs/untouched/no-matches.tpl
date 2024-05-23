@@ -9,3 +9,4 @@ NAME}
 {{NAME}
 {NAME}
 {{ _NAME }}
+{{ my.NAME.is.mud }}
