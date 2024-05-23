@@ -5,23 +5,13 @@
   // esbenp.prettier-vscode
   "prettier.singleQuote": true,
   "prettier.trailingComma": "none",
-
-  "[yaml]": {
-    "diffEditor.ignoreTrimWhitespace": false,
-    "editor.tabSize": 2
-  },
+  "prettier.resolveGlobalModules": true,
+  "prettier.useEditorConfig": true,
 
   // redhat.vscode-yaml
   "yaml.format.singleQuote": true,
   "yaml.validate": true,
   "yaml.schemaStore.enable": true,
-
-  "[powershell]": {
-    "editor.tabSize": 4,
-    "files.encoding": "utf8",
-    "files.insertFinalNewline": true,
-    "files.trimTrailingWhitespace": true
-  },
 
   // ms-vscode.powershell
   "powershell.codeFormatting.preset": "Allman",
