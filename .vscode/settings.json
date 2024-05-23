@@ -26,5 +26,11 @@
   "powershell.codeFormatting.whitespaceInsideBrace": false,
 
   // streetsidesoftware.code-spell-checker
-  "cSpell.words": ["bigendianunicode", "bigendianutf", "envsubst", "jonlabelle"]
+  "cSpell.words": [
+    "bigendianunicode",
+    "bigendianutf",
+    "commitlint",
+    "envsubst",
+    "jonlabelle"
+  ]
 }
