@@ -1,0 +1,30 @@
+{
+  "editor.insertSpaces": true,
+  "editor.rulers": [80, 120],
+
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "none",
+
+  "[yaml]": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.tabSize": 2
+  },
+
+  "[powershell]": {
+    "editor.tabSize": 4,
+    "files.encoding": "utf8",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true
+  },
+
+  "powershell.codeFormatting.preset": "Allman",
+  "powershell.codeFormatting.alignPropertyValuePairs": false,
+  "powershell.codeFormatting.autoCorrectAliases": true,
+  "powershell.codeFormatting.ignoreOneLineBlock": true,
+  "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+  "powershell.codeFormatting.useConstantStrings": true,
+  "powershell.codeFormatting.useCorrectCasing": true,
+  "powershell.codeFormatting.whitespaceAroundOperator": true,
+  "powershell.codeFormatting.whitespaceBetweenParameters": true,
+  "powershell.codeFormatting.whitespaceInsideBrace": false
+}
