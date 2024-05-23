@@ -1,0 +1,24 @@
+name: format check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  check-format:
+    name: Format check
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+
+      - name: Run Prettier format check
+        run: npx prettier --check --log-level warn '**.{md,yml,js,json}'
