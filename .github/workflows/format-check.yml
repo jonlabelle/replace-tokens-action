@@ -11,6 +11,7 @@ on:
       - synchronize
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   check-format:
@@ -21,4 +22,4 @@ jobs:
         uses: actions/checkout@main
 
       - name: Run Prettier format check
-        run: npx prettier --check --log-level warn '**.{md,yml,js,json}'
+        run: npx prettier --check --log-level log '**.{md,yml,js,json}'
