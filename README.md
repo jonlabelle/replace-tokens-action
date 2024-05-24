@@ -26,6 +26,9 @@ See [action.yml](action.yml)
 
 ### Replace tokens in path
 
+Replace **handlebars** styled tokens `{{ NAME }}` in `./path/to/template.json`
+with environment variable `NAME`.
+
 ```yaml
 steps:
   - name: Replace tokens in the specified path
@@ -37,6 +40,8 @@ steps:
 ```
 
 ### Using a path filter
+
+Search and replace all tokens in `*.json` files found in the `./path/to/search` directory.
 
 ```yaml
 steps:
@@ -50,6 +55,8 @@ steps:
 ```
 
 ### Search multiple paths
+
+Search three paths and replace matching tokens in `*.json*` files.
 
 ```yaml
 steps:
@@ -65,11 +72,13 @@ steps:
       NAME: jon
 ```
 
-### Replace envsubst styled tokens
+### Replace envsubst and make styled tokens
+
+Replace tokens using the **envsubst** style/format, e.g. `${VARIABLE}`.
 
 ```yaml
 steps:
-  - name: Replace envsubst styled tokens, e.g. ${VARIABLE}
+  - name: Replace envsubst styled tokens
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -79,14 +88,32 @@ steps:
       NAME: jon
 ```
 
-### Search paths recursively, 2 directories deep
+Replace tokens using the **make** style/format, e.g. `$(VARIABLE)`.
+
+```yaml
+steps:
+  - name: Replace envsubst styled tokens
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      style: make
+    env:
+      NAME: jon
+```
+
+### Search paths recursively
+
+Search and replace tokens from the specified paths, recursively, two directories deep.
 
 ```yaml
 steps:
   - name: Replace tokens using recursion, 2 directories deep
     uses: jonlabelle/replace-tokens-action@v1
     with:
-      paths: ./path/to/search
+      paths: |
+        ./first/path/to/search
+        ./second/path/to/search
       filter: '*.json'
       recurse: true
       depth: 2
@@ -95,6 +122,8 @@ steps:
 ```
 
 ### Replace an API key and URL in .env files
+
+Replace URL and API key tokens in .env files.
 
 ```yaml
 steps:
@@ -109,7 +138,9 @@ steps:
       API_URL: https://example.net/api
 ```
 
-### Exclude certain items or patterns from results
+### Exclude items and patterns
+
+Exclude certain file or directory patterns from results.
 
 ```yaml
 steps:
@@ -128,7 +159,9 @@ steps:
       API_URL: https://example.net/api
 ```
 
-### Throw an error if no tokens were replaced
+### Fail on no-op
+
+Fail if no tokens were replaced.
 
 ```yaml
 steps:
@@ -142,7 +175,13 @@ steps:
       NAME: jon
 ```
 
-### Use custom file encoding
+> [!NOTE]  
+> Tokens defined in files that don't have matching environment variables will
+> be written to error log output. Example: `Cannot find path 'Env:<MISSING_VARIABLE>' because it does not exist`.
+
+### Custom file encoding
+
+Specify the encoding to use for file read/writes.
 
 ```yaml
 steps:
@@ -156,7 +195,9 @@ steps:
       NAME: jon
 ```
 
-### Don't insert a final newline
+### No newline at eof
+
+Don't insert a final newline after tokens are replaced.
 
 ```yaml
 steps:
