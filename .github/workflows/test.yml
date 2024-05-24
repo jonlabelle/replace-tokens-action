@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        style: [handlebars, envsubst]
+        style: [handlebars, envsubst, make]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout repository for ${{ matrix.style }} test on ${{ matrix.os }}

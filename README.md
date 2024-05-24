@@ -178,6 +178,7 @@ Tokens must be in one of following formats to be replaced:
 | ---------------------- | -------------- | -------------------------- |
 | `handlebars` (default) | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `envsubst`             | `${VARIABLE}`  | `${TOKEN}`                 |
+| `make`                 | `$(VARIABLE)`  | `$(TOKEN)`                 |
 
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
