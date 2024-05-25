@@ -1,5 +1,7 @@
-branch: main
-repositoryUrl: https://github.com/jonlabelle/replace-tokens-action
+# semantic-release configuration: https://semantic-release.gitbook.io/semantic-release/usage/configuration
+branches:
+  - main
+repositoryUrl: https://github.com/jonlabelle/replace-tokens-action.git
 tagFormat: v${version}
 plugins:
   - '@semantic-release/commit-analyzer'
