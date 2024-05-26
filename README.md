@@ -9,7 +9,7 @@
 
 See [action.yml](action.yml)
 
-| Name              | Description                        | Type    | Required | Default      | Example       |
+| name              | description                        | type    | required | default      | example       |
 | ----------------- | ---------------------------------- | ------- | -------- | ------------ | ------------- |
 | `paths`           | token file paths [^1]              | string  | true     | none         | `./prod.json` |
 | `style`           | [token style/format](#token-style) | string  | false    | `handlebars` | `envsubst`    |
