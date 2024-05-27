@@ -25,4 +25,4 @@ jobs:
         with:
           fail-on-severity: moderate
           comment-summary-in-pr: always
-          # allow-licenses: 'MIT'
+          allow-licenses: 'MIT'
