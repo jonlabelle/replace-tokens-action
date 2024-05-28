@@ -215,7 +215,7 @@ steps:
 
 Tokens must be in one of following formats to be replaced:
 
-| Name                   | Style          | Examples                   |
+| name                   | style          | examples                   |
 | ---------------------- | -------------- | -------------------------- |
 | `handlebars` (default) | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `envsubst`             | `${VARIABLE}`  | `${TOKEN}`                 |
