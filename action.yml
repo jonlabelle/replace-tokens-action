@@ -2,7 +2,7 @@ name: Replace tokens action
 description: A GitHub action to replace tokens in a file, similar to envsubst
 author: Jon LaBelle
 branding:
-  icon: percent
+  icon: repeat
   color: purple
 
 inputs:
