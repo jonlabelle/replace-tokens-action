@@ -5,7 +5,7 @@ param (
     $Path,
 
     [Parameter()]
-    [ValidateSet('envsubst', 'handlebars', 'mustache', 'make', ErrorMessage = 'Unknown token style', IgnoreCase = $true)]
+    [ValidateSet('mustache', 'handlebars', 'envsubst', 'make', ErrorMessage = 'Unknown token style', IgnoreCase = $true)]
     [string]
     $Style = 'mustache',
 
@@ -46,8 +46,6 @@ $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
 $makePattern = '\$\(([^)]+)\)' # make pattern, e.g. $(VARIABLE)
 
 $tokenPattern = $null
-$fileEncoding = $null
-
 switch ($Style)
 {
     'envsubst'
@@ -65,6 +63,7 @@ switch ($Style)
     default { $tokenPattern = $mustachePattern; break }
 }
 
+$fileEncoding = $null
 switch ($Encoding)
 {
     # Canonicalize utf-8 (no bom) moniker
