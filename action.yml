@@ -3,7 +3,7 @@ description: A GitHub action to replace tokens in a file, similar to envsubst
 author: Jon LaBelle
 branding:
   icon: repeat
-  color: purple
+  color: green
 
 inputs:
   paths:
