@@ -9,24 +9,24 @@
 
 See [action.yml](action.yml)
 
-| name              | description                        | type    | required | default      | example       |
-| ----------------- | ---------------------------------- | ------- | -------- | ------------ | ------------- |
-| `paths`           | token file paths [^1]              | string  | true     | none         | `./prod.json` |
-| `style`           | [token style/format](#token-style) | string  | false    | `handlebars` | `envsubst`    |
-| `filter`          | filter pattern [^2]                | string  | false    | none         | `*.json`      |
-| `exclude`         | exclusion patterns [^3]            | string  | false    | none         | `*dev*.json`  |
-| `recurse`         | recurse directories                | boolean | false    | `false`      | `false`       |
-| `depth`           | depth of recursion                 | number  | false    | none         | `2`           |
-| `follow-symlinks` | follow symbolic links              | boolean | false    | `false`      | `false`       |
-| `throw`           | if no tokens replaced              | boolean | false    | `false`      | `false`       |
-| `encoding`        | [file encoding](#file-encoding)    | string  | false    | `utf8`       | `unicode`     |
-| `no-newline`      | at end-of-file                     | boolean | false    | false        | `true`        |
+| name              | description                        | type    | required | default    | example       |
+| ----------------- | ---------------------------------- | ------- | -------- | ---------- | ------------- |
+| `paths`           | token file paths [^1]              | string  | true     | none       | `./prod.json` |
+| `style`           | [token style/format](#token-style) | string  | false    | `mustache` | `envsubst`    |
+| `filter`          | filter pattern [^2]                | string  | false    | none       | `*.json`      |
+| `exclude`         | exclusion patterns [^3]            | string  | false    | none       | `*dev*.json`  |
+| `recurse`         | recurse directories                | boolean | false    | `false`    | `false`       |
+| `depth`           | depth of recursion                 | number  | false    | none       | `2`           |
+| `follow-symlinks` | follow symbolic links              | boolean | false    | `false`    | `false`       |
+| `throw`           | if no tokens replaced              | boolean | false    | `false`    | `false`       |
+| `encoding`        | [file encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
+| `no-newline`      | at end-of-file                     | boolean | false    | false      | `true`        |
 
 ## Examples
 
 ### Replace tokens in path
 
-Replace **handlebars** styled tokens `{{ NAME }}` in `./path/to/template.json`
+Replace **mustache** styled tokens `{{ NAME }}` in `./path/to/template.json`
 with environment variable `NAME`.
 
 ```yaml
@@ -215,11 +215,11 @@ steps:
 
 Tokens must be in one of following formats to be replaced:
 
-| name                   | style          | examples                   |
-| ---------------------- | -------------- | -------------------------- |
-| `handlebars` (default) | `{{VARIABLE}}` | `{{TOKEN}}`, `{{ TOKEN }}` |
-| `envsubst`             | `${VARIABLE}`  | `${TOKEN}`                 |
-| `make`                 | `$(VARIABLE)`  | `$(TOKEN)`                 |
+| name                 | style            | examples                   |
+| -------------------- | ---------------- | -------------------------- |
+| `mustache` (default) | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+| `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
+| `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
 
 Where `VARIABLE` has a matching environment variable name whose value will be
 used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).

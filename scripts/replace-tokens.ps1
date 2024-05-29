@@ -7,7 +7,7 @@ param (
     [Parameter()]
     [ValidateSet('envsubst', 'handlebars', 'mustache', 'make', ErrorMessage = 'Unknown token style', IgnoreCase = $true)]
     [string]
-    $Style = 'handlebars',
+    $Style = 'mustache',
 
     [Parameter()]
     [string]
@@ -41,7 +41,7 @@ param (
 
 $script:filesReplaced = @()
 
-$handlebarsPattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
+$mustachePattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
 $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
 $makePattern = '\$\(([^)]+)\)' # make pattern, e.g. $(VARIABLE)
 
@@ -60,9 +60,9 @@ switch ($Style)
     }
     { ($_ -eq 'handlebars') -or ($_ -eq 'mustache') }
     {
-        $tokenPattern = $handlebarsPattern; break
+        $tokenPattern = $mustachePattern; break
     }
-    default { $tokenPattern = $handlebarsPattern; break }
+    default { $tokenPattern = $mustachePattern; break }
 }
 
 switch ($Encoding)
