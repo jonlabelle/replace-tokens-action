@@ -35,7 +35,8 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module PSScriptAnalyzer -ErrorAction Stop
+          Install-Module PSScriptAnalyzer
+          Install-Module InjectionHunter
 
       - name: Run PSScriptAnalyzer
         shell: pwsh
@@ -51,3 +52,9 @@ jobs:
           else {
             Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
           }
+
+      - name: Run script Injection Hunter
+        shell: pwsh
+        run: |
+          $rulePath = (Get-Module -list InjectionHunter).Path
+          Invoke-ScriptAnalyzer -CustomRulePath $rulePath -Path . -Recurse
