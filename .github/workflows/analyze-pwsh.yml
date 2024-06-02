@@ -31,7 +31,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@main
 
-      - name: Install PSScriptAnalyzer
+      - name: Install modules
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
@@ -53,7 +53,7 @@ jobs:
             Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
           }
 
-      - name: Run script Injection Hunter
+      - name: Run InjectionHunter
         shell: pwsh
         run: |
           $rulePath = (Get-Module -list InjectionHunter).Path
