@@ -243,5 +243,7 @@ The default file encoding for read/write operations is set to `utf8`, _without_ 
 [MIT](LICENSE)
 
 [^1]: A path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
+
 [^2]: `filter` only supports `*` and `?` wildcards.
+
 [^3]: One or more string items or patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.
