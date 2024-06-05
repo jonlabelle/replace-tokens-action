@@ -4,8 +4,15 @@ _NAME
 ${.NAME}
 ${ NAME }
 ${NAME
+}
 NAME}
 {NAME}}
+{{  }}
+${}
+}}
+{{
+{{ NAME
+}}
 {{NAME}
 {NAME}
 {{ _NAME }}
