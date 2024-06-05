@@ -41,7 +41,8 @@ jobs:
       - name: Run PSScriptAnalyzer
         shell: pwsh
         run: |
-          Invoke-ScriptAnalyzer -Settings PSScriptAnalyzerSettings.psd1 -Path . -Recurse -OutVariable issues
+          $injectionHunterRules = (Get-Module -list InjectionHunter).Path
+          Invoke-ScriptAnalyzer -Settings PSScriptAnalyzerSettings.psd1 -CustomRulePath $injectionHunterRules -Path . -Recurse -OutVariable issues
 
           $errors = $issues.Where({$_.Severity -eq 'Error'})
           $warnings = $issues.Where({$_.Severity -eq 'Warning'})
@@ -52,9 +53,3 @@ jobs:
           else {
             Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
           }
-
-      - name: Run InjectionHunter
-        shell: pwsh
-        run: |
-          $rulePath = (Get-Module -list InjectionHunter).Path
-          Invoke-ScriptAnalyzer -CustomRulePath $rulePath -Path . -Recurse
