@@ -39,7 +39,7 @@ param (
     $Exclude
 )
 
-$script:filesReplaced = @()
+$script:filesReplaced = New-Object System.Collections.Generic.HashSet[string]
 
 $mustachePattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
 $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
@@ -77,7 +77,6 @@ switch ($Encoding)
 function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline)
 {
     $contentModified = $false
-
     $content = Get-Content -Path $File -Raw -Encoding $FileEncoding
     $matched = [Regex]::Matches($content, $Pattern)
 
@@ -89,16 +88,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
         if (-not ([string]::IsNullOrWhiteSpace($replacement)))
         {
             $content = $content.Replace($match.Value, $replacement)
-
-            if ($contentModified -eq $false)
-            {
-                # Only add to the replaced file list once
-                if (-not ($script:filesReplaced.Contains($File)))
-                {
-                    $script:filesReplaced += $File
-                }
-            }
-
+            $script:filesReplaced.Add($File) | Out-Null
             $contentModified = $true
         }
     }
