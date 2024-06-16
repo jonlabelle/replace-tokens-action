@@ -106,6 +106,7 @@ obj
 # tests
 /test/subject.tpl
 scratch.*
+*.sarif
 
 # IDEs
 .idea
