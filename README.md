@@ -39,6 +39,9 @@ steps:
       NAME: jon
 ```
 
+> [!NOTE]  
+> To avoid issues, it's good practice to treat environment variables as case sensitive, irrespective of the behavior of the operating system and shell you are using.
+
 ### Using a path filter
 
 Search and replace all tokens in `*.json` files found in the `./path/to/search` directory.
