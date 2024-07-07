@@ -95,7 +95,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
 
     if ($contentModified)
     {
-        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline
+        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force
     }
 }
 
