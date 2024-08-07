@@ -83,13 +83,23 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
     foreach ($match in $matched)
     {
         $varName = $match.Groups[1].Value
-        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
 
+        if (([string]::IsNullOrWhiteSpace($varName)) -eq $true -or (Test-Path -LiteralPath "Env:$varName") -eq $false)
+        {
+            Write-Verbose ('Found a token that does not have a matching environment variable: {0}. Skipping.' -f $varName) -Verbose:$true
+            continue
+        }
+
+        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
         if (-not ([string]::IsNullOrWhiteSpace($replacement)))
         {
             $content = $content.Replace($match.Value, $replacement)
             $script:filesReplaced.Add($File) | Out-Null
             $contentModified = $true
+        }
+        else
+        {
+            Write-Verbose ('Token value is empty: {0}. Skipping.' -f $varName) -Verbose:$true
         }
     }
 
