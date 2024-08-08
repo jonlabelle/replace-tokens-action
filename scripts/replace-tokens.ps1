@@ -85,7 +85,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
         $varName = $match.Groups[1].Value
         if (([string]::IsNullOrWhiteSpace($varName)) -eq $true -or (Test-Path -LiteralPath "Env:$varName") -eq $false)
         {
-            Write-Warning ('Token does not have matching environment variable: ''{0}''' -f $varName) -ErrorAction Continue
+            Write-Warning ('Token does not have matching environment variable: {0}' -f $varName) -ErrorAction Continue
             continue
         }
 
@@ -98,7 +98,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
         }
         else
         {
-            Write-Warning ('Token value is empty: ''{0}''' -f $varName) -ErrorAction Continue
+            Write-Warning ('Token value is empty: {0}' -f $varName) -ErrorAction Continue
         }
     }
 
