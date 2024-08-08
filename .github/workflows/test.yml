@@ -63,7 +63,7 @@ jobs:
             ${{ steps.test-setup.outputs.subject-path }}
             ${{ steps.test-setup.outputs.untouched-path }}
           style: ${{ matrix.style }}
-          throw: true
+          fail: true
           no-newline: true
         env:
           NAME: jon

@@ -76,8 +76,8 @@ inputs:
     required: false
     default: 'false'
 
-  throw:
-    description: Throw an error if no tokens were replaced.
+  fail:
+    description: Fail the step if no tokens were replaced.
     required: false
     default: 'false'
 
@@ -106,9 +106,9 @@ runs:
         $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')
         $result = (& $scriptPath @params)
 
-        $throw = [bool]'${{ inputs.throw }}'
-        if (($throw -eq $true) -and ($result.Count -eq 0)) {
-          echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and have defined appropriate tokens that can be replaced."
+        $fail = [bool]'${{ inputs.fail }}'
+        if (($fail -eq $true) -and ($result.Count -eq 0)) {
+          echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace."
           exit 1
         }
 

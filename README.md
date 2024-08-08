@@ -18,7 +18,7 @@ See [action.yml](action.yml)
 | `recurse`         | recurse directories                | boolean | false    | `false`    | `false`       |
 | `depth`           | depth of recursion                 | number  | false    | none       | `2`           |
 | `follow-symlinks` | follow symbolic links              | boolean | false    | `false`    | `false`       |
-| `throw`           | if no tokens replaced              | boolean | false    | `false`    | `false`       |
+| `fail`            | if no tokens replaced              | boolean | false    | `false`    | `false`       |
 | `encoding`        | [file encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
 | `no-newline`      | at end-of-file                     | boolean | false    | false      | `true`        |
 
@@ -164,23 +164,22 @@ steps:
 
 ### Fail on no-op
 
-Fail if no tokens were replaced.
+Fail the step if no tokens were replaced.
 
 ```yaml
 steps:
-  - name: Throw an error if no tokens were replaced
+  - name: Fail if no tokens were replaced
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
-      throw: true
+      fail: true
     env:
       NAME: jon
 ```
 
 > [!NOTE]  
-> Tokens defined in files that don't have matching environment variables will
-> be written to error log output. Example: `Cannot find path 'Env:<MISSING_VARIABLE>' because it does not exist`.
+> A warning will be printed to console output if a token doesn't have a matching environment variable.
 
 ### Custom file encoding
 
