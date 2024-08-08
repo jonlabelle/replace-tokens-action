@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.21.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.20.0...v1.21.0) (2024-08-08)
+
+
+### Features
+
+* rename throw option, to fail ([1a02807](https://github.com/jonlabelle/replace-tokens-action/commit/1a02807b54ae5c39787e33c6c6c759cc3fbe535d))
+
 # [1.20.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.19.0...v1.20.0) (2024-08-08)
 
 
