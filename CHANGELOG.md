@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.18.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.17.0...v1.18.0) (2024-08-08)
+
+
+### Features
+
+* use warnings instead of verbose ([0216488](https://github.com/jonlabelle/replace-tokens-action/commit/021648838e5da8a79a98bef26f56fe55bee1c6c5))
+
 # [1.17.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.16.0...v1.17.0) (2024-08-07)
 
 
