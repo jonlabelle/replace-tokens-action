@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.19.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.18.0...v1.19.0) (2024-08-08)
+
+
+### Features
+
+* remove skipping verbiage ([bda339b](https://github.com/jonlabelle/replace-tokens-action/commit/bda339babf139a0c551a073bd16680adc4565248))
+
 # [1.18.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.17.0...v1.18.0) (2024-08-08)
 
 
