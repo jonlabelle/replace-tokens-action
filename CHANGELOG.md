@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.20.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.19.0...v1.20.0) (2024-08-08)
+
+
+### Features
+
+* remove extra quotes ([bdc6258](https://github.com/jonlabelle/replace-tokens-action/commit/bdc62581359d31b2cd096c25056c5bb9600e703f))
+
 # [1.19.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.18.0...v1.19.0) (2024-08-08)
 
 
