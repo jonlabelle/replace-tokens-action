@@ -77,7 +77,7 @@ switch ($Encoding)
 function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline)
 {
     $contentModified = $false
-    $content = Get-Content -Path $File -Raw -Encoding $FileEncoding
+    $content = Get-Content -Path $File -Raw -Encoding $FileEncoding -ErrorAction Stop
     $matched = [Regex]::Matches($content, $Pattern)
 
     foreach ($match in $matched)
@@ -104,7 +104,7 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
 
     if ($contentModified)
     {
-        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force
+        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
     }
 }
 

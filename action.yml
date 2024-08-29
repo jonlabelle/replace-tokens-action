@@ -105,6 +105,10 @@ runs:
 
         $scriptPath = (Join-Path '${{ github.action_path }}' 'scripts' 'replace-tokens.ps1')
         $result = (& $scriptPath @params)
+        if ($? -eq $false) {
+          echo "::error title=✘ Failed::Review console output for errors"
+          exit 1
+        }
 
         $fail = [bool]'${{ inputs.fail }}'
         if (($fail -eq $true) -and ($result.Count -eq 0)) {
