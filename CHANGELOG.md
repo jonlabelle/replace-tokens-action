@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.0...v1.21.1) (2024-08-29)
+
+
+### Bug Fixes
+
+* fail fast if ps1 script has errors ([7687a2f](https://github.com/jonlabelle/replace-tokens-action/commit/7687a2f6babbc54e3bff9098c6f966f138af6548))
+
 # [1.21.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.20.0...v1.21.0) (2024-08-08)
 
 ### Features
