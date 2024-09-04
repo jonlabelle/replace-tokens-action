@@ -94,7 +94,7 @@ runs:
         $params = @{
           Path = $paths
           Filter = '${{ inputs.filter }}'
-          Recurse = '${{ inputs.recurse }}'
+          Recurse = [System.Convert]::ToBoolean('${{ inputs.recurse }}')
           Depth = [System.Convert]::ToInt32('${{ inputs.depth }}')
           FollowSymlinks = [System.Convert]::ToBoolean('${{ inputs.follow-symlinks }}')
           Style = '${{ inputs.style }}'
