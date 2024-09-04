@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.1...v1.21.2) (2024-09-04)
+
+
+### Bug Fixes
+
+* proper input type conversions ([9f17f4b](https://github.com/jonlabelle/replace-tokens-action/commit/9f17f4ba082131407d691de566139441d53b9697))
+
 ## [1.21.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.0...v1.21.1) (2024-08-29)
 
 
