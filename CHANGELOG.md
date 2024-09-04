@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.3](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.2...v1.21.3) (2024-09-04)
+
+
+### Bug Fixes
+
+* fix recurse type cast ([745fa69](https://github.com/jonlabelle/replace-tokens-action/commit/745fa691628c04856f0d1bd953ddd75871679529))
+
 ## [1.21.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.1...v1.21.2) (2024-09-04)
 
 
