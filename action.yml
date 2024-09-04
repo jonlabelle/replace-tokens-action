@@ -94,12 +94,12 @@ runs:
         $params = @{
           Path = $paths
           Filter = '${{ inputs.filter }}'
-          Recurse = [bool]'${{ inputs.recurse }}'
-          Depth = [int]'${{ inputs.depth }}'
-          FollowSymlinks = [bool]'${{ inputs.follow-symlinks }}'
+          Recurse = '${{ inputs.recurse }}'
+          Depth = [System.Convert]::ToInt32('${{ inputs.depth }}')
+          FollowSymlinks = [System.Convert]::ToBoolean('${{ inputs.follow-symlinks }}')
           Style = '${{ inputs.style }}'
           Encoding = '${{ inputs.encoding }}'
-          NoNewline = [bool]'${{ inputs.no-newline }}'
+          NoNewline = [System.Convert]::ToBoolean('${{ inputs.no-newline }}')
           Exclude = $exclude
         }
 
@@ -110,7 +110,7 @@ runs:
           exit 1
         }
 
-        $fail = [bool]'${{ inputs.fail }}'
+        $fail = [System.Convert]::ToBoolean('${{ inputs.fail }}')
         if (($fail -eq $true) -and ($result.Count -eq 0)) {
           echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace."
           exit 1
