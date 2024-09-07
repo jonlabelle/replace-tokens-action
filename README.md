@@ -1,9 +1,27 @@
-# Replace tokens action
+# Replace Tokens Action
 
 [![test](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml)
 [![latest release](https://img.shields.io/github/v/tag/jonlabelle/replace-tokens-action.svg?label=version&sort=semver)](https://github.com/jonlabelle/replace-tokens-action/releases)
 
 > A GitHub action to replace tokens in a file, similar to envsubst.
+
+## Table of contents
+
+- [Usage](#usage)
+- [Examples](#examples)
+  - [Replace tokens in path](#replace-tokens-in-path)
+  - [Using a path filter](#using-a-path-filter)
+  - [Search multiple paths](#search-multiple-paths)
+  - [Replace envsubst and make styled tokens](#replace-envsubst-and-make-styled-tokens)
+  - [Search paths recursively](#search-paths-recursively)
+  - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
+  - [Exclude items and patterns](#exclude-items-and-patterns)
+  - [Fail on no-op](#fail-on-no-op)
+  - [Custom file encoding](#custom-file-encoding)
+  - [No Newline at eof](#no-newline-at-eof)
+- [Token style](#token-style)
+- [File encoding](#file-encoding)
+- [License](#license)
 
 ## Usage
 
@@ -11,16 +29,16 @@ See [action.yml](action.yml)
 
 | name              | description                        | type    | required | default    | example       |
 | ----------------- | ---------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`           | token file paths [^1]              | string  | true     | none       | `./prod.json` |
-| `style`           | [token style/format](#token-style) | string  | false    | `mustache` | `envsubst`    |
-| `filter`          | filter pattern [^2]                | string  | false    | none       | `*.json`      |
-| `exclude`         | exclusion patterns [^3]            | string  | false    | none       | `*dev*.json`  |
-| `recurse`         | recurse directories                | boolean | false    | `false`    | `false`       |
-| `depth`           | depth of recursion                 | number  | false    | none       | `2`           |
-| `follow-symlinks` | follow symbolic links              | boolean | false    | `false`    | `false`       |
-| `fail`            | if no tokens replaced              | boolean | false    | `false`    | `false`       |
-| `encoding`        | [file encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
-| `no-newline`      | at end-of-file                     | boolean | false    | false      | `true`        |
+| `paths`           | Token file paths [^1]              | string  | true     | none       | `./prod.json` |
+| `style`           | [Token style/format](#token-style) | string  | false    | `mustache` | `envsubst`    |
+| `filter`          | Filter pattern [^2]                | string  | false    | none       | `*.json`      |
+| `exclude`         | Exclusion patterns [^3]            | string  | false    | none       | `*dev*.json`  |
+| `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`       |
+| `depth`           | Depth of recursion                 | number  | false    | none       | `2`           |
+| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`       |
+| `fail`            | Fail if no tokens replaced         | boolean | false    | `false`    | `false`       |
+| `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
+| `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
 
 ## Examples
 
