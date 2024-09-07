@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.22.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.3...v1.22.0) (2024-09-07)
+
+
+### Features
+
+* internal improvements ([2bdde60](https://github.com/jonlabelle/replace-tokens-action/commit/2bdde60ad56c505a23049715348d8f7079a16567))
+
 ## [1.21.3](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.2...v1.21.3) (2024-09-04)
 
 
