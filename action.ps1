@@ -64,37 +64,45 @@ $fileEncoding = switch ($Encoding)
     default { $Encoding }
 }
 
+$fileEncoding = switch ($Encoding.ToLower())
+{
+    'utf8' { 'utf8NoBOM' }
+    'utf-8' { 'utf8NoBOM' }
+    'utf8nobom' { 'utf8NoBOM' }
+    'utf8bom' { 'utf8BOM' }
+    default { $Encoding }
+}
+
 # Function to replace tokens in a file
 function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline)
 {
-    $contentModified = $false
     $content = Get-Content -Path $File -Raw -Encoding $FileEncoding -ErrorAction Stop
-    $matched = [Regex]::Matches($content, $Pattern)
+    $originalContent = $content
 
-    foreach ($match in $matched)
+    # Replace tokens using a regex evaluator
+    $content = [Regex]::Replace($content, $Pattern, {
+            param ($match)
+            $varName = $match.Groups[1].Value
+
+            if (-not (Test-Path -LiteralPath "Env:$varName"))
+            {
+                Write-Warning "Token does not have a matching environment variable: $varName"
+                return $match.Value
+            }
+
+            $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
+            if ([string]::IsNullOrWhiteSpace($replacement))
+            {
+                Write-Warning "Token value is empty: $varName"
+                return $match.Value
+            }
+
+            return $replacement
+        })
+
+    if ($content -ne $originalContent)
     {
-        $varName = $match.Groups[1].Value
-        if ([string]::IsNullOrWhiteSpace($varName) -or -not (Test-Path -LiteralPath "Env:$varName"))
-        {
-            Write-Warning "Token does not have matching environment variable: $varName"
-            continue
-        }
-
-        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
-        if (-not [string]::IsNullOrWhiteSpace($replacement))
-        {
-            $content = $content.Replace($match.Value, $replacement)
-            $script:filesReplaced.Add($File) | Out-Null
-            $contentModified = $true
-        }
-        else
-        {
-            Write-Warning "Token value is empty: $varName"
-        }
-    }
-
-    if ($contentModified)
-    {
+        $script:filesReplaced.Add($File) | Out-Null
         Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
     }
 }
@@ -113,7 +121,7 @@ if ($FollowSymlinks) { $params.Add('FollowSymlink', $true) }
 if ($Exclude) { $params.Add('Exclude', $Exclude) }
 
 # Get files to process
-$files = Get-ChildItem @params
+$files = Get-ChildItem @params | Where-Object { -not $_.PSIsContainer }
 
 # Process each file
 foreach ($file in $files)
