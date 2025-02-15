@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.23.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.22.0...v1.23.0) (2025-02-15)
+
+
+### Features
+
+* improve token replacement ([#5](https://github.com/jonlabelle/replace-tokens-action/issues/5)) ([5a06cd4](https://github.com/jonlabelle/replace-tokens-action/commit/5a06cd404d71b646ca256852cc70cac9a3e61110))
+
 # [1.22.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.21.3...v1.22.0) (2024-09-07)
 
 
