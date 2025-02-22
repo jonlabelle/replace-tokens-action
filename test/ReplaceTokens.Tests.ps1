@@ -76,4 +76,49 @@ Describe 'ReplaceTokens Function' {
         # Assert
         $result | Should -Be 'Encoding Test'
     }
+
+    It 'Replaces tokens with envsubst style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'test6.txt'
+        Set-Content -Path $testFile -Value 'Hello, ${NAME}!' -Encoding utf8NoBOM -NoNewline
+
+        $env:NAME = 'Bob'
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Bob!'
+    }
+
+    It 'Replaces tokens with make style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'test7.txt'
+        Set-Content -Path $testFile -Value 'Hello, $(NAME)!' -Encoding utf8NoBOM -NoNewline
+
+        $env:NAME = 'Charlie'
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Charlie!'
+    }
+
+    It 'Does not replace tokens if file is excluded' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'test8.txt'
+        Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding utf8NoBOM -NoNewline
+
+        $env:NAME = 'Dave'
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -Exclude 'test8.txt'
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, {{NAME}}!' # Token remains unchanged
+    }
 }
