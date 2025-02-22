@@ -114,5 +114,6 @@ jobs:
       - name: Run Pester Tests
         shell: pwsh
         run: |
-          $testPath = (Join-Path -Path "$env:GITHUB_WORKSPACE" -ChildPath 'test')
-          Invoke-Pester -Path (Join-Path -Path $testPath -ChildPath 'ReplaceTokens.Tests.ps1') -Output Detailed
+          # $testPath = (Join-Path -Path "$env:GITHUB_WORKSPACE" -ChildPath 'test')
+          # Invoke-Pester -Path (Join-Path -Path $testPath -ChildPath 'ReplaceTokens.Tests.ps1') -Output Detailed
+          ./test/ReplaceTokens.Tests.ps1
