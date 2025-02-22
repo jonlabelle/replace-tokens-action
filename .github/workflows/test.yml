@@ -32,12 +32,12 @@ jobs:
         run: |
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
           $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
-          $prestine = (Join-Path $pwd test stubs prestine ${{ matrix.style }}.tpl)
+          $pristine = (Join-Path $pwd test stubs pristine ${{ matrix.style }}.tpl)
 
           $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
           $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
 
-          Copy-Item -Path $prestine -Destination $subject
+          Copy-Item -Path $pristine -Destination $subject
 
           Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
           Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
