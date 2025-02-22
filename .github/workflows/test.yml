@@ -107,6 +107,7 @@ jobs:
 
   pester:
     runs-on: ubuntu-latest
+    name: Pester tests
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
