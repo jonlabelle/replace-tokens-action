@@ -32,7 +32,7 @@ jobs:
         run: |
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
           $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
-          $pristine = (Join-Path $pwd test stubs pristine ${{ matrix.style }}.tpl)
+          $pristine = (Join-Path $pwd test stubs $pristine ${{ matrix.style }}.tpl)
 
           $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
           $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
