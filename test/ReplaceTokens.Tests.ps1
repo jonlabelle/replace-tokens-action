@@ -3,7 +3,7 @@
 # Check if Pester is installed, if not, install it
 if (-not (Get-Module -Name Pester -ListAvailable))
 {
-    Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+    Install-Module -Name Pester -Force -SkipPublisherCheck
 }
 
 # Import the script being tested
@@ -20,6 +20,15 @@ Describe 'ReplaceTokens Function' {
     AfterAll {
         # Cleanup test directory
         Remove-Item -Path $testDir -Recurse -Force
+    }
+
+    It 'Checks the script path' {
+        # Act
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
+
+        # Assert
+        $scriptPath | Should -Not -BeNullOrEmpty
+        $scriptPath | Should -BeExactly (Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1')
     }
 
     It 'Replaces tokens when environment variables exist' {
