@@ -113,4 +113,4 @@ jobs:
 
       - name: Run Pester Tests
         shell: pwsh
-        run: Invoke-Pester -Path test/ReplaceTokens.Tests.ps1 -Output Detailed
+        run: ./test/ReplaceTokens.Tests.ps1
