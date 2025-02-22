@@ -121,4 +121,16 @@ Describe 'ReplaceTokens Function' {
         # Assert
         $result | Should -Be 'Hello, {{NAME}}!' # Token remains unchanged
     }
+
+    It 'Fails the step if no tokens were replaced and fail is true' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'test9.txt'
+        Set-Content -Path $testFile -Value 'No tokens here!' -Encoding utf8NoBOM -NoNewline
+
+        # Act
+        $result = & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 0 # No tokens were replaced
+    }
 }
