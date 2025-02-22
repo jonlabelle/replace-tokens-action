@@ -22,15 +22,6 @@ Describe 'ReplaceTokens Function' {
         Remove-Item -Path $testDir -Recurse -Force
     }
 
-    It 'Checks the script path' {
-        # Act
-        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
-
-        # Assert
-        $scriptPath | Should -Not -BeNullOrEmpty
-        $scriptPath | Should -BeExactly (Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1')
-    }
-
     It 'Replaces tokens when environment variables exist' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'test1.txt'
