@@ -49,12 +49,13 @@ $envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
 $makePattern = '\$\(([^)]+)\)' # make pattern, e.g. $(VARIABLE)
 
 # Determine the token pattern based on the style
-$tokenPattern = switch ($Style)
+$tokenPattern = switch ($Style.ToLower())
 {
+    'mustache' { $mustachePattern }
+    'handlebars' { $mustachePattern }
     'envsubst' { $envsubstPattern }
     'make' { $makePattern }
-    { ($_ -eq 'handlebars') -or ($_ -eq 'mustache') } { $mustachePattern }
-    default { $mustachePattern }
+    default { throw "Unknown token style: $Style" }
 }
 
 # Normalize utf8 (no bom) encoding
