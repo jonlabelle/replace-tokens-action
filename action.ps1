@@ -57,19 +57,12 @@ $tokenPattern = switch ($Style)
     default { $mustachePattern }
 }
 
-# Determine the file encoding
-$fileEncoding = switch ($Encoding)
-{
-    { ($_ -eq 'utf8') -or ($_ -eq 'utf-8') -or ($_ -eq 'utf8NoBOM') } { 'utf8NoBOM' }
-    default { $Encoding }
-}
-
+# Normalize utf8 (no bom) encoding
 $fileEncoding = switch ($Encoding.ToLower())
 {
     'utf8' { 'utf8NoBOM' }
     'utf-8' { 'utf8NoBOM' }
     'utf8nobom' { 'utf8NoBOM' }
-    'utf8bom' { 'utf8BOM' }
     default { $Encoding }
 }
 
