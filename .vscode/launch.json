@@ -6,24 +6,38 @@
 
   "configurations": [
     {
-      "name": "pwsh: Run PSScriptAnalyzer",
+      "name": "Run PSScriptAnalyzer",
       "type": "PowerShell",
       "request": "launch",
-      "script": "Invoke-ScriptAnalyzer -Settings PSScriptAnalyzerSettings.psd1 -Recurse -Path .",
+      "script": "Invoke-ScriptAnalyzer -Settings PSScriptAnalyzerSettings.psd1 -Recurse -Path . -OutVariable issues -ReportSummary -Severity Error,Warning,Information; $issues | Format-List *",
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "pwsh: Run current file",
+      "name": "Run PSScriptAnalyzer Fix",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "Invoke-ScriptAnalyzer -Settings PSScriptAnalyzerSettings.psd1 -Recurse -Path . -Fix",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run current file",
       "type": "PowerShell",
       "request": "launch",
       "script": "${file}",
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "Run Pester tests",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": ".${pathSeparator}test${pathSeparator}ReplaceTokens.Tests.ps1",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       // Run this launch config and then set breakpoints in your module.
       // Then you can `Import-Module -Force ./DailyBackup.psd1`
       // and run a function that will hit the breakpoint.
-      "name": "pwsh: Interactive session",
+      "name": "Interactive session",
       "type": "PowerShell",
       "request": "launch",
       "cwd": ""

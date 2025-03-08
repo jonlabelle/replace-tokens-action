@@ -43,10 +43,10 @@ param (
 # Initialize a set to keep track of replaced files
 $script:filesReplaced = New-Object System.Collections.Generic.HashSet[string]
 
-# Define token patterns
-$mustachePattern = '\{\{\s*([^}\s]+)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
-$envsubstPattern = '\$\{([^}]+)\}' # envsubst template pattern, e.g. ${VARIABLE}
-$makePattern = '\$\(([^)]+)\)' # make pattern, e.g. $(VARIABLE)
+# Define token patterns with validation for environment variable names
+$mustachePattern = '\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
+$envsubstPattern = '\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}' # envsubst template pattern, e.g. ${VARIABLE}
+$makePattern = '\$\(([a-zA-Z_][a-zA-Z0-9_]*)\)' # make pattern, e.g. $(VARIABLE)
 
 # Determine the token pattern based on the style
 $tokenPattern = switch ($Style.ToLower())
@@ -96,8 +96,8 @@ function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding
 
     if ($content -ne $originalContent)
     {
-        $script:filesReplaced.Add($File) | Out-Null
         Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
+        $script:filesReplaced.Add($File) | Out-Null
     }
 }
 

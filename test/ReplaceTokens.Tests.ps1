@@ -133,4 +133,82 @@ Describe 'ReplaceTokens Function' {
         # Assert
         $result.Count | Should -Be 0 # No tokens were replaced
     }
+
+    It 'Only replaces tokens with valid environment variable names (letter start)' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'valid-name.txt'
+        Set-Content -Path $testFile -Value 'Valid: {{VALID_NAME}} - Invalid: {{1INVALID}}' -Encoding utf8NoBOM -NoNewline
+
+        $env:VALID_NAME = 'ValidValue'
+        $env:1INVALID = 'InvalidValue' # Won't be used as it's an invalid env var name
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: ValidValue - Invalid: {{1INVALID}}'
+    }
+
+    It 'Allows environment variable names starting with underscore' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'underscore-name.txt'
+        Set-Content -Path $testFile -Value 'Underscore: {{_TEST_VAR}}' -Encoding utf8NoBOM -NoNewline
+
+        $env:_TEST_VAR = 'UnderscoreValue'
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Underscore: UnderscoreValue'
+    }
+
+    It 'Does not replace tokens with special characters in variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'special-chars.txt'
+        Set-Content -Path $testFile -Value 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}' -Encoding utf8NoBOM -NoNewline
+
+        $env:SPECIAL = 'SpecialValue' # This won't be used
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}'
+    }
+
+    It 'Correctly handles envsubst style with valid/invalid variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style.txt'
+        Set-Content -Path $testFile -Value 'Valid: ${ENV_VAR} - Invalid: ${123VAR}' -Encoding utf8NoBOM -NoNewline
+
+        $env:ENV_VAR = 'EnvValue'
+        $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: EnvValue - Invalid: ${123VAR}'
+    }
+
+    It 'Correctly handles make style with valid/invalid variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'make-style.txt'
+        Set-Content -Path $testFile -Value 'Valid: $(MAKE_VAR) - Invalid: $(MAKE-VAR)' -Encoding utf8NoBOM -NoNewline
+
+        $env:MAKE_VAR = 'MakeValue'
+        $env:MAKE = 'Invalid'  # Won't match the token format
+
+        # Act
+        & $scriptPath -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: MakeValue - Invalid: $(MAKE-VAR)'
+    }
 }
