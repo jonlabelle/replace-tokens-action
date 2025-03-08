@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.26.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.25.0...v1.26.0) (2025-03-08)
+
+
+### Features
+
+* verbose option ([a4bb046](https://github.com/jonlabelle/replace-tokens-action/commit/a4bb046195c5f19a53c28f1e75b421ae1e962c36))
+
 # [1.25.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.24.0...v1.25.0) (2025-03-08)
 
 
