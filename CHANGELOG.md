@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.25.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.24.0...v1.25.0) (2025-03-08)
+
+
+### Features
+
+* improve log messages ([2ab6932](https://github.com/jonlabelle/replace-tokens-action/commit/2ab6932521866d7a4878308591aa6906c49b474e))
+
 # [1.24.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.23.0...v1.24.0) (2025-03-08)
 
 
