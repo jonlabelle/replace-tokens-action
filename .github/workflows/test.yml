@@ -65,6 +65,7 @@ jobs:
           style: ${{ matrix.style }}
           fail: true
           no-newline: true
+          verbose: true
         env:
           NAME: jon
 

@@ -39,6 +39,7 @@ See [action.yml](action.yml)
 | `fail`            | Fail if no tokens replaced         | boolean | false    | `false`    | `false`       |
 | `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
 | `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
+| `verbose`         | Enable verbose output              | boolean | false    | `false`    | `true`        |
 
 ## Examples
 
