@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.24.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.23.0...v1.24.0) (2025-03-08)
+
+
+### Features
+
+* ensure tokens are valid env var names ([dca7b4d](https://github.com/jonlabelle/replace-tokens-action/commit/dca7b4d2bf5842b6d852751f6296a6be05cdb751))
+
 # [1.23.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.22.0...v1.23.0) (2025-02-15)
 
 
