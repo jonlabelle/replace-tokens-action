@@ -7,7 +7,7 @@ if (-not (Get-Module -Name Pester -ListAvailable))
 }
 
 # Import the script being tested
-$scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
+$replaceTokens = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
 
 Describe 'ReplaceTokens Function' {
 
@@ -22,15 +22,15 @@ Describe 'ReplaceTokens Function' {
         Remove-Item -Path $testDir -Recurse -Force
     }
 
-    It 'Replaces tokens when environment variables exist' {
+    It 'Replaces mustache-style tokens when environment variables exist' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test1.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'mustache-style.txt'
         Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding utf8NoBOM -NoNewline
 
         $env:NAME = 'Alice'
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -39,11 +39,11 @@ Describe 'ReplaceTokens Function' {
 
     It 'Does not replace tokens if no matching environment variable exists' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test2.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'missing-env-var.txt'
         Set-Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -Encoding utf8NoBOM -NoNewline
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -52,13 +52,13 @@ Describe 'ReplaceTokens Function' {
 
     It 'Handles empty environment variable values correctly' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test3.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'empty-env-var.txt'
         Set-Content -Path $testFile -Value 'Your ID: {{ID}}' -Encoding utf8NoBOM -NoNewline
 
         $env:ID = ''
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -67,7 +67,7 @@ Describe 'ReplaceTokens Function' {
 
     It 'Applies correct encoding options' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test5.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'encoding-test.txt'
         Set-Content -Path $testFile -Value 'Encoding Test' -Encoding ascii -NoNewline
 
         # Act
@@ -79,13 +79,13 @@ Describe 'ReplaceTokens Function' {
 
     It 'Replaces tokens with envsubst style' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test6.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style-basic.txt'
         Set-Content -Path $testFile -Value 'Hello, ${NAME}!' -Encoding utf8NoBOM -NoNewline
 
         $env:NAME = 'Bob'
 
         # Act
-        & $scriptPath -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -94,13 +94,13 @@ Describe 'ReplaceTokens Function' {
 
     It 'Replaces tokens with make style' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test7.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'make-style-basic.txt'
         Set-Content -Path $testFile -Value 'Hello, $(NAME)!' -Encoding utf8NoBOM -NoNewline
 
         $env:NAME = 'Charlie'
 
         # Act
-        & $scriptPath -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -109,13 +109,13 @@ Describe 'ReplaceTokens Function' {
 
     It 'Does not replace tokens if file is excluded' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test8.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'excluded-file.txt'
         Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding utf8NoBOM -NoNewline
 
         $env:NAME = 'Dave'
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -Exclude 'test8.txt'
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -Exclude 'excluded-file.txt'
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -124,11 +124,11 @@ Describe 'ReplaceTokens Function' {
 
     It 'Fails the step if no tokens were replaced and fail is true' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'test9.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'no-tokens.txt'
         Set-Content -Path $testFile -Value 'No tokens here!' -Encoding utf8NoBOM -NoNewline
 
         # Act
-        $result = & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $result = & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
 
         # Assert
         $result.Count | Should -Be 0 # No tokens were replaced
@@ -143,7 +143,7 @@ Describe 'ReplaceTokens Function' {
         $env:1INVALID = 'InvalidValue' # Won't be used as it's an invalid env var name
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -158,7 +158,7 @@ Describe 'ReplaceTokens Function' {
         $env:_TEST_VAR = 'UnderscoreValue'
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -173,7 +173,7 @@ Describe 'ReplaceTokens Function' {
         $env:SPECIAL = 'SpecialValue' # This won't be used
 
         # Act
-        & $scriptPath -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -189,7 +189,7 @@ Describe 'ReplaceTokens Function' {
         $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
 
         # Act
-        & $scriptPath -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -205,7 +205,7 @@ Describe 'ReplaceTokens Function' {
         $env:MAKE = 'Invalid'  # Won't match the token format
 
         # Act
-        & $scriptPath -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        & $replaceTokens -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
