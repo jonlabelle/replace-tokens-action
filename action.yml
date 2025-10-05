@@ -111,8 +111,10 @@ runs:
           Verbose = [System.Convert]::ToBoolean('${{ inputs.verbose }}')
         }
 
-        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'action.ps1'
-        $result = (& $scriptPath @params)
+        # Import and call the function directly
+        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Expand-TemplateFile.ps1'
+        . $scriptPath
+        $result = Expand-TemplateFile @params
         if ($? -eq $false) {
           echo "::error title=✘ Failed::Review console output for errors"
           exit 1

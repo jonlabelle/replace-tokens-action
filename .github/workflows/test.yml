@@ -15,20 +15,34 @@ on:
 
 jobs:
   test:
-    name: Test ${{ matrix.style }} on ${{ matrix.os }}
+    name: Test ${{ matrix.style }} on ${{ matrix.os }} (${{ matrix.shell }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     strategy:
       fail-fast: false
       matrix:
         style: [mustache, envsubst, make]
         os: [ubuntu-latest, windows-latest, macos-latest]
+        shell: [pwsh]
+        include:
+          # Add PowerShell 5.1 tests on Windows for each style
+          - os: windows-latest
+            style: mustache
+            shell: powershell
+          - os: windows-latest
+            style: envsubst
+            shell: powershell
+          - os: windows-latest
+            style: make
+            shell: powershell
     steps:
       - name: Checkout repository for ${{ matrix.style }} test on ${{ matrix.os }}
         uses: actions/checkout@main
 
       - name: Setup ${{ matrix.style }} test on ${{ matrix.os }}
         id: test-setup
-        shell: pwsh
         run: |
           $expected = (Join-Path $pwd test stubs expected replaced.tpl)
           $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
@@ -74,7 +88,6 @@ jobs:
 
       - name: Assert ${{ matrix.style }} replacement test on ${{ matrix.os }}
         id: assert-replacement
-        shell: pwsh
         run: |
           $expected = "${{ steps.test-setup.outputs.expected-path }}"
           $subject = "${{ steps.test-setup.outputs.subject-path }}"
@@ -94,7 +107,6 @@ jobs:
 
       - name: Assert ${{ matrix.style }} untouched test on ${{ matrix.os }}
         id: assert-untouched
-        shell: pwsh
         run: |
           $expected = "${{ steps.test-setup.outputs.untouched-hash }}"
           $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
@@ -106,13 +118,5 @@ jobs:
             echo "✓ Token untouched test passed"
           }
 
-  pester:
-    runs-on: ubuntu-latest
-    name: Pester tests
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@main
-
       - name: Run Pester Tests
-        shell: pwsh
-        run: ./test/ReplaceTokens.Tests.ps1
+        run: Invoke-Pester -Path ./test/ReplaceTokens.Tests.ps1 -Output Detailed

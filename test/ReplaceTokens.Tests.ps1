@@ -1,4 +1,4 @@
-# Usage: Invoke-Pester -Path ReplaceTokens.Tests.ps1 -Output Detailed
+# Usage: Invoke-Pester -Path ./test/ReplaceTokens.Tests.ps1 -Output Detailed
 
 # Check if Pester is installed, if not, install it
 if (-not (Get-Module -Name Pester -ListAvailable))
@@ -6,12 +6,12 @@ if (-not (Get-Module -Name Pester -ListAvailable))
     Install-Module -Name Pester -Force -SkipPublisherCheck
 }
 
-# Import the script being tested
-$replaceTokens = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
-
-Describe 'ReplaceTokens Function' {
+Describe 'Expand-TemplateFile Function' {
 
     BeforeAll {
+        # Import the function being tested
+        . (Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Expand-TemplateFile.ps1')
+
         # Set up a temporary test directory
         $testDir = Join-Path -Path $PSScriptRoot -ChildPath 'TokenReplaceTest'
         New-Item -Path $testDir -ItemType Directory -Force | Out-Null
@@ -30,7 +30,7 @@ Describe 'ReplaceTokens Function' {
         $env:NAME = 'Alice'
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -43,7 +43,7 @@ Describe 'ReplaceTokens Function' {
         Set-Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -Encoding utf8NoBOM -NoNewline
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -58,7 +58,7 @@ Describe 'ReplaceTokens Function' {
         $env:ID = ''
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -85,7 +85,7 @@ Describe 'ReplaceTokens Function' {
         $env:NAME = 'Bob'
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -100,7 +100,7 @@ Describe 'ReplaceTokens Function' {
         $env:NAME = 'Charlie'
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -115,7 +115,7 @@ Describe 'ReplaceTokens Function' {
         $env:NAME = 'Dave'
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -Exclude 'excluded-file.txt'
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -Exclude 'excluded-file.txt'
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -128,7 +128,7 @@ Describe 'ReplaceTokens Function' {
         Set-Content -Path $testFile -Value 'No tokens here!' -Encoding utf8NoBOM -NoNewline
 
         # Act
-        $result = & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
 
         # Assert
         $result.Count | Should -Be 0 # No tokens were replaced
@@ -143,7 +143,7 @@ Describe 'ReplaceTokens Function' {
         $env:1INVALID = 'InvalidValue' # Won't be used as it's an invalid env var name
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -158,7 +158,7 @@ Describe 'ReplaceTokens Function' {
         $env:_TEST_VAR = 'UnderscoreValue'
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -173,7 +173,7 @@ Describe 'ReplaceTokens Function' {
         $env:SPECIAL = 'SpecialValue' # This won't be used
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -189,7 +189,7 @@ Describe 'ReplaceTokens Function' {
         $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'envsubst' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -205,7 +205,7 @@ Describe 'ReplaceTokens Function' {
         $env:MAKE = 'Invalid'  # Won't match the token format
 
         # Act
-        & $replaceTokens -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'make' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
