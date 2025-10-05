@@ -211,4 +211,65 @@ Describe 'Expand-TemplateFile Function' {
         # Assert
         $result | Should -Be 'Valid: MakeValue - Invalid: $(MAKE-VAR)'
     }
+
+    It 'Ensures utf8 encoding produces no BOM regardless of PowerShell version' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'utf8-no-bom.txt'
+        Set-Content -Path $testFile -Value 'Test {{VAR}} content' -Encoding utf8 -NoNewline
+
+        $env:VAR = 'Replaced'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8' -NoNewline
+
+        # Assert - Check file has no BOM
+        $bytes = [System.IO.File]::ReadAllBytes($testFile)
+        $hasBOM = ($bytes.Length -ge 3) -and ($bytes[0] -eq 0xEF) -and ($bytes[1] -eq 0xBB) -and ($bytes[2] -eq 0xBF)
+        $hasBOM | Should -Be $false -Because 'utf8 should not add BOM'
+
+        # Verify content is correct
+        $result = Get-Content -Path $testFile -Raw
+        $result | Should -Be 'Test Replaced content'
+    }
+
+    It 'Ensures utf8NoBOM encoding produces no BOM regardless of PowerShell version' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'utf8nobom-no-bom.txt'
+        Set-Content -Path $testFile -Value 'Test {{VAR2}} content' -Encoding utf8 -NoNewline
+
+        $env:VAR2 = 'Replaced2'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert - Check file has no BOM
+        $bytes = [System.IO.File]::ReadAllBytes($testFile)
+        $hasBOM = ($bytes.Length -ge 3) -and ($bytes[0] -eq 0xEF) -and ($bytes[1] -eq 0xBB) -and ($bytes[2] -eq 0xBF)
+        $hasBOM | Should -Be $false -Because 'utf8NoBOM should not add BOM'
+
+        # Verify content is correct
+        $result = Get-Content -Path $testFile -Raw
+        $result | Should -Be 'Test Replaced2 content'
+    }
+
+    It 'Ensures utf8BOM encoding produces BOM when explicitly requested' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'utf8-with-bom.txt'
+        Set-Content -Path $testFile -Value 'Test {{VAR3}} content' -Encoding utf8 -NoNewline
+
+        $env:VAR3 = 'Replaced3'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8BOM' -NoNewline
+
+        # Assert - Check file has BOM
+        $bytes = [System.IO.File]::ReadAllBytes($testFile)
+        $hasBOM = ($bytes.Length -ge 3) -and ($bytes[0] -eq 0xEF) -and ($bytes[1] -eq 0xBB) -and ($bytes[2] -eq 0xBF)
+        $hasBOM | Should -Be $true -Because 'utf8BOM should add BOM'
+
+        # Verify content is correct (read without BOM)
+        $result = Get-Content -Path $testFile -Raw
+        $result | Should -Be 'Test Replaced3 content'
+    }
 }
+

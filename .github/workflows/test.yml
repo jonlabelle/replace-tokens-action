@@ -54,10 +54,11 @@ jobs:
 
           Copy-Item -Path $pristine -Destination $subject
 
-          Write-Output "expected-path=$expected" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
-          Write-Output "subject-path=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
-          Write-Output "untouched-path=$untouched" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
-          Write-Output "untouched-hash=$untouchedHash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8NoBOM -Append
+          # Use Add-Content for PowerShell 5.1 compatibility (Out-File utf8NoBOM not available in PS 5.1)
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "expected-path=$expected" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "subject-path=$subject" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "untouched-path=$untouched" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "untouched-hash=$untouchedHash" -Encoding UTF8
 
       - name: Show ${{ matrix.style }} test subject before replacement on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"

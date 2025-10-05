@@ -119,16 +119,21 @@ function Expand-TemplateFile
         }
 
         # Normalize utf8 (no bom) encoding
+        # In PowerShell 5.1, utf8NoBOM is not available, so we need to use a workaround
+        $psVersion = $PSVersionTable.PSVersion.Major
         $fileEncoding = switch ($Encoding.ToLower())
         {
-            'utf8' { 'utf8NoBOM' }
-            'utf-8' { 'utf8NoBOM' }
-            'utf8nobom' { 'utf8NoBOM' }
+            'utf8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
+            'utf-8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
+            'utf8nobom' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
             default { $Encoding }
         }
 
+        # Flag to indicate if we need to manually strip BOM in PS 5.1
+        $stripBOM = ($psVersion -lt 6) -and ($Encoding.ToLower() -in @('utf8', 'utf-8', 'utf8nobom'))
+
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline)
+        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM)
         {
             try
             {
@@ -169,7 +174,23 @@ function Expand-TemplateFile
                 {
                     if (-not $DryRun)
                     {
-                        Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
+                        if ($StripBOM)
+                        {
+                            # For PowerShell 5.1, we need to manually write without BOM
+                            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+                            if ($NoNewline)
+                            {
+                                [System.IO.File]::WriteAllText($File, $content, $utf8NoBom)
+                            }
+                            else
+                            {
+                                [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8NoBom)
+                            }
+                        }
+                        else
+                        {
+                            Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
+                        }
                     }
 
                     $script:filesReplaced.Add($File) | Out-Null
@@ -205,7 +226,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline
+            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM
         }
     }
 
