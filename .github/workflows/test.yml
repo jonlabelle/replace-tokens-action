@@ -98,10 +98,10 @@ jobs:
           $actualContent = Get-Content -Path $subject -Raw
 
           if ($expectedContent -ne $actualContent) {
-            echo "::error title=✘ Token replacement test failed::You probably want to fix this."
+            Write-Host "::error title=FAIL Token replacement test failed::You probably want to fix this."
             exit 1
           } else {
-            echo "✓ Token replacement test passed"
+            Write-Host "PASS: Token replacement test passed"
           }
 
       - name: Show actual result of untouched ${{ matrix.style }} test on ${{ matrix.os }}
@@ -114,10 +114,10 @@ jobs:
           $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
 
           if ($expected -ne $actual) {
-            echo "::error title=✘ Token untouched test failed::You probably want to fix this."
+            Write-Host "::error title=FAIL Token untouched test failed::You probably want to fix this."
             exit 1
           } else {
-            echo "✓ Token untouched test passed"
+            Write-Host "PASS: Token untouched test passed"
           }
 
       - name: Run Pester Tests
