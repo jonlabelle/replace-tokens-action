@@ -1,36 +1,6 @@
 # Changelog
 
-## [1.26.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.26.1...v1.26.2) (2025-10-05)
-
-
-### Bug Fixes
-
-* powershell 5.1 compatibility ([c8f2643](https://github.com/jonlabelle/replace-tokens-action/commit/c8f2643b726e02eb54e5fc276608e5f6e6507eff))
-* unicode testing and PowerShell 5.1 compatibility ([d0d4eb7](https://github.com/jonlabelle/replace-tokens-action/commit/d0d4eb79864273849be41d25c463b6587974fa9b))
-
-## [1.26.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.26.0...v1.26.1) (2025-10-05)
-
-
-### Bug Fixes
-
-* ensure compatibility with PowerShell 5.1 ([67c818d](https://github.com/jonlabelle/replace-tokens-action/commit/67c818d97c78d00f3d52b54bd27913a5d6092079))
-
-# [1.26.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.25.0...v1.26.0) (2025-03-08)
-
-
-### Features
-
-* verbose option ([a4bb046](https://github.com/jonlabelle/replace-tokens-action/commit/a4bb046195c5f19a53c28f1e75b421ae1e962c36))
-
-# [1.25.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.24.0...v1.25.0) (2025-03-08)
-
-
-### Features
-
-* improve log messages ([2ab6932](https://github.com/jonlabelle/replace-tokens-action/commit/2ab6932521866d7a4878308591aa6906c49b474e))
-
 # [1.24.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.23.0...v1.24.0) (2025-03-08)
-
 
 ### Features
 
