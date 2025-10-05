@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.26.0...v1.26.1) (2025-10-05)
+
+
+### Bug Fixes
+
+* ensure compatibility with PowerShell 5.1 ([67c818d](https://github.com/jonlabelle/replace-tokens-action/commit/67c818d97c78d00f3d52b54bd27913a5d6092079))
+
 # [1.26.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.25.0...v1.26.0) (2025-03-08)
 
 
