@@ -44,11 +44,12 @@ jobs:
       - name: Setup ${{ matrix.style }} test on ${{ matrix.os }}
         id: test-setup
         run: |
-          $expected = (Join-Path $pwd test stubs expected replaced.tpl)
-          $subject = (Join-Path $pwd test subject-${{ matrix.style }}.tpl)
-          $pristine = (Join-Path $pwd test stubs pristine ${{ matrix.style }}.tpl)
+          # Use explicit parameter names for PowerShell 5.1 compatibility
+          $expected = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath test) -ChildPath stubs) -ChildPath expected) -ChildPath replaced.tpl
+          $subject = Join-Path -Path (Join-Path -Path $pwd -ChildPath test) -ChildPath subject-${{ matrix.style }}.tpl
+          $pristine = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath test) -ChildPath stubs) -ChildPath pristine) -ChildPath ${{ matrix.style }}.tpl
 
-          $untouched = (Join-Path $pwd test stubs untouched no-matches.tpl)
+          $untouched = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath test) -ChildPath stubs) -ChildPath untouched) -ChildPath no-matches.tpl
           $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
 
           Copy-Item -Path $pristine -Destination $subject
