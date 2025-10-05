@@ -15,6 +15,25 @@ Describe 'Expand-TemplateFile Function' {
         # Set up a temporary test directory
         $testDir = Join-Path -Path $PSScriptRoot -ChildPath 'TokenReplaceTest'
         New-Item -Path $testDir -ItemType Directory -Force | Out-Null
+
+        # Helper function to write UTF-8 without BOM (cross-version compatible)
+        function Set-Utf8Content
+        {
+            param(
+                [string]$Path,
+                [string]$Value,
+                [switch]$NoNewline
+            )
+            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+            if ($NoNewline)
+            {
+                [System.IO.File]::WriteAllText($Path, $Value, $utf8NoBom)
+            }
+            else
+            {
+                [System.IO.File]::WriteAllText($Path, ($Value + [Environment]::NewLine), $utf8NoBom)
+            }
+        }
     }
 
     AfterAll {
@@ -25,7 +44,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces mustache-style tokens when environment variables exist' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'mustache-style.txt'
-        Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
 
         $env:NAME = 'Alice'
 
@@ -40,7 +59,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens if no matching environment variable exists' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'missing-env-var.txt'
-        Set-Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -NoNewline
 
         # Act
         Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
@@ -53,7 +72,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Handles empty environment variable values correctly' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'empty-env-var.txt'
-        Set-Content -Path $testFile -Value 'Your ID: {{ID}}' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Your ID: {{ID}}' -NoNewline
 
         $env:ID = ''
 
@@ -80,7 +99,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with envsubst style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style-basic.txt'
-        Set-Content -Path $testFile -Value 'Hello, ${NAME}!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Hello, ${NAME}!' -NoNewline
 
         $env:NAME = 'Bob'
 
@@ -95,7 +114,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with make style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'make-style-basic.txt'
-        Set-Content -Path $testFile -Value 'Hello, $(NAME)!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Hello, $(NAME)!' -NoNewline
 
         $env:NAME = 'Charlie'
 
@@ -110,7 +129,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens if file is excluded' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'excluded-file.txt'
-        Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
 
         $env:NAME = 'Dave'
 
@@ -125,7 +144,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Fails the step if no tokens were replaced and fail is true' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'no-tokens.txt'
-        Set-Content -Path $testFile -Value 'No tokens here!' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'No tokens here!' -NoNewline
 
         # Act
         $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
@@ -137,7 +156,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Only replaces tokens with valid environment variable names (letter start)' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'valid-name.txt'
-        Set-Content -Path $testFile -Value 'Valid: {{VALID_NAME}} - Invalid: {{1INVALID}}' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Valid: {{VALID_NAME}} - Invalid: {{1INVALID}}' -NoNewline
 
         $env:VALID_NAME = 'ValidValue'
         $env:1INVALID = 'InvalidValue' # Won't be used as it's an invalid env var name
@@ -153,7 +172,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Allows environment variable names starting with underscore' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'underscore-name.txt'
-        Set-Content -Path $testFile -Value 'Underscore: {{_TEST_VAR}}' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Underscore: {{_TEST_VAR}}' -NoNewline
 
         $env:_TEST_VAR = 'UnderscoreValue'
 
@@ -168,7 +187,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens with special characters in variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'special-chars.txt'
-        Set-Content -Path $testFile -Value 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}' -NoNewline
 
         $env:SPECIAL = 'SpecialValue' # This won't be used
 
@@ -183,7 +202,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles envsubst style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style.txt'
-        Set-Content -Path $testFile -Value 'Valid: ${ENV_VAR} - Invalid: ${123VAR}' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Valid: ${ENV_VAR} - Invalid: ${123VAR}' -NoNewline
 
         $env:ENV_VAR = 'EnvValue'
         $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
@@ -199,7 +218,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles make style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'make-style.txt'
-        Set-Content -Path $testFile -Value 'Valid: $(MAKE_VAR) - Invalid: $(MAKE-VAR)' -Encoding utf8NoBOM -NoNewline
+        Set-Utf8Content -Path $testFile -Value 'Valid: $(MAKE_VAR) - Invalid: $(MAKE-VAR)' -NoNewline
 
         $env:MAKE_VAR = 'MakeValue'
         $env:MAKE = 'Invalid'  # Won't match the token format

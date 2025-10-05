@@ -58,7 +58,7 @@ function Expand-TemplateFile
         $Path,
 
         [Parameter(HelpMessage = 'Specify the token style to use')]
-        [ValidateSet('mustache', 'handlebars', 'envsubst', 'make', ErrorMessage = 'Unknown token style', IgnoreCase = $true)]
+        [ValidateSet('mustache', 'handlebars', 'envsubst', 'make', IgnoreCase = $true)]
         [string]
         $Style = 'mustache',
 
@@ -79,7 +79,7 @@ function Expand-TemplateFile
         $FollowSymlinks,
 
         [Parameter(HelpMessage = 'Specify the file encoding')]
-        [ValidateSet('utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', ErrorMessage = 'Unknown encoding', IgnoreCase = $true)]
+        [ValidateSet('utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', IgnoreCase = $true)]
         [string]
         $Encoding = 'utf8',
 
