@@ -118,22 +118,24 @@ function Expand-TemplateFile
             default { throw "Unknown token style: $Style" }
         }
 
-        # Normalize utf8 (no bom) encoding
-        # In PowerShell 5.1, utf8NoBOM is not available, so we need to use a workaround
+        # Normalize encoding for PowerShell version compatibility
+        # In PowerShell 5.1, utf8NoBOM and utf8BOM are not available
         $psVersion = $PSVersionTable.PSVersion.Major
         $fileEncoding = switch ($Encoding.ToLower())
         {
             'utf8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
             'utf-8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
             'utf8nobom' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
+            'utf8bom' { 'utf8' }  # In PS 5.1, utf8 adds BOM; in PS 6+, we'll add BOM manually
             default { $Encoding }
         }
 
-        # Flag to indicate if we need to manually strip BOM in PS 5.1
+        # Flags for manual BOM handling in PS 5.1
         $stripBOM = ($psVersion -lt 6) -and ($Encoding.ToLower() -in @('utf8', 'utf-8', 'utf8nobom'))
+        $addBOM = ($Encoding.ToLower() -eq 'utf8bom')
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM)
+        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
         {
             try
             {
@@ -176,7 +178,7 @@ function Expand-TemplateFile
                     {
                         if ($StripBOM)
                         {
-                            # For PowerShell 5.1, we need to manually write without BOM
+                            # For PowerShell 5.1, manually write without BOM
                             $utf8NoBom = New-Object System.Text.UTF8Encoding $false
                             if ($NoNewline)
                             {
@@ -185,6 +187,19 @@ function Expand-TemplateFile
                             else
                             {
                                 [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8NoBom)
+                            }
+                        }
+                        elseif ($AddBOM)
+                        {
+                            # Manually write with BOM (works in all PS versions)
+                            $utf8WithBom = New-Object System.Text.UTF8Encoding $true
+                            if ($NoNewline)
+                            {
+                                [System.IO.File]::WriteAllText($File, $content, $utf8WithBom)
+                            }
+                            else
+                            {
+                                [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8WithBom)
                             }
                         }
                         else
@@ -226,7 +241,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM
+            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
         }
     }
 
