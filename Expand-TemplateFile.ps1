@@ -121,6 +121,11 @@ function Expand-TemplateFile
         # Pre-compile the regex pattern for better performance
         $CompiledRegex = [Regex]::new($tokenPattern, [System.Text.RegularExpressions.RegexOptions]::Compiled)
 
+        # Cache environment variables for better performance
+        # Avoid repeated Test-Path and Get-Item calls
+        $EnvVars = @{}
+        Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
+
         # Normalize encoding for PowerShell version compatibility
         # In PowerShell 5.1, utf8NoBOM and utf8BOM are not available
         $psVersion = $PSVersionTable.PSVersion.Major
@@ -138,7 +143,7 @@ function Expand-TemplateFile
         $addBOM = ($Encoding.ToLower() -eq 'utf8bom')
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
         {
             try
             {
@@ -152,7 +157,7 @@ function Expand-TemplateFile
                         param ($match)
                         $varName = $match.Groups[1].Value
 
-                        if (-not (Test-Path -LiteralPath "Env:$varName"))
+                        if (-not $EnvironmentVars.ContainsKey($varName))
                         {
                             Write-Warning "[$File] Environment variable '$varName' not found - token will not be replaced"
                             $script:tokensSkipped++
@@ -160,7 +165,7 @@ function Expand-TemplateFile
                             return $match.Value
                         }
 
-                        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
+                        $replacement = $EnvironmentVars[$varName]
                         if ([string]::IsNullOrWhiteSpace($replacement))
                         {
                             Write-Warning "[$File] Environment variable '$varName' exists but has empty value - token will not be replaced"
@@ -244,7 +249,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
         }
     }
 
