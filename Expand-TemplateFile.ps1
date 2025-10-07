@@ -334,7 +334,11 @@ function Expand-TemplateFile
         }
 
         # Return rich objects with file details
-        # Use return instead of Write-Output to ensure output works with -WhatIf on Windows PowerShell 5.1
-        return $script:fileResults
+        # Use WriteObject to ensure output works with -WhatIf on Windows PowerShell 5.1
+        # This bypasses the automatic output suppression that occurs with SupportsShouldProcess
+        if ($script:fileResults.Count -gt 0)
+        {
+            $PSCmdlet.WriteObject($script:fileResults, $true)
+        }
     }
 }
