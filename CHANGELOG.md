@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.28.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.27.0...v1.28.0) (2025-10-07)
+
+
+### Features
+
+* general improvements and optimizations ([#7](https://github.com/jonlabelle/replace-tokens-action/issues/7)) ([01588f7](https://github.com/jonlabelle/replace-tokens-action/commit/01588f79388a81ba1bc54811126acb3ed7e5475c))
+
 # [1.27.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.26.0...v1.27.0) (2025-10-05)
 
 ### Features
