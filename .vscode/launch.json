@@ -30,7 +30,7 @@
       "name": "Run Pester tests",
       "type": "PowerShell",
       "request": "launch",
-      "script": ".${pathSeparator}test${pathSeparator}ReplaceTokens.Tests.ps1",
+      "script": ".${pathSeparator}Tests${pathSeparator}Expand-TemplateFile.Tests.ps1",
       "cwd": "${workspaceFolder}"
     },
     {

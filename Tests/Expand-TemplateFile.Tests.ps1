@@ -1,4 +1,4 @@
-# Usage: Invoke-Pester -Path ./test/ReplaceTokens.Tests.ps1 -Output Detailed
+# Usage: Invoke-Pester -Path ./Tests/Expand-TemplateFile.Tests.ps1 -Output Detailed
 
 # Check if Pester is installed, if not, install it
 if (-not (Get-Module -Name Pester -ListAvailable))

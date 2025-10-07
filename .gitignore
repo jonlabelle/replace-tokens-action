@@ -104,7 +104,7 @@ obj
 *.html
 
 # tests
-/test/subject.tpl
+/Tests/subject.tpl
 scratch.*
 *.sarif
 
@@ -119,4 +119,4 @@ scratch.*
 # !.vscode/settings.json
 # !.vscode/tasks.json
 
-test/TokenReplaceTest/
+Tests/TokenReplaceTest/
