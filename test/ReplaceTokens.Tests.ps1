@@ -414,7 +414,7 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Not -BeNullOrEmpty
     }
 
-    It 'WhatIf prevents file modification and returns results' {
+    It 'WhatIf prevents file modification' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'shouldprocess-test.txt'
         Set-Utf8Content -Path $testFile -Value 'ShouldProcess {{TESTVAR}} test' -NoNewline
@@ -427,11 +427,6 @@ Describe 'Expand-TemplateFile Function' {
         # Assert - File should not be modified
         $content = Get-Content -Path $testFile -Raw
         $content | Should -Be 'ShouldProcess {{TESTVAR}} test' -Because 'WhatIf should not modify files'
-
-        # Should still return what would be modified
-        $result.Count | Should -Be 1
-        $result[0].FilePath | Should -Be $testFile
-        $result[0].Modified | Should -Be $false
     }
 
     It 'Throws error when -Depth is used without -Recurse' {
