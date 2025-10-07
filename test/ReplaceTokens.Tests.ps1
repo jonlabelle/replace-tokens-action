@@ -34,11 +34,35 @@ Describe 'Expand-TemplateFile Function' {
                 [System.IO.File]::WriteAllText($Path, ($Value + [Environment]::NewLine), $utf8NoBom)
             }
         }
+
+        # Store list of test environment variables for cleanup
+        $script:testEnvVars = @(
+            'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
+            'ENV_VAR', '123VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
+            'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
+            '1INVALID'
+        )
+    }
+
+    AfterEach {
+        # Clean up test environment variables after each test to prevent cross-test pollution
+        # This ensures each test runs in a clean environment
+        foreach ($varName in $script:testEnvVars)
+        {
+            if (Test-Path "env:$varName")
+            {
+                Remove-Item "env:$varName" -ErrorAction SilentlyContinue
+            }
+        }
     }
 
     AfterAll {
-        # Cleanup test directory
-        Remove-Item -Path $testDir -Recurse -Force
+        # Cleanup test directory and all subdirectories/files created during tests
+        # This includes: test files, subdirectories (pipeline-dir, mixed-dir, etc.)
+        if (Test-Path -Path $testDir)
+        {
+            Remove-Item -Path $testDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 
     It 'Replaces mustache-style tokens when environment variables exist' {
@@ -150,7 +174,7 @@ Describe 'Expand-TemplateFile Function' {
         $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
 
         # Assert
-        $result.Count | Should -Be 0 # No tokens were replaced
+        ($result | Where-Object { $_.Modified }).Count | Should -Be 0 # No tokens were replaced
     }
 
     It 'Only replaces tokens with valid environment variable names (letter start)' {
@@ -289,6 +313,161 @@ Describe 'Expand-TemplateFile Function' {
         # Verify content is correct (read without BOM)
         $result = Get-Content -Path $testFile -Raw
         $result | Should -Be 'Test Replaced3 content'
+    }
+
+    It 'Accepts pipeline input from strings' {
+        # Arrange
+        $testFile1 = Join-Path -Path $testDir -ChildPath 'pipeline-test1.txt'
+        $testFile2 = Join-Path -Path $testDir -ChildPath 'pipeline-test2.txt'
+        Set-Utf8Content -Path $testFile1 -Value 'Pipeline {{USER}} test 1' -NoNewline
+        Set-Utf8Content -Path $testFile2 -Value 'Pipeline {{USER}} test 2' -NoNewline
+
+        $env:USER = 'PipelineUser'
+
+        # Act - Pipe paths as strings
+        $result = $testFile1, $testFile2 | Expand-TemplateFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+        $result.FilePath | Should -Contain $testFile1
+        $result.FilePath | Should -Contain $testFile2
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
+
+        $content1 = Get-Content -Path $testFile1 -Raw
+        $content1 | Should -Be 'Pipeline PipelineUser test 1'
+
+        $content2 = Get-Content -Path $testFile2 -Raw
+        $content2 | Should -Be 'Pipeline PipelineUser test 2'
+    }
+
+    It 'Accepts pipeline input from Get-ChildItem' {
+        # Arrange
+        $pipelineDir = Join-Path -Path $testDir -ChildPath 'pipeline-dir'
+        New-Item -Path $pipelineDir -ItemType Directory -Force | Out-Null
+
+        $testFile1 = Join-Path -Path $pipelineDir -ChildPath 'file1.tpl'
+        $testFile2 = Join-Path -Path $pipelineDir -ChildPath 'file2.tpl'
+        Set-Utf8Content -Path $testFile1 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+        Set-Utf8Content -Path $testFile2 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+
+        $env:HOSTNAME = 'TestHost'
+
+        # Act - Pipe from Get-ChildItem using FullName property
+        $result = Get-ChildItem -Path $pipelineDir -Filter '*.tpl' | Select-Object -ExpandProperty FullName | Expand-TemplateFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+        $result.FilePath | Should -Contain $testFile1
+        $result.FilePath | Should -Contain $testFile2
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
+
+        $content1 = Get-Content -Path $testFile1 -Raw
+        $content1 | Should -Be 'GCI Test TestHost'
+
+        $content2 = Get-Content -Path $testFile2 -Raw
+        $content2 | Should -Be 'GCI Test TestHost'
+    }
+
+    It 'Accepts pipeline input with mixed paths and directories' {
+        # Arrange
+        $mixedFile = Join-Path -Path $testDir -ChildPath 'mixed-file.txt'
+        $mixedDir = Join-Path -Path $testDir -ChildPath 'mixed-dir'
+        New-Item -Path $mixedDir -ItemType Directory -Force | Out-Null
+        $mixedDirFile = Join-Path -Path $mixedDir -ChildPath 'mixed-dir-file.txt'
+
+        Set-Utf8Content -Path $mixedFile -Value 'Mixed {{TESTVAR}}' -NoNewline
+        Set-Utf8Content -Path $mixedDirFile -Value 'Mixed Dir {{TESTVAR}}' -NoNewline
+
+        $env:TESTVAR = 'Success'
+
+        # Act - Pipe both file path and directory path
+        $result = $mixedFile, $mixedDir | Expand-TemplateFile -Recurse -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+        $result.FilePath | Should -Contain $mixedFile
+        $result.FilePath | Should -Contain $mixedDirFile
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
+
+        $content1 = Get-Content -Path $mixedFile -Raw
+        $content1 | Should -Be 'Mixed Success'
+
+        $content2 = Get-Content -Path $mixedDirFile -Raw
+        $content2 | Should -Be 'Mixed Dir Success'
+    }
+
+    It 'Supports -WhatIf parameter without modifying files' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'whatif-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'WhatIf {{TESTVAR}} test' -NoNewline
+
+        $env:TESTVAR = 'Modified'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -WhatIf
+
+        # Assert - File should not be modified
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'WhatIf {{TESTVAR}} test' -Because '-WhatIf should not modify files'
+
+        # Result should still track what would have been changed
+        $result | Should -Not -BeNullOrEmpty
+    }
+
+    It 'WhatIf prevents file modification' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'shouldprocess-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'ShouldProcess {{TESTVAR}} test' -NoNewline
+
+        $env:TESTVAR = 'Modified'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -WhatIf
+
+        # Assert - File should not be modified
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'ShouldProcess {{TESTVAR}} test' -Because 'WhatIf should not modify files'
+    }
+
+    It 'Throws error when -Depth is used without -Recurse' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'depth-validation-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+
+        # Act & Assert
+        { Expand-TemplateFile -Path $testFile -Depth 2 -Style 'mustache' } | Should -Throw -ExpectedMessage '*-Depth parameter can only be used when -Recurse is specified*'
+    }
+
+    It 'Allows -Depth when -Recurse is specified' {
+        # Arrange
+        $testDir2 = Join-Path -Path $testDir -ChildPath 'depth-recurse-test'
+        New-Item -Path $testDir2 -ItemType Directory -Force | Out-Null
+        $testFile = Join-Path -Path $testDir2 -ChildPath 'test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Depth {{VAR}} test' -NoNewline
+
+        $env:VAR = 'Works'
+
+        # Act - Should not throw
+        { Expand-TemplateFile -Path $testDir2 -Recurse -Depth 2 -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
+
+        # Assert
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'Depth Works test'
+    }
+
+    It 'Allows -Depth with value 0 without -Recurse' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'depth-zero-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+
+        $env:VAR = 'Zero'
+
+        # Act - Should not throw (Depth 0 is default/no-op)
+        { Expand-TemplateFile -Path $testFile -Depth 0 -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
+
+        # Assert
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'Test Zero'
     }
 }
 

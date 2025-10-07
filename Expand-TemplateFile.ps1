@@ -36,23 +36,36 @@ function Expand-TemplateFile
     .PARAMETER Exclude
         Specify files or directories to exclude from processing.
 
-    .PARAMETER DryRun
-        Run in dry-run mode (do not modify files). Shows what would be changed.
-
     .EXAMPLE
         Expand-TemplateFile -Path ./config.template -Style mustache
 
     .EXAMPLE
         Expand-TemplateFile -Path ./templates -Recurse -Filter *.tpl -Style envsubst
 
+    .EXAMPLE
+        './file1.txt', './file2.txt' | Expand-TemplateFile -Style mustache
+
+    .EXAMPLE
+        Get-ChildItem ./templates/*.tpl | Select-Object -ExpandProperty FullName | Expand-TemplateFile -Style envsubst
+
+    .EXAMPLE
+        Expand-TemplateFile -Path ./config.template -WhatIf
+
+    .EXAMPLE
+        Expand-TemplateFile -Path ./templates -Recurse -Filter *.tpl -Style envsubst -WhatIf
+
+    .EXAMPLE
+        Expand-TemplateFile -Path ./src -Recurse -Depth 2 -Filter *.config -Style mustache
+
     .OUTPUTS
-        System.Collections.Generic.HashSet[string]
-        Returns a collection of file paths that were modified.
+        PSCustomObject[]
+        Returns an array of objects with file processing details.
+        Each object contains: FilePath, TokensReplaced, TokensSkipped, Modified
     #>
-    [CmdletBinding()]
-    [OutputType([System.Collections.Generic.HashSet[string]])]
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([PSCustomObject[]])]
     param (
-        [Parameter(Mandatory = $true, HelpMessage = 'Specify the path(s) to process')]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Specify the path(s) to process')]
         [ValidateNotNullOrEmpty()]
         [string[]]
         $Path,
@@ -89,17 +102,19 @@ function Expand-TemplateFile
 
         [Parameter(HelpMessage = 'Specify files or directories to exclude')]
         [string[]]
-        $Exclude,
-
-        [Parameter(HelpMessage = 'Run in dry-run mode (do not modify files)')]
-        [switch]
-        $DryRun
+        $Exclude
     )
 
     begin
     {
+        # Validate that -Depth is only used with -Recurse
+        if ($Depth -gt 0 -and -not $Recurse)
+        {
+            throw 'The -Depth parameter can only be used when -Recurse is specified.'
+        }
+
         # Initialize tracking variables
-        $script:filesReplaced = New-Object System.Collections.Generic.HashSet[string]
+        $script:fileResults = New-Object System.Collections.Generic.List[PSCustomObject]
         $script:tokensReplaced = 0
         $script:tokensSkipped = 0
 
@@ -118,65 +133,114 @@ function Expand-TemplateFile
             default { throw "Unknown token style: $Style" }
         }
 
-        # Normalize encoding for PowerShell version compatibility
-        # In PowerShell 5.1, utf8NoBOM and utf8BOM are not available
-        $psVersion = $PSVersionTable.PSVersion.Major
-        $fileEncoding = switch ($Encoding.ToLower())
+        # Pre-compile the regex pattern for better performance
+        $CompiledRegex = [Regex]::new($tokenPattern, [System.Text.RegularExpressions.RegexOptions]::Compiled)
+
+        # Cache environment variables for better performance
+        # Avoid repeated Test-Path and Get-Item calls
+        $EnvVars = @{}
+        Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
+
+        # Helper function to normalize encoding settings
+        function Get-NormalizedEncoding
         {
-            'utf8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf-8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf8nobom' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf8bom' { 'utf8' }  # In PS 5.1, utf8 adds BOM; in PS 6+, we'll add BOM manually
-            default { $Encoding }
+            param ([string] $EncodingName)
+
+            $psVersion = $PSVersionTable.PSVersion.Major
+            $encodingLower = $EncodingName.ToLower()
+
+            # Create encoding configuration object
+            $config = [PSCustomObject]@{
+                FileEncoding = $EncodingName
+                StripBOM = $false
+                AddBOM = $false
+            }
+
+            # Handle UTF-8 variants based on PowerShell version
+            switch ($encodingLower)
+            {
+                { $_ -in @('utf8', 'utf-8', 'utf8nobom') }
+                {
+                    if ($psVersion -ge 6)
+                    {
+                        $config.FileEncoding = 'utf8NoBOM'
+                    }
+                    else
+                    {
+                        # PS 5.1: utf8 adds BOM, so we need to strip it manually
+                        $config.FileEncoding = 'utf8'
+                        $config.StripBOM = $true
+                    }
+                }
+                'utf8bom'
+                {
+                    if ($psVersion -ge 6)
+                    {
+                        # PS 6+: Manually add BOM
+                        $config.FileEncoding = 'utf8'
+                        $config.AddBOM = $true
+                    }
+                    else
+                    {
+                        # PS 5.1: utf8 encoding adds BOM by default
+                        $config.FileEncoding = 'utf8'
+                    }
+                }
+            }
+
+            return $config
         }
 
-        # Flags for manual BOM handling in PS 5.1
-        $stripBOM = ($psVersion -lt 6) -and ($Encoding.ToLower() -in @('utf8', 'utf-8', 'utf8nobom'))
-        $addBOM = ($Encoding.ToLower() -eq 'utf8bom')
+        # Normalize encoding for PowerShell version compatibility
+        $encodingConfig = Get-NormalizedEncoding -EncodingName $Encoding
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
         {
+            # Use script-scoped variables for per-file counters so they work inside scriptblocks
+            $script:tokensInFile = 0
+            $script:skippedInFile = 0
+
             try
             {
-                $content = Get-Content -Path $File -Raw -Encoding $FileEncoding -ErrorAction Stop
+                $content = Get-Content -Path $File -Raw -Encoding $EncodingConfig.FileEncoding -ErrorAction Stop
                 $originalContent = $content
-                $tokensInFile = 0
-                $skippedInFile = 0
 
-                # Replace tokens using a regex evaluator
-                $content = [Regex]::Replace($content, $Pattern, {
+                # Replace tokens using a regex evaluator with pre-compiled pattern
+                $content = $TokenRegex.Replace($content, {
                         param ($match)
                         $varName = $match.Groups[1].Value
 
-                        if (-not (Test-Path -LiteralPath "Env:$varName"))
+                        if (-not $EnvironmentVars.ContainsKey($varName))
                         {
                             Write-Warning "[$File] Environment variable '$varName' not found - token will not be replaced"
                             $script:tokensSkipped++
-                            $skippedInFile++
+                            $script:skippedInFile++
                             return $match.Value
                         }
 
-                        $replacement = (Get-Item -LiteralPath "Env:$varName" -ErrorAction Continue).Value
+                        $replacement = $EnvironmentVars[$varName]
                         if ([string]::IsNullOrWhiteSpace($replacement))
                         {
                             Write-Warning "[$File] Environment variable '$varName' exists but has empty value - token will not be replaced"
                             $script:tokensSkipped++
-                            $skippedInFile++
+                            $script:skippedInFile++
                             return $match.Value
                         }
 
                         $script:tokensReplaced++
-                        $tokensInFile++
+                        $script:tokensInFile++
 
                         return $replacement
                     })
 
+                $modified = $false
                 if ($content -ne $originalContent)
                 {
-                    if (-not $DryRun)
+                    # Use ShouldProcess for -WhatIf support
+                    if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
-                        if ($StripBOM)
+                        if ($EncodingConfig.StripBOM)
                         {
                             # For PowerShell 5.1, manually write without BOM
                             $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -189,7 +253,7 @@ function Expand-TemplateFile
                                 [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8NoBom)
                             }
                         }
-                        elseif ($AddBOM)
+                        elseif ($EncodingConfig.AddBOM)
                         {
                             # Manually write with BOM (works in all PS versions)
                             $utf8WithBom = New-Object System.Text.UTF8Encoding $true
@@ -204,14 +268,24 @@ function Expand-TemplateFile
                         }
                         else
                         {
-                            Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
+                            Set-Content -Path $File -Value $content -Encoding $EncodingConfig.FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
                         }
+                        $modified = $true
                     }
 
-                    $script:filesReplaced.Add($File) | Out-Null
-
-                    Write-Verbose "[$File] Replaced $tokensInFile token(s) (skipped $skippedInFile)"
+                    Write-Verbose "[$File] Replaced $($script:tokensInFile) token(s) (skipped $($script:skippedInFile))"
                 }
+
+                # Create result object for this file
+                $fileResult = [PSCustomObject]@{
+                    FilePath = $File
+                    TokensReplaced = $script:tokensInFile
+                    TokensSkipped = $script:skippedInFile
+                    Modified = $modified
+                }
+
+                # Add to collection - this is the ONLY way to return data with -WhatIf on Windows PowerShell 5.1
+                $script:fileResults.Add($fileResult)
             }
             catch
             {
@@ -241,22 +315,26 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -EncodingConfig $encodingConfig -NoNewline $NoNewline
         }
     }
 
     end
     {
-        # Output results
-        if ($DryRun)
+        # Count modified files
+        $modifiedCount = ($script:fileResults | Where-Object { $_.Modified }).Count
+
+        # Output summary
+        if ($WhatIfPreference)
         {
-            Write-Information "DRY RUN: Would replace $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)" -InformationAction Continue
+            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
+            Write-Information $message -InformationAction Continue
         }
         else
         {
-            Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)"
+            Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
         }
 
-        Write-Output $script:filesReplaced
+        $script:fileResults
     }
 }

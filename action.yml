@@ -76,6 +76,14 @@ inputs:
     required: false
     default: 'false'
 
+  dry-run:
+    description: >-
+      Run in dry-run mode without modifying files.
+      Shows what changes would be made.
+      The default behavior is to modify files.
+    required: false
+    default: 'false'
+
   fail:
     description: Fail the step if no tokens were replaced.
     required: false
@@ -111,6 +119,12 @@ runs:
           Verbose = [System.Convert]::ToBoolean('${{ inputs.verbose }}')
         }
 
+        # Add WhatIf if dry-run is enabled
+        $dryRun = [System.Convert]::ToBoolean('${{ inputs.dry-run }}')
+        if ($dryRun) {
+          $params.Add('WhatIf', $true)
+        }
+
         # Import and call the function directly
         $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Expand-TemplateFile.ps1'
         . $scriptPath
@@ -121,10 +135,13 @@ runs:
         }
 
         $fail = [System.Convert]::ToBoolean('${{ inputs.fail }}')
-        if (($fail -eq $true) -and ($result.Count -eq 0)) {
+        $modifiedFiles = $result | Where-Object { $_.Modified }
+        if (($fail -eq $true) -and ($modifiedFiles.Count -eq 0)) {
           echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace."
           exit 1
         }
 
         Write-Output -InputObject 'Tokens were replaced in the following file(s):'
-        Write-Output -InputObject $result
+        $result | Where-Object { $_.Modified } | ForEach-Object {
+          Write-Output -InputObject "  $($_.FilePath) - Replaced: $($_.TokensReplaced), Skipped: $($_.TokensSkipped)"
+        }
