@@ -364,5 +364,42 @@ Describe 'Expand-TemplateFile Function' {
         $content2 = Get-Content -Path $mixedDirFile -Raw
         $content2 | Should -Be 'Mixed Dir Success'
     }
+
+    It 'Supports -WhatIf parameter without modifying files' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'whatif-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'WhatIf {{TESTVAR}} test' -NoNewline
+
+        $env:TESTVAR = 'Modified'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -WhatIf
+
+        # Assert - File should not be modified
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'WhatIf {{TESTVAR}} test' -Because '-WhatIf should not modify files'
+
+        # Result should still track what would have been changed
+        $result | Should -Not -BeNullOrEmpty
+    }
+
+    It 'WhatIf prevents file modification and returns results' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'shouldprocess-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'ShouldProcess {{TESTVAR}} test' -NoNewline
+
+        $env:TESTVAR = 'Modified'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -WhatIf
+
+        # Assert - File should not be modified
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'ShouldProcess {{TESTVAR}} test' -Because 'WhatIf should not modify files'
+
+        # Should still return what would be modified
+        $result.Count | Should -Be 1
+        $result.Contains($testFile) | Should -Be $true
+    }
 }
 

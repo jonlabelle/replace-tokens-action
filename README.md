@@ -16,6 +16,7 @@
   - [Search paths recursively](#search-paths-recursively)
   - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
   - [Exclude items and patterns](#exclude-items-and-patterns)
+  - [Preview changes with dry-run](#preview-changes-with-dry-run)
   - [Fail on no-op](#fail-on-no-op)
   - [Custom file encoding](#custom-file-encoding)
   - [No Newline at eof](#no-newline-at-eof)
@@ -36,6 +37,7 @@ See [action.yml](action.yml)
 | `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`       |
 | `depth`           | Depth of recursion                 | number  | false    | none       | `2`           |
 | `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`       |
+| `dry-run`         | Preview changes without modifying  | boolean | false    | `false`    | `true`        |
 | `fail`            | Fail if no tokens replaced         | boolean | false    | `false`    | `false`       |
 | `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
 | `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
@@ -180,6 +182,25 @@ steps:
       API_KEY: ${{ secrets.api-key }}
       API_URL: https://example.net/api
 ```
+
+### Preview changes with dry-run
+
+Preview what changes would be made without actually modifying files.
+
+```yaml
+steps:
+  - name: Preview token replacement without modifying files
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      dry-run: true
+    env:
+      NAME: jon
+```
+
+> [!TIP]
+> Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations.
 
 ### Fail on no-op
 

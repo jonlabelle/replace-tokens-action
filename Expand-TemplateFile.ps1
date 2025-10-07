@@ -36,9 +36,6 @@ function Expand-TemplateFile
     .PARAMETER Exclude
         Specify files or directories to exclude from processing.
 
-    .PARAMETER DryRun
-        Run in dry-run mode (do not modify files). Shows what would be changed.
-
     .EXAMPLE
         Expand-TemplateFile -Path ./config.template -Style mustache
 
@@ -51,11 +48,17 @@ function Expand-TemplateFile
     .EXAMPLE
         Get-ChildItem ./templates/*.tpl | Select-Object -ExpandProperty FullName | Expand-TemplateFile -Style envsubst
 
+    .EXAMPLE
+        Expand-TemplateFile -Path ./config.template -WhatIf
+
+    .EXAMPLE
+        Expand-TemplateFile -Path ./templates -Recurse -Filter *.tpl -Style envsubst -WhatIf
+
     .OUTPUTS
         System.Collections.Generic.HashSet[string]
         Returns a collection of file paths that were modified.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([System.Collections.Generic.HashSet[string]])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Specify the path(s) to process')]
@@ -95,11 +98,7 @@ function Expand-TemplateFile
 
         [Parameter(HelpMessage = 'Specify files or directories to exclude')]
         [string[]]
-        $Exclude,
-
-        [Parameter(HelpMessage = 'Run in dry-run mode (do not modify files)')]
-        [switch]
-        $DryRun
+        $Exclude
     )
 
     begin
@@ -225,7 +224,8 @@ function Expand-TemplateFile
 
                 if ($content -ne $originalContent)
                 {
-                    if (-not $DryRun)
+                    # Use ShouldProcess for -WhatIf support
+                    if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
                         if ($EncodingConfig.StripBOM)
                         {
@@ -299,9 +299,10 @@ function Expand-TemplateFile
     end
     {
         # Output results
-        if ($DryRun)
+        if ($WhatIfPreference)
         {
-            Write-Information "DRY RUN: Would replace $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)" -InformationAction Continue
+            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)"
+            Write-Information $message -InformationAction Continue
         }
         else
         {

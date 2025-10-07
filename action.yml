@@ -76,6 +76,14 @@ inputs:
     required: false
     default: 'false'
 
+  dry-run:
+    description: >-
+      Run in dry-run mode without modifying files.
+      Shows what changes would be made.
+      The default behavior is to modify files.
+    required: false
+    default: 'false'
+
   fail:
     description: Fail the step if no tokens were replaced.
     required: false
@@ -109,6 +117,12 @@ runs:
           NoNewline = [System.Convert]::ToBoolean('${{ inputs.no-newline }}')
           Exclude = $exclude
           Verbose = [System.Convert]::ToBoolean('${{ inputs.verbose }}')
+        }
+
+        # Add WhatIf if dry-run is enabled
+        $dryRun = [System.Convert]::ToBoolean('${{ inputs.dry-run }}')
+        if ($dryRun) {
+          $params.Add('WhatIf', $true)
         }
 
         # Import and call the function directly
