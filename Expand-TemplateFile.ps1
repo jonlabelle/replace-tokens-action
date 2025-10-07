@@ -45,6 +45,12 @@ function Expand-TemplateFile
     .EXAMPLE
         Expand-TemplateFile -Path ./templates -Recurse -Filter *.tpl -Style envsubst
 
+    .EXAMPLE
+        './file1.txt', './file2.txt' | Expand-TemplateFile -Style mustache
+
+    .EXAMPLE
+        Get-ChildItem ./templates/*.tpl | Select-Object -ExpandProperty FullName | Expand-TemplateFile -Style envsubst
+
     .OUTPUTS
         System.Collections.Generic.HashSet[string]
         Returns a collection of file paths that were modified.
@@ -52,7 +58,7 @@ function Expand-TemplateFile
     [CmdletBinding()]
     [OutputType([System.Collections.Generic.HashSet[string]])]
     param (
-        [Parameter(Mandatory = $true, HelpMessage = 'Specify the path(s) to process')]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Specify the path(s) to process')]
         [ValidateNotNullOrEmpty()]
         [string[]]
         $Path,

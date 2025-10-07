@@ -290,5 +290,79 @@ Describe 'Expand-TemplateFile Function' {
         $result = Get-Content -Path $testFile -Raw
         $result | Should -Be 'Test Replaced3 content'
     }
+
+    It 'Accepts pipeline input from strings' {
+        # Arrange
+        $testFile1 = Join-Path -Path $testDir -ChildPath 'pipeline-test1.txt'
+        $testFile2 = Join-Path -Path $testDir -ChildPath 'pipeline-test2.txt'
+        Set-Utf8Content -Path $testFile1 -Value 'Pipeline {{USER}} test 1' -NoNewline
+        Set-Utf8Content -Path $testFile2 -Value 'Pipeline {{USER}} test 2' -NoNewline
+
+        $env:USER = 'PipelineUser'
+
+        # Act - Pipe paths as strings
+        $result = $testFile1, $testFile2 | Expand-TemplateFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+        $result.Contains($testFile1) | Should -Be $true
+        $result.Contains($testFile2) | Should -Be $true
+
+        $content1 = Get-Content -Path $testFile1 -Raw
+        $content1 | Should -Be 'Pipeline PipelineUser test 1'
+
+        $content2 = Get-Content -Path $testFile2 -Raw
+        $content2 | Should -Be 'Pipeline PipelineUser test 2'
+    }
+
+    It 'Accepts pipeline input from Get-ChildItem' {
+        # Arrange
+        $pipelineDir = Join-Path -Path $testDir -ChildPath 'pipeline-dir'
+        New-Item -Path $pipelineDir -ItemType Directory -Force | Out-Null
+
+        $testFile1 = Join-Path -Path $pipelineDir -ChildPath 'file1.tpl'
+        $testFile2 = Join-Path -Path $pipelineDir -ChildPath 'file2.tpl'
+        Set-Utf8Content -Path $testFile1 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+        Set-Utf8Content -Path $testFile2 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+
+        $env:HOSTNAME = 'TestHost'
+
+        # Act - Pipe from Get-ChildItem using FullName property
+        $result = Get-ChildItem -Path $pipelineDir -Filter '*.tpl' | Select-Object -ExpandProperty FullName | Expand-TemplateFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+
+        $content1 = Get-Content -Path $testFile1 -Raw
+        $content1 | Should -Be 'GCI Test TestHost'
+
+        $content2 = Get-Content -Path $testFile2 -Raw
+        $content2 | Should -Be 'GCI Test TestHost'
+    }
+
+    It 'Accepts pipeline input with mixed paths and directories' {
+        # Arrange
+        $mixedFile = Join-Path -Path $testDir -ChildPath 'mixed-file.txt'
+        $mixedDir = Join-Path -Path $testDir -ChildPath 'mixed-dir'
+        New-Item -Path $mixedDir -ItemType Directory -Force | Out-Null
+        $mixedDirFile = Join-Path -Path $mixedDir -ChildPath 'mixed-dir-file.txt'
+
+        Set-Utf8Content -Path $mixedFile -Value 'Mixed {{TESTVAR}}' -NoNewline
+        Set-Utf8Content -Path $mixedDirFile -Value 'Mixed Dir {{TESTVAR}}' -NoNewline
+
+        $env:TESTVAR = 'Success'
+
+        # Act - Pipe both file path and directory path
+        $result = $mixedFile, $mixedDir | Expand-TemplateFile -Recurse -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        $result.Count | Should -Be 2
+
+        $content1 = Get-Content -Path $mixedFile -Raw
+        $content1 | Should -Be 'Mixed Success'
+
+        $content2 = Get-Content -Path $mixedDirFile -Raw
+        $content2 | Should -Be 'Mixed Dir Success'
+    }
 }
 
