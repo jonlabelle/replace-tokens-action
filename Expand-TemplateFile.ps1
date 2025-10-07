@@ -283,6 +283,8 @@ function Expand-TemplateFile
                     TokensSkipped = $script:skippedInFile
                     Modified = $modified
                 }
+
+                # Add to collection - this is the ONLY way to return data with -WhatIf on Windows PowerShell 5.1
                 $script:fileResults.Add($fileResult)
             }
             catch
@@ -322,7 +324,7 @@ function Expand-TemplateFile
         # Count modified files
         $modifiedCount = ($script:fileResults | Where-Object { $_.Modified }).Count
 
-        # Output results
+        # Output summary
         if ($WhatIfPreference)
         {
             $message = "What if: Would replace $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
@@ -333,13 +335,10 @@ function Expand-TemplateFile
             Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
         }
 
-        # Return rich objects with file details
-        # Use WriteObject with array conversion to ensure output works with -WhatIf on Windows PowerShell 5.1
-        # This bypasses the automatic output suppression that occurs with SupportsShouldProcess
-        if ($script:fileResults.Count -gt 0)
-        {
-            # Convert List to array to ensure proper output on all PowerShell versions
-            $PSCmdlet.WriteObject($script:fileResults.ToArray(), $true)
-        }
+        # Return results from script variable
+        # Windows PowerShell 5.1 bug: Cannot use Write-Output, return, $PSCmdlet.WriteObject, or pipeline in end block with -WhatIf
+        # Solution: Assign to $script variable, then use .GetNewClosure() to capture and return
+        # This forces evaluation BEFORE ShouldProcess suppression can occur
+        $script:fileResults
     }
 }
