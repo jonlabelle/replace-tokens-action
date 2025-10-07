@@ -335,10 +335,6 @@ function Expand-TemplateFile
             Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
         }
 
-        # Return results from script variable
-        # Windows PowerShell 5.1 bug: Cannot use Write-Output, return, $PSCmdlet.WriteObject, or pipeline in end block with -WhatIf
-        # Solution: Assign to $script variable, then use .GetNewClosure() to capture and return
-        # This forces evaluation BEFORE ShouldProcess suppression can occur
         $script:fileResults
     }
 }
