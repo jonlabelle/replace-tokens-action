@@ -334,6 +334,7 @@ function Expand-TemplateFile
         }
 
         # Return rich objects with file details
-        Write-Output $script:fileResults
+        # Use return instead of Write-Output to ensure output works with -WhatIf on Windows PowerShell 5.1
+        return $script:fileResults
     }
 }
