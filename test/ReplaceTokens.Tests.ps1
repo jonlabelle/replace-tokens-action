@@ -34,11 +34,35 @@ Describe 'Expand-TemplateFile Function' {
                 [System.IO.File]::WriteAllText($Path, ($Value + [Environment]::NewLine), $utf8NoBom)
             }
         }
+
+        # Store list of test environment variables for cleanup
+        $script:testEnvVars = @(
+            'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
+            'ENV_VAR', '123VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
+            'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
+            '1INVALID'
+        )
+    }
+
+    AfterEach {
+        # Clean up test environment variables after each test to prevent cross-test pollution
+        # This ensures each test runs in a clean environment
+        foreach ($varName in $script:testEnvVars)
+        {
+            if (Test-Path "env:$varName")
+            {
+                Remove-Item "env:$varName" -ErrorAction SilentlyContinue
+            }
+        }
     }
 
     AfterAll {
-        # Cleanup test directory
-        Remove-Item -Path $testDir -Recurse -Force
+        # Cleanup test directory and all subdirectories/files created during tests
+        # This includes: test files, subdirectories (pipeline-dir, mixed-dir, etc.)
+        if (Test-Path -Path $testDir)
+        {
+            Remove-Item -Path $testDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 
     It 'Replaces mustache-style tokens when environment variables exist' {
