@@ -118,6 +118,9 @@ function Expand-TemplateFile
             default { throw "Unknown token style: $Style" }
         }
 
+        # Pre-compile the regex pattern for better performance
+        $CompiledRegex = [Regex]::new($tokenPattern, [System.Text.RegularExpressions.RegexOptions]::Compiled)
+
         # Normalize encoding for PowerShell version compatibility
         # In PowerShell 5.1, utf8NoBOM and utf8BOM are not available
         $psVersion = $PSVersionTable.PSVersion.Major
@@ -135,7 +138,7 @@ function Expand-TemplateFile
         $addBOM = ($Encoding.ToLower() -eq 'utf8bom')
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [string] $Pattern, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
         {
             try
             {
@@ -144,8 +147,8 @@ function Expand-TemplateFile
                 $tokensInFile = 0
                 $skippedInFile = 0
 
-                # Replace tokens using a regex evaluator
-                $content = [Regex]::Replace($content, $Pattern, {
+                # Replace tokens using a regex evaluator with pre-compiled pattern
+                $content = $TokenRegex.Replace($content, {
                         param ($match)
                         $varName = $match.Groups[1].Value
 
@@ -241,7 +244,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -Pattern $tokenPattern -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
         }
     }
 
