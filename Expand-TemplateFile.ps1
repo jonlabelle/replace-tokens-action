@@ -54,6 +54,9 @@ function Expand-TemplateFile
     .EXAMPLE
         Expand-TemplateFile -Path ./templates -Recurse -Filter *.tpl -Style envsubst -WhatIf
 
+    .EXAMPLE
+        Expand-TemplateFile -Path ./src -Recurse -Depth 2 -Filter *.config -Style mustache
+
     .OUTPUTS
         System.Collections.Generic.HashSet[string]
         Returns a collection of file paths that were modified.
@@ -103,6 +106,12 @@ function Expand-TemplateFile
 
     begin
     {
+        # Validate that -Depth is only used with -Recurse
+        if ($Depth -gt 0 -and -not $Recurse)
+        {
+            throw 'The -Depth parameter can only be used when -Recurse is specified.'
+        }
+
         # Initialize tracking variables
         $script:filesReplaced = New-Object System.Collections.Generic.HashSet[string]
         $script:tokensReplaced = 0

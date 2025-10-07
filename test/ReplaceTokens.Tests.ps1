@@ -401,5 +401,46 @@ Describe 'Expand-TemplateFile Function' {
         $result.Count | Should -Be 1
         $result.Contains($testFile) | Should -Be $true
     }
+
+    It 'Throws error when -Depth is used without -Recurse' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'depth-validation-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+
+        # Act & Assert
+        { Expand-TemplateFile -Path $testFile -Depth 2 -Style 'mustache' } | Should -Throw -ExpectedMessage '*-Depth parameter can only be used when -Recurse is specified*'
+    }
+
+    It 'Allows -Depth when -Recurse is specified' {
+        # Arrange
+        $testDir2 = Join-Path -Path $testDir -ChildPath 'depth-recurse-test'
+        New-Item -Path $testDir2 -ItemType Directory -Force | Out-Null
+        $testFile = Join-Path -Path $testDir2 -ChildPath 'test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Depth {{VAR}} test' -NoNewline
+
+        $env:VAR = 'Works'
+
+        # Act - Should not throw
+        { Expand-TemplateFile -Path $testDir2 -Recurse -Depth 2 -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
+
+        # Assert
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'Depth Works test'
+    }
+
+    It 'Allows -Depth with value 0 without -Recurse' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'depth-zero-test.txt'
+        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+
+        $env:VAR = 'Zero'
+
+        # Act - Should not throw (Depth 0 is default/no-op)
+        { Expand-TemplateFile -Path $testFile -Depth 0 -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
+
+        # Assert
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'Test Zero'
+    }
 }
 
