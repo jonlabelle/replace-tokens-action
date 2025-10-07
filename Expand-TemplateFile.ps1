@@ -126,28 +126,65 @@ function Expand-TemplateFile
         $EnvVars = @{}
         Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
 
-        # Normalize encoding for PowerShell version compatibility
-        # In PowerShell 5.1, utf8NoBOM and utf8BOM are not available
-        $psVersion = $PSVersionTable.PSVersion.Major
-        $fileEncoding = switch ($Encoding.ToLower())
+        # Helper function to normalize encoding settings
+        function Get-NormalizedEncoding
         {
-            'utf8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf-8' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf8nobom' { if ($psVersion -ge 6) { 'utf8NoBOM' } else { 'utf8' } }
-            'utf8bom' { 'utf8' }  # In PS 5.1, utf8 adds BOM; in PS 6+, we'll add BOM manually
-            default { $Encoding }
+            param ([string] $EncodingName)
+
+            $psVersion = $PSVersionTable.PSVersion.Major
+            $encodingLower = $EncodingName.ToLower()
+
+            # Create encoding configuration object
+            $config = [PSCustomObject]@{
+                FileEncoding = $EncodingName
+                StripBOM = $false
+                AddBOM = $false
+            }
+
+            # Handle UTF-8 variants based on PowerShell version
+            switch ($encodingLower)
+            {
+                { $_ -in @('utf8', 'utf-8', 'utf8nobom') }
+                {
+                    if ($psVersion -ge 6)
+                    {
+                        $config.FileEncoding = 'utf8NoBOM'
+                    }
+                    else
+                    {
+                        # PS 5.1: utf8 adds BOM, so we need to strip it manually
+                        $config.FileEncoding = 'utf8'
+                        $config.StripBOM = $true
+                    }
+                }
+                'utf8bom'
+                {
+                    if ($psVersion -ge 6)
+                    {
+                        # PS 6+: Manually add BOM
+                        $config.FileEncoding = 'utf8'
+                        $config.AddBOM = $true
+                    }
+                    else
+                    {
+                        # PS 5.1: utf8 encoding adds BOM by default
+                        $config.FileEncoding = 'utf8'
+                    }
+                }
+            }
+
+            return $config
         }
 
-        # Flags for manual BOM handling in PS 5.1
-        $stripBOM = ($psVersion -lt 6) -and ($Encoding.ToLower() -in @('utf8', 'utf-8', 'utf8nobom'))
-        $addBOM = ($Encoding.ToLower() -eq 'utf8bom')
+        # Normalize encoding for PowerShell version compatibility
+        $encodingConfig = Get-NormalizedEncoding -EncodingName $Encoding
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [string] $FileEncoding, [bool] $NoNewline, [bool] $StripBOM, [bool] $AddBOM)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
         {
             try
             {
-                $content = Get-Content -Path $File -Raw -Encoding $FileEncoding -ErrorAction Stop
+                $content = Get-Content -Path $File -Raw -Encoding $EncodingConfig.FileEncoding -ErrorAction Stop
                 $originalContent = $content
                 $tokensInFile = 0
                 $skippedInFile = 0
@@ -184,7 +221,7 @@ function Expand-TemplateFile
                 {
                     if (-not $DryRun)
                     {
-                        if ($StripBOM)
+                        if ($EncodingConfig.StripBOM)
                         {
                             # For PowerShell 5.1, manually write without BOM
                             $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -197,7 +234,7 @@ function Expand-TemplateFile
                                 [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8NoBom)
                             }
                         }
-                        elseif ($AddBOM)
+                        elseif ($EncodingConfig.AddBOM)
                         {
                             # Manually write with BOM (works in all PS versions)
                             $utf8WithBom = New-Object System.Text.UTF8Encoding $true
@@ -212,7 +249,7 @@ function Expand-TemplateFile
                         }
                         else
                         {
-                            Set-Content -Path $File -Value $content -Encoding $FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
+                            Set-Content -Path $File -Value $content -Encoding $EncodingConfig.FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
                         }
                     }
 
@@ -249,7 +286,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -FileEncoding $fileEncoding -NoNewline $NoNewline -StripBOM $stripBOM -AddBOM $addBOM
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -EncodingConfig $encodingConfig -NoNewline $NoNewline
         }
     }
 
