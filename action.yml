@@ -135,10 +135,13 @@ runs:
         }
 
         $fail = [System.Convert]::ToBoolean('${{ inputs.fail }}')
-        if (($fail -eq $true) -and ($result.Count -eq 0)) {
+        $modifiedFiles = $result | Where-Object { $_.Modified }
+        if (($fail -eq $true) -and ($modifiedFiles.Count -eq 0)) {
           echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace."
           exit 1
         }
 
         Write-Output -InputObject 'Tokens were replaced in the following file(s):'
-        Write-Output -InputObject $result
+        $result | Where-Object { $_.Modified } | ForEach-Object {
+          Write-Output -InputObject "  $($_.FilePath) - Replaced: $($_.TokensReplaced), Skipped: $($_.TokensSkipped)"
+        }

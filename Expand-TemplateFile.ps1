@@ -58,11 +58,12 @@ function Expand-TemplateFile
         Expand-TemplateFile -Path ./src -Recurse -Depth 2 -Filter *.config -Style mustache
 
     .OUTPUTS
-        System.Collections.Generic.HashSet[string]
-        Returns a collection of file paths that were modified.
+        PSCustomObject[]
+        Returns an array of objects with file processing details.
+        Each object contains: FilePath, TokensReplaced, TokensSkipped, Modified
     #>
     [CmdletBinding(SupportsShouldProcess)]
-    [OutputType([System.Collections.Generic.HashSet[string]])]
+    [OutputType([PSCustomObject[]])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = 'Specify the path(s) to process')]
         [ValidateNotNullOrEmpty()]
@@ -113,7 +114,7 @@ function Expand-TemplateFile
         }
 
         # Initialize tracking variables
-        $script:filesReplaced = New-Object System.Collections.Generic.HashSet[string]
+        $script:fileResults = New-Object System.Collections.Generic.List[PSCustomObject]
         $script:tokensReplaced = 0
         $script:tokensSkipped = 0
 
@@ -196,12 +197,14 @@ function Expand-TemplateFile
         # Function to replace tokens in a file
         function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
         {
+            # Use script-scoped variables for per-file counters so they work inside scriptblocks
+            $script:tokensInFile = 0
+            $script:skippedInFile = 0
+
             try
             {
                 $content = Get-Content -Path $File -Raw -Encoding $EncodingConfig.FileEncoding -ErrorAction Stop
                 $originalContent = $content
-                $tokensInFile = 0
-                $skippedInFile = 0
 
                 # Replace tokens using a regex evaluator with pre-compiled pattern
                 $content = $TokenRegex.Replace($content, {
@@ -212,7 +215,7 @@ function Expand-TemplateFile
                         {
                             Write-Warning "[$File] Environment variable '$varName' not found - token will not be replaced"
                             $script:tokensSkipped++
-                            $skippedInFile++
+                            $script:skippedInFile++
                             return $match.Value
                         }
 
@@ -221,16 +224,17 @@ function Expand-TemplateFile
                         {
                             Write-Warning "[$File] Environment variable '$varName' exists but has empty value - token will not be replaced"
                             $script:tokensSkipped++
-                            $skippedInFile++
+                            $script:skippedInFile++
                             return $match.Value
                         }
 
                         $script:tokensReplaced++
-                        $tokensInFile++
+                        $script:tokensInFile++
 
                         return $replacement
                     })
 
+                $modified = $false
                 if ($content -ne $originalContent)
                 {
                     # Use ShouldProcess for -WhatIf support
@@ -266,12 +270,20 @@ function Expand-TemplateFile
                         {
                             Set-Content -Path $File -Value $content -Encoding $EncodingConfig.FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
                         }
+                        $modified = $true
                     }
 
-                    $script:filesReplaced.Add($File) | Out-Null
-
-                    Write-Verbose "[$File] Replaced $tokensInFile token(s) (skipped $skippedInFile)"
+                    Write-Verbose "[$File] Replaced $($script:tokensInFile) token(s) (skipped $($script:skippedInFile))"
                 }
+
+                # Create result object for this file
+                $fileResult = [PSCustomObject]@{
+                    FilePath = $File
+                    TokensReplaced = $script:tokensInFile
+                    TokensSkipped = $script:skippedInFile
+                    Modified = $modified
+                }
+                $script:fileResults.Add($fileResult)
             }
             catch
             {
@@ -307,17 +319,21 @@ function Expand-TemplateFile
 
     end
     {
+        # Count modified files
+        $modifiedCount = ($script:fileResults | Where-Object { $_.Modified }).Count
+
         # Output results
         if ($WhatIfPreference)
         {
-            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)"
+            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
             Write-Information $message -InformationAction Continue
         }
         else
         {
-            Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $($script:filesReplaced.Count) file(s)"
+            Write-Verbose "Replaced $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
         }
 
-        Write-Output $script:filesReplaced
+        # Return rich objects with file details
+        Write-Output $script:fileResults
     }
 }

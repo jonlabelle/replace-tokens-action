@@ -150,7 +150,7 @@ Describe 'Expand-TemplateFile Function' {
         $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
 
         # Assert
-        $result.Count | Should -Be 0 # No tokens were replaced
+        ($result | Where-Object { $_.Modified }).Count | Should -Be 0 # No tokens were replaced
     }
 
     It 'Only replaces tokens with valid environment variable names (letter start)' {
@@ -305,8 +305,9 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result.Count | Should -Be 2
-        $result.Contains($testFile1) | Should -Be $true
-        $result.Contains($testFile2) | Should -Be $true
+        $result.FilePath | Should -Contain $testFile1
+        $result.FilePath | Should -Contain $testFile2
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
 
         $content1 = Get-Content -Path $testFile1 -Raw
         $content1 | Should -Be 'Pipeline PipelineUser test 1'
@@ -332,6 +333,9 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result.Count | Should -Be 2
+        $result.FilePath | Should -Contain $testFile1
+        $result.FilePath | Should -Contain $testFile2
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
 
         $content1 = Get-Content -Path $testFile1 -Raw
         $content1 | Should -Be 'GCI Test TestHost'
@@ -357,6 +361,9 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result.Count | Should -Be 2
+        $result.FilePath | Should -Contain $mixedFile
+        $result.FilePath | Should -Contain $mixedDirFile
+        ($result | ForEach-Object { $_.TokensReplaced }) | Should -Be @(1, 1)
 
         $content1 = Get-Content -Path $mixedFile -Raw
         $content1 | Should -Be 'Mixed Success'
@@ -399,7 +406,8 @@ Describe 'Expand-TemplateFile Function' {
 
         # Should still return what would be modified
         $result.Count | Should -Be 1
-        $result.Contains($testFile) | Should -Be $true
+        $result[0].FilePath | Should -Be $testFile
+        $result[0].Modified | Should -Be $false
     }
 
     It 'Throws error when -Depth is used without -Recurse' {
