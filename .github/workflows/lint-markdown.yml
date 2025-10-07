@@ -31,6 +31,6 @@ jobs:
 
       - uses: DavidAnson/markdownlint-cli2-action@main
         with:
-          config: .markdownlint.json
+          config: .markdownlint-cli2.jsonc
           globs: |
             README.md
