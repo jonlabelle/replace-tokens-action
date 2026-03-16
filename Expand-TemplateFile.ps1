@@ -6,7 +6,7 @@ function Expand-TemplateFile
 
     .DESCRIPTION
         Expands template files by replacing tokens with values from environment variables.
-        Supports multiple token styles: mustache ({{VAR}}), double-hashes (##VAR##), envsubst (${VAR}), and make ($(VAR)).
+        Supports multiple token styles: mustache/handlebars ({{VAR}}), double-hashes (##VAR##), envsubst (${VAR}), and make ($(VAR)).
 
     .PARAMETER Path
         Specify the path(s) to process. Can be files or directories.

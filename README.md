@@ -130,7 +130,7 @@ Replace tokens using the **make** style/format, e.g. `$(VARIABLE)`.
 
 ```yaml
 steps:
-  - name: Replace envsubst styled tokens
+  - name: Replace make styled tokens
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search

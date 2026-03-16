@@ -260,7 +260,7 @@ Describe 'Expand-TemplateFile Function' {
         Set-Utf8Content -Path $testFile -Value 'Valid: ## HASH_VAR ## - Invalid: ##123VAR##' -NoNewline
 
         $env:HASH_VAR = 'HashValue'
-        $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
+        $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
 
         # Act
         Expand-TemplateFile -Path $testFile -Style 'double-hashes' -Encoding 'utf8NoBOM' -NoNewline
