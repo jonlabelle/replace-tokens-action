@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.30.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.29.0...v1.30.0) (2026-03-16)
+
+
+### Features
+
+* add brackets token style support ([#9](https://github.com/jonlabelle/replace-tokens-action/issues/9)) ([67154b9](https://github.com/jonlabelle/replace-tokens-action/commit/67154b9da2acb5dab13d5dd81771b49624bbee86))
+
 # [1.29.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.28.0...v1.29.0) (2026-03-16)
 
 
