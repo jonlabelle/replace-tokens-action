@@ -38,7 +38,7 @@ Describe 'Expand-TemplateFile Function' {
         # Store list of test environment variables for cleanup
         $script:testEnvVars = @(
             'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
-            'ENV_VAR', '123VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
+            'ENV_VAR', '123VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
             '1INVALID'
         )
@@ -133,6 +133,21 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Hello, Bob!'
+    }
+
+    It 'Replaces tokens with double-hashes style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style-basic.txt'
+        Set-Utf8Content -Path $testFile -Value 'Hello, ##NAME##!' -NoNewline
+
+        $env:NAME = 'Bailey'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'double-hashes' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Bailey!'
     }
 
     It 'Replaces tokens with make style' {
@@ -237,6 +252,22 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Valid: EnvValue - Invalid: ${123VAR}'
+    }
+
+    It 'Correctly handles double-hashes style with valid/invalid variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style.txt'
+        Set-Utf8Content -Path $testFile -Value 'Valid: ## HASH_VAR ## - Invalid: ##123VAR##' -NoNewline
+
+        $env:HASH_VAR = 'HashValue'
+        $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'double-hashes' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: HashValue - Invalid: ##123VAR##'
     }
 
     It 'Correctly handles make style with valid/invalid variable names' {
@@ -470,4 +501,3 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Test Zero'
     }
 }
-

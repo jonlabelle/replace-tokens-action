@@ -19,7 +19,7 @@ inputs:
   style:
     description: >-
       The style (or format) of the tokens that will be replaced.
-      Accepted values are `mustache/handlebars` (ex: `{{ VARIABLE }}`), `envsubst` (ex: `${VARIABLE}`), and `make` (ex: `$(VARIABLE)`).
+      Accepted values are `mustache/handlebars` (ex: `{{ VARIABLE }}`), `double-hashes` (ex: `## VARIABLE ##`), `envsubst` (ex: `${VARIABLE}`), and `make` (ex: `$(VARIABLE)`).
       The default token style is `mustache`.
     required: false
     default: 'mustache'

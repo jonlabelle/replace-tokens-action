@@ -12,7 +12,7 @@
   - [Replace tokens in path](#replace-tokens-in-path)
   - [Using a path filter](#using-a-path-filter)
   - [Search multiple paths](#search-multiple-paths)
-  - [Replace envsubst and make styled tokens](#replace-envsubst-and-make-styled-tokens)
+  - [Replace envsubst, double-hashes, and make styled tokens](#replace-envsubst-double-hashes-and-make-styled-tokens)
   - [Search paths recursively](#search-paths-recursively)
   - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
   - [Exclude items and patterns](#exclude-items-and-patterns)
@@ -96,7 +96,7 @@ steps:
       NAME: jon
 ```
 
-### Replace envsubst and make styled tokens
+### Replace envsubst, double-hashes, and make styled tokens
 
 Replace tokens using the **envsubst** style/format, e.g. `${VARIABLE}`.
 
@@ -108,6 +108,20 @@ steps:
       paths: ./path/to/search
       filter: '*.json'
       style: envsubst
+    env:
+      NAME: jon
+```
+
+Replace tokens using the **double-hashes** style/format, e.g. `##VARIABLE##`.
+
+```yaml
+steps:
+  - name: Replace double-hashes styled tokens
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      style: double-hashes
     env:
       NAME: jon
 ```
@@ -260,6 +274,7 @@ Tokens must be in one of following formats to be replaced:
 | name                 | style            | examples                   |
 | -------------------- | ---------------- | -------------------------- |
 | `mustache` (default) | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+| `double-hashes`      | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
 | `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
 | `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
 
