@@ -126,6 +126,9 @@ steps:
       NAME: jon
 ```
 
+> [!WARNING]  
+> The `brackets` style (`<VARIABLE>`) can collide with HTML and XML tags. If an environment variable name matches a tag name (e.g. `div`, `span`), those tags will be replaced unintentionally. Avoid using this style on HTML/XML files, or use the `filter`/`exclude` inputs to restrict processing to non-markup files.
+
 Replace tokens using the **double-hashes** style/format, e.g. `##VARIABLE##`.
 
 ```yaml

@@ -120,7 +120,7 @@ function Expand-TemplateFile
 
         # Define token patterns with validation for environment variable names
         $mustachePattern = '\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
-        $bracketsPattern = '<\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*>' # brackets pattern, e.g. <VARIABLE>
+        $bracketsPattern = '<\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*>' # brackets pattern, e.g. <VARIABLE>; NOTE: avoid using on HTML/XML files as this pattern matches tag names
         $doubleHashesPattern = '##\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*##' # double-hashes pattern, e.g. ##VARIABLE##
         $envsubstPattern = '\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}' # envsubst template pattern, e.g. ${VARIABLE}
         $makePattern = '\$\(([a-zA-Z_][a-zA-Z0-9_]*)\)' # make pattern, e.g. $(VARIABLE)
