@@ -38,7 +38,7 @@ Describe 'Expand-TemplateFile Function' {
         # Store list of test environment variables for cleanup
         $script:testEnvVars = @(
             'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
-            'ENV_VAR', '123VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
+            'ENV_VAR', '123VAR', 'BRACKET_VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
             '1INVALID'
         )
@@ -133,6 +133,21 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Hello, Bob!'
+    }
+
+    It 'Replaces tokens with brackets style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'brackets-style-basic.txt'
+        Set-Utf8Content -Path $testFile -Value 'Hello, < NAME >!' -NoNewline
+
+        $env:NAME = 'Billie'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'brackets' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Billie!'
     }
 
     It 'Replaces tokens with double-hashes style' {
@@ -268,6 +283,22 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Valid: HashValue - Invalid: ##123VAR##'
+    }
+
+    It 'Correctly handles brackets style with valid/invalid variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'brackets-style.txt'
+        Set-Utf8Content -Path $testFile -Value 'Valid: <BRACKET_VAR> - Invalid: <123VAR>' -NoNewline
+
+        $env:BRACKET_VAR = 'BracketValue'
+        $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'brackets' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: BracketValue - Invalid: <123VAR>'
     }
 
     It 'Correctly handles make style with valid/invalid variable names' {
