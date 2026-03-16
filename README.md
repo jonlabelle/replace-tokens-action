@@ -37,7 +37,7 @@ See [action.yml](action.yml)
 | `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`       |
 | `depth`           | Depth of recursion                 | number  | false    | none       | `2`           |
 | `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`       |
-| `dry-run`         | Preview changes without modifying  | boolean | false    | `false`    | `true`        |
+| `dry-run`         | Preview without modifying          | boolean | false    | `false`    | `true`        |
 | `fail`            | Fail if no tokens replaced         | boolean | false    | `false`    | `false`       |
 | `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
 | `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
