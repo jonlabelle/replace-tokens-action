@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.29.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.28.0...v1.29.0) (2026-03-16)
+
+
+### Features
+
+* add double-hashes token style support ([#8](https://github.com/jonlabelle/replace-tokens-action/issues/8)) ([25d9138](https://github.com/jonlabelle/replace-tokens-action/commit/25d9138de16db2651ab5c5d8c293bbaa7e845b72))
+
 # [1.28.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.27.0...v1.28.0) (2025-10-07)
 
 
