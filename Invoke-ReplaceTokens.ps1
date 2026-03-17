@@ -146,7 +146,7 @@ function Split-MultilineInput
     )
 }
 
-function Set-ActionOutput
+function Write-ActionOutput
 {
     param(
         [string]
@@ -253,7 +253,7 @@ else
     }
 }
 
-Set-ActionOutput -Name 'tokens-replaced' -Value $totalTokensReplaced
-Set-ActionOutput -Name 'tokens-skipped' -Value $totalTokensSkipped
-Set-ActionOutput -Name 'modified-files-count' -Value $modifiedFiles.Count
-Set-ActionOutput -Name 'would-modify-files-count' -Value $wouldModifyFiles.Count
+Write-ActionOutput -Name 'tokens-replaced' -Value $totalTokensReplaced
+Write-ActionOutput -Name 'tokens-skipped' -Value $totalTokensSkipped
+Write-ActionOutput -Name 'modified-files-count' -Value $modifiedFiles.Count
+Write-ActionOutput -Name 'would-modify-files-count' -Value $wouldModifyFiles.Count
