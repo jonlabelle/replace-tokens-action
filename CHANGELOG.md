@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.31.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.30.1...v1.31.0) (2026-03-17)
+
+
+### Features
+
+* add support for ANSI encoding ([#11](https://github.com/jonlabelle/replace-tokens-action/issues/11)) ([d9cdfa1](https://github.com/jonlabelle/replace-tokens-action/commit/d9cdfa1fd986791d55cbab6d5e6069c380e2f435))
+
 ## [1.30.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.30.0...v1.30.1) (2026-03-17)
 
 
