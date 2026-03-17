@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage and configuration documentation
+    url: https://github.com/jonlabelle/replace-tokens-action/blob/main/README.md
+    about: Review supported inputs, token styles, examples, and platform behavior before opening an issue.

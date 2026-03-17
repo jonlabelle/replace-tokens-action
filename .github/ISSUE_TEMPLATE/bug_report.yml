@@ -1,0 +1,146 @@
+name: Bug report
+description: Report a reproducible problem with token replacement, file handling, or action behavior.
+title: '[Bug]: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for defects in the action itself.
+
+        Include a minimal reproduction when possible. This project supports:
+        - Windows PowerShell 5.1 on Windows runners
+        - PowerShell Core on Linux and macOS runners
+        - Token styles: mustache, handlebars, brackets, double-hashes, envsubst, make
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preliminary checks
+      options:
+        - label: I searched existing issues and did not find a matching report.
+          required: true
+        - label: I can reproduce this on the latest version of the action.
+          required: true
+        - label: I included a minimal workflow, file sample, or log excerpt below.
+          required: true
+
+  - type: dropdown
+    id: runner_os
+    attributes:
+      label: Runner OS
+      description: Which GitHub Actions runner shows the problem?
+      options:
+        - windows-latest
+        - ubuntu-latest
+        - macos-latest
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: shell
+    attributes:
+      label: PowerShell runtime
+      description: Which shell/runtime is used when the failure happens?
+      options:
+        - powershell (Windows PowerShell 5.1)
+        - pwsh (PowerShell Core)
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: action_version
+    attributes:
+      label: Action version
+      description: For example `v1`, a full tag, or a commit SHA.
+      placeholder: v1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: style
+    attributes:
+      label: Token style
+      description: Which token format are you using?
+      options:
+        - mustache
+        - handlebars
+        - brackets
+        - double-hashes
+        - envsubst
+        - make
+        - Multiple
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Action inputs
+      description: Provide the relevant `with:` values you used.
+      placeholder: |
+        paths: ./path/to/search
+        filter: '*.json'
+        exclude: ''
+        recurse: false
+        depth: 0
+        follow-symlinks: false
+        encoding: utf8
+        no-newline: false
+        dry-run: false
+        fail: false
+        verbose: true
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Minimal workflow snippet
+      description: Include the relevant step plus any environment variables needed to reproduce the issue.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: template_sample
+    attributes:
+      label: Template file sample
+      description: Paste a minimal example of the source file before replacement.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include exact error messages when available.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or console output
+      description: Paste relevant action output, warnings, or stack traces.
+      render: text
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Include details such as encoding, symlink usage, path patterns, line ending expectations, or platform-specific differences.

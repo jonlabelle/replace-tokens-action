@@ -1,0 +1,91 @@
+name: Feature request
+description: Propose a new capability or an improvement to token replacement behavior.
+title: '[Feature]: '
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for new inputs, behavioral changes, documentation improvements, or broader workflow support.
+
+        Keep compatibility in mind:
+        - Windows PowerShell 5.1 must remain supported
+        - PowerShell Core on Linux and macOS must remain supported
+        - Changes usually need tests and documentation updates
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preliminary checks
+      options:
+        - label: I searched existing issues and did not find a matching request.
+          required: true
+        - label: This request is scoped to this action rather than my workflow configuration.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe the limitation, friction, or use case you are trying to solve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior, new input, or API change you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow_example
+    attributes:
+      label: Example workflow or usage
+      description: Show how you expect the feature to be used in a GitHub Actions workflow.
+      render: yaml
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the action would this affect most?
+      options:
+        - Token styles and parsing
+        - File discovery and path filtering
+        - Encoding or newline handling
+        - Dry-run or failure behavior
+        - Outputs and reporting
+        - Documentation
+        - Tests or platform compatibility
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibility impact
+      description: Mark the environments or concerns that apply.
+      options:
+        - label: This needs to work on Windows PowerShell 5.1.
+        - label: This needs to work on PowerShell Core on Linux.
+        - label: This needs to work on PowerShell Core on macOS.
+        - label: This may affect existing token styles or matching rules.
+        - label: This may affect file encoding or newline behavior.
+        - label: This likely needs new tests.
+        - label: This likely needs README or action metadata updates.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe workarounds or other designs you considered.
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Add examples, constraints, links, or anything else useful for evaluation.
