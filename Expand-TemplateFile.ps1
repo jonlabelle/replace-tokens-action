@@ -209,6 +209,14 @@ function Expand-TemplateFile
                         $config.FileEncoding = 'utf8'
                     }
                 }
+                'ansi'
+                {
+                    if ($psVersion -lt 6)
+                    {
+                        # PS 5.1 uses Default for the active ANSI code page
+                        $config.FileEncoding = 'Default'
+                    }
+                }
             }
 
             return $config
