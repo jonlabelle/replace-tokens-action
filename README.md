@@ -346,6 +346,8 @@ The default file encoding for read/write operations is set to `utf8`, _without_ 
 - `unicode`: Encodes in UTF-16 format using the little-endian byte order
 - `utf32`: Encodes in UTF-32 format
 
+On Windows PowerShell 5.1, `ansi` is normalized to `Default`, and UTF-8 BOM behavior is normalized internally so `utf8` remains BOM-less by default while `utf8BOM` writes a BOM.
+
 ## License
 
 [MIT](LICENSE)

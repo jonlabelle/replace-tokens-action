@@ -130,6 +130,23 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Encoding Test'
     }
 
+    It 'Replaces tokens when ansi encoding is specified' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'ansi-encoding-test.txt'
+        Set-Content -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding ansi -NoNewline
+
+        $env:NAME = 'Avery'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'ansi' -NoNewline
+        $content = Get-Content -Path $testFile -Raw -Encoding ansi
+
+        # Assert
+        $content | Should -Be 'Hello, Avery!'
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].Modified | Should -Be $true
+    }
+
     It 'Replaces tokens with envsubst style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style-basic.txt'
