@@ -54,10 +54,10 @@ See [action.yml](action.yml)
 
 ## Platform support
 
-- Windows runners execute the composite action with Windows PowerShell 5.1.
-- Linux and macOS runners execute the composite action with PowerShell Core (`pwsh`).
+- GitHub-hosted runners execute the composite action with PowerShell Core (`pwsh`).
+- On self-hosted Windows runners, GitHub Actions falls back to Windows PowerShell when `pwsh` is not installed, so the action remains usable in both environments.
 - Environment variable name matching follows platform conventions: case-insensitive on Windows, case-sensitive on Linux and macOS.
-- The `Expand-TemplateFile.ps1` script remains compatible with Windows PowerShell 5.1 and PowerShell Core 6+.
+- The `Expand-TemplateFile.ps1` script remains compatible with Windows PowerShell 5.1 and PowerShell Core 6+ for self-hosted fallback and direct script usage.
 
 ## Examples
 
