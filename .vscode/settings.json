@@ -34,6 +34,7 @@
     "bigendianutf",
     "commitlint",
     "envsubst",
-    "jonlabelle"
+    "jonlabelle",
+    "nonwindows"
   ]
 }

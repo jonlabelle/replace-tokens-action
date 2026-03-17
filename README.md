@@ -8,11 +8,13 @@
 ## Table of contents
 
 - [Usage](#usage)
+- [Outputs](#outputs)
+- [Platform support](#platform-support)
 - [Examples](#examples)
   - [Replace tokens in path](#replace-tokens-in-path)
   - [Using a path filter](#using-a-path-filter)
   - [Search multiple paths](#search-multiple-paths)
-  - [Replace envsubst, brackets, double-hashes, and make styled tokens](#replace-envsubst-brackets-double-hashes-and-make-styled-tokens)
+  - [Replace handlebars, envsubst, brackets, double-hashes, and make styled tokens](#replace-handlebars-envsubst-brackets-double-hashes-and-make-styled-tokens)
   - [Search paths recursively](#search-paths-recursively)
   - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
   - [Exclude items and patterns](#exclude-items-and-patterns)
@@ -30,7 +32,7 @@ See [action.yml](action.yml)
 
 | name              | description                        | type    | required | default    | example       |
 | ----------------- | ---------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`           | Token file paths [^1]              | string  | true     | none       | `./prod.json` |
+| `paths`           | Token file paths [^1]              | string  | false    | `.`        | `./prod.json` |
 | `style`           | [Token style/format](#token-style) | string  | false    | `mustache` | `envsubst`    |
 | `filter`          | Filter pattern [^2]                | string  | false    | none       | `*.json`      |
 | `exclude`         | Exclusion patterns [^3]            | string  | false    | none       | `*dev*.json`  |
@@ -38,10 +40,24 @@ See [action.yml](action.yml)
 | `depth`           | Depth of recursion                 | number  | false    | none       | `2`           |
 | `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`       |
 | `dry-run`         | Preview without modifying          | boolean | false    | `false`    | `true`        |
-| `fail`            | Fail if no tokens replaced         | boolean | false    | `false`    | `false`       |
+| `fail`            | Fail if no files change [^4]       | boolean | false    | `false`    | `false`       |
 | `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
 | `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
 | `verbose`         | Enable verbose output              | boolean | false    | `false`    | `true`        |
+
+## Outputs
+
+- `tokens-replaced`: Total number of tokens replaced, or that would be replaced in dry-run mode.
+- `tokens-skipped`: Total number of tokens skipped because no matching value was available.
+- `modified-files-count`: Number of files updated by the action.
+- `would-modify-files-count`: Number of files that would be updated in dry-run mode.
+
+## Platform support
+
+- Windows runners execute the composite action with Windows PowerShell 5.1.
+- Linux and macOS runners execute the composite action with PowerShell Core (`pwsh`).
+- Environment variable name matching follows platform conventions: case-insensitive on Windows, case-sensitive on Linux and macOS.
+- The `Expand-TemplateFile.ps1` script remains compatible with Windows PowerShell 5.1 and PowerShell Core 6+.
 
 ## Examples
 
@@ -61,7 +77,7 @@ steps:
 ```
 
 > [!NOTE]  
-> To avoid issues, it's good practice to treat environment variables as case sensitive, irrespective of the behavior of the operating system and shell you are using.
+> Environment variable names are matched case-insensitively on Windows, and case-sensitively on Linux and macOS.
 
 ### Using a path filter
 
@@ -96,7 +112,21 @@ steps:
       NAME: jon
 ```
 
-### Replace envsubst, brackets, double-hashes, and make styled tokens
+### Replace handlebars, envsubst, brackets, double-hashes, and make styled tokens
+
+Replace tokens using the **handlebars** style/format, e.g. `{{VARIABLE}}`.
+
+```yaml
+steps:
+  - name: Replace handlebars styled tokens
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      style: handlebars
+    env:
+      NAME: jon
+```
 
 Replace tokens using the **envsubst** style/format, e.g. `${VARIABLE}`.
 
@@ -232,10 +262,12 @@ steps:
 
 > [!TIP]
 > Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations.
+> [!NOTE]
+> When `dry-run: true` and `fail: true` are used together, the action fails only if no files would be changed.
 
 ### Fail on no-op
 
-Fail the step if no tokens were replaced.
+Fail the step if no files were changed.
 
 ```yaml
 steps:
@@ -291,6 +323,7 @@ Tokens must be in one of following formats to be replaced:
 | name                 | style            | examples                   |
 | -------------------- | ---------------- | -------------------------- |
 | `mustache` (default) | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
+| `handlebars`         | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `brackets`           | `< VARIABLE >`   | `<TOKEN>`, `< TOKEN >`     |
 | `double-hashes`      | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
 | `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
@@ -317,8 +350,10 @@ The default file encoding for read/write operations is set to `utf8`, _without_ 
 
 [MIT](LICENSE)
 
-[^1]: A path to one or more locations. Wildcards are accepted. The default location is the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
+[^1]: A path to one or more locations. Wildcards are accepted. If omitted, the action defaults to the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
 
 [^2]: `filter` only supports `*` and `?` wildcards.
 
 [^3]: One or more string items or patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.
+
+[^4]: When `dry-run` is enabled, `fail` checks whether any files would change instead of whether any files were written.

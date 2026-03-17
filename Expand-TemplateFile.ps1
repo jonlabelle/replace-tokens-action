@@ -107,6 +107,16 @@ function Expand-TemplateFile
 
     begin
     {
+        function Test-IsWindows
+        {
+            if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)
+            {
+                return [bool]$IsWindows
+            }
+
+            return [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+        }
+
         # Validate that -Depth is only used with -Recurse
         if ($Depth -gt 0 -and -not $Recurse)
         {
@@ -142,7 +152,16 @@ function Expand-TemplateFile
 
         # Cache environment variables for better performance
         # Avoid repeated Test-Path and Get-Item calls
-        $EnvVars = @{}
+        $envComparer = if (Test-IsWindows)
+        {
+            [System.StringComparer]::OrdinalIgnoreCase
+        }
+        else
+        {
+            [System.StringComparer]::Ordinal
+        }
+
+        $EnvVars = New-Object 'System.Collections.Generic.Dictionary[string,string]' $envComparer
         Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
 
         # Helper function to normalize encoding settings
@@ -199,7 +218,7 @@ function Expand-TemplateFile
         $encodingConfig = Get-NormalizedEncoding -EncodingName $Encoding
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [hashtable] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string,string]] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
         {
             # Use script-scoped variables for per-file counters so they work inside scriptblocks
             $script:tokensInFile = 0
@@ -239,8 +258,11 @@ function Expand-TemplateFile
                     })
 
                 $modified = $false
+                $wouldModify = $false
                 if ($content -ne $originalContent)
                 {
+                    $wouldModify = $true
+
                     # Use ShouldProcess for -WhatIf support
                     if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
@@ -285,6 +307,7 @@ function Expand-TemplateFile
                     FilePath = $File
                     TokensReplaced = $script:tokensInFile
                     TokensSkipped = $script:skippedInFile
+                    WouldModify = $wouldModify
                     Modified = $modified
                 }
 
@@ -327,11 +350,12 @@ function Expand-TemplateFile
     {
         # Count modified files
         $modifiedCount = ($script:fileResults | Where-Object { $_.Modified }).Count
+        $wouldModifyCount = ($script:fileResults | Where-Object { $_.WouldModify }).Count
 
         # Output summary
         if ($WhatIfPreference)
         {
-            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $modifiedCount file(s)"
+            $message = "What if: Would replace $($script:tokensReplaced) token(s) in $wouldModifyCount file(s)"
             Write-Information $message -InformationAction Continue
         }
         else

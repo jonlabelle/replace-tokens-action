@@ -14,7 +14,8 @@ inputs:
       Wildcards are accepted.
       The default location is the current directory (`.`).
       Example: `./path/to/my/settings.json`
-    required: true
+    required: false
+    default: '.'
 
   style:
     description: >-
@@ -85,7 +86,9 @@ inputs:
     default: 'false'
 
   fail:
-    description: Fail the step if no tokens were replaced.
+    description: >-
+      Fail the step if no files were changed.
+      When `dry-run` is enabled, fail the step if no files would be changed.
     required: false
     default: 'false'
 
@@ -96,52 +99,91 @@ inputs:
     required: false
     default: 'false'
 
+outputs:
+  tokens-replaced:
+    description: Total number of tokens replaced or that would be replaced in dry-run mode.
+    value: ${{ steps.replace-tokens-windows.outputs.tokens-replaced || steps.replace-tokens-nonwindows.outputs.tokens-replaced }}
+  tokens-skipped:
+    description: Total number of tokens skipped because no matching value was available.
+    value: ${{ steps.replace-tokens-windows.outputs.tokens-skipped || steps.replace-tokens-nonwindows.outputs.tokens-skipped }}
+  modified-files-count:
+    description: Number of files updated by the action.
+    value: ${{ steps.replace-tokens-windows.outputs.modified-files-count || steps.replace-tokens-nonwindows.outputs.modified-files-count }}
+  would-modify-files-count:
+    description: Number of files that would be updated in dry-run mode.
+    value: ${{ steps.replace-tokens-windows.outputs.would-modify-files-count || steps.replace-tokens-nonwindows.outputs.would-modify-files-count }}
+
 runs:
   using: composite
   steps:
-    - name: Replace tokens
+    - id: replace-tokens-windows
+      name: Replace tokens (Windows PowerShell)
+      if: ${{ runner.os == 'Windows' }}
+      shell: powershell
+      run: |
+        $pathsInput = @'
+        ${{ inputs.paths }}
+        '@
+        $excludeInput = @'
+        ${{ inputs.exclude }}
+        '@
+        $filterInput = @'
+        ${{ inputs.filter }}
+        '@
+        $styleInput = @'
+        ${{ inputs.style }}
+        '@
+        $encodingInput = @'
+        ${{ inputs.encoding }}
+        '@
+
+        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Invoke-ReplaceTokens.ps1'
+        & $scriptPath `
+          -PathsInput $pathsInput `
+          -Style $styleInput `
+          -Filter $filterInput `
+          -ExcludeInput $excludeInput `
+          -Recurse '${{ inputs.recurse }}' `
+          -Depth '${{ inputs.depth }}' `
+          -FollowSymlinks '${{ inputs.follow-symlinks }}' `
+          -Encoding $encodingInput `
+          -NoNewline '${{ inputs.no-newline }}' `
+          -DryRun '${{ inputs.dry-run }}' `
+          -Fail '${{ inputs.fail }}' `
+          -VerboseInput '${{ inputs.verbose }}'
+
+    - id: replace-tokens-nonwindows
+      name: Replace tokens (PowerShell Core)
+      if: ${{ runner.os != 'Windows' }}
       shell: pwsh
       run: |
-        # Split multiline paths
-        $paths = '${{ inputs.paths }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
-        $exclude = '${{ inputs.exclude }}' -split '\r?\n|\r' | Where-Object {$_.Trim() -ne ''}
+        $pathsInput = @'
+        ${{ inputs.paths }}
+        '@
+        $excludeInput = @'
+        ${{ inputs.exclude }}
+        '@
+        $filterInput = @'
+        ${{ inputs.filter }}
+        '@
+        $styleInput = @'
+        ${{ inputs.style }}
+        '@
+        $encodingInput = @'
+        ${{ inputs.encoding }}
+        '@
 
-        $params = @{
-          Path = $paths
-          Filter = '${{ inputs.filter }}'
-          Recurse = [System.Convert]::ToBoolean('${{ inputs.recurse }}')
-          Depth = [System.Convert]::ToInt32('${{ inputs.depth }}')
-          FollowSymlinks = [System.Convert]::ToBoolean('${{ inputs.follow-symlinks }}')
-          Style = '${{ inputs.style }}'
-          Encoding = '${{ inputs.encoding }}'
-          NoNewline = [System.Convert]::ToBoolean('${{ inputs.no-newline }}')
-          Exclude = $exclude
-          Verbose = [System.Convert]::ToBoolean('${{ inputs.verbose }}')
-        }
-
-        # Add WhatIf if dry-run is enabled
-        $dryRun = [System.Convert]::ToBoolean('${{ inputs.dry-run }}')
-        if ($dryRun) {
-          $params.Add('WhatIf', $true)
-        }
-
-        # Import and call the function directly
-        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Expand-TemplateFile.ps1'
-        . $scriptPath
-        $result = Expand-TemplateFile @params
-        if ($? -eq $false) {
-          echo "::error title=✘ Failed::Review console output for errors"
-          exit 1
-        }
-
-        $fail = [System.Convert]::ToBoolean('${{ inputs.fail }}')
-        $modifiedFiles = $result | Where-Object { $_.Modified }
-        if (($fail -eq $true) -and ($modifiedFiles.Count -eq 0)) {
-          echo "::error title=✘ No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace."
-          exit 1
-        }
-
-        Write-Output -InputObject 'Tokens were replaced in the following file(s):'
-        $result | Where-Object { $_.Modified } | ForEach-Object {
-          Write-Output -InputObject "  $($_.FilePath) - Replaced: $($_.TokensReplaced), Skipped: $($_.TokensSkipped)"
-        }
+        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Invoke-ReplaceTokens.ps1'
+        & $scriptPath `
+          -PathsInput $pathsInput `
+          -Style $styleInput `
+          -Filter $filterInput `
+          -ExcludeInput $excludeInput `
+          -Recurse '${{ inputs.recurse }}' `
+          -Depth '${{ inputs.depth }}' `
+          -FollowSymlinks '${{ inputs.follow-symlinks }}' `
+          -Encoding $encodingInput `
+          -NoNewline '${{ inputs.no-newline }}' `
+          -DryRun '${{ inputs.dry-run }}' `
+          -Fail '${{ inputs.fail }}' `
+          -VerboseInput '${{ inputs.verbose }}'

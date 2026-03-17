@@ -12,6 +12,16 @@ Describe 'Expand-TemplateFile Function' {
         # Import the function being tested
         . (Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Expand-TemplateFile.ps1')
 
+        function Test-IsWindows
+        {
+            if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)
+            {
+                return [bool]$IsWindows
+            }
+
+            return [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+        }
+
         # Set up a temporary test directory
         $testDir = Join-Path -Path $PSScriptRoot -ChildPath 'TokenReplaceTest'
         New-Item -Path $testDir -ItemType Directory -Force | Out-Null
@@ -195,7 +205,7 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Hello, {{NAME}}!' # Token remains unchanged
     }
 
-    It 'Fails the step if no tokens were replaced and fail is true' {
+    It 'Returns no modified files when no tokens are present' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'no-tokens.txt'
         Set-Utf8Content -Path $testFile -Value 'No tokens here!' -NoNewline
@@ -474,6 +484,9 @@ Describe 'Expand-TemplateFile Function' {
 
         # Result should still track what would have been changed
         $result | Should -Not -BeNullOrEmpty
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].WouldModify | Should -Be $true
+        $result[0].Modified | Should -Be $false
     }
 
     It 'WhatIf prevents file modification' {
@@ -489,6 +502,34 @@ Describe 'Expand-TemplateFile Function' {
         # Assert - File should not be modified
         $content = Get-Content -Path $testFile -Raw
         $content | Should -Be 'ShouldProcess {{TESTVAR}} test' -Because 'WhatIf should not modify files'
+        $result[0].WouldModify | Should -Be $true
+        $result[0].Modified | Should -Be $false
+    }
+
+    It 'Uses platform-appropriate case sensitivity for environment variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'case-sensitive-env-var.txt'
+        Set-Utf8Content -Path $testFile -Value 'Case {{name}} test' -NoNewline
+
+        $env:NAME = 'CaseValue'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        if (Test-IsWindows)
+        {
+            $content | Should -Be 'Case CaseValue test'
+            $result[0].TokensReplaced | Should -Be 1
+            $result[0].Modified | Should -Be $true
+        }
+        else
+        {
+            $content | Should -Be 'Case {{name}} test'
+            $result[0].TokensReplaced | Should -Be 0
+            $result[0].Modified | Should -Be $false
+        }
     }
 
     It 'Throws error when -Depth is used without -Recurse' {
