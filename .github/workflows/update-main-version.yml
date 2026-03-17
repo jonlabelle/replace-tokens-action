@@ -25,6 +25,13 @@ on:
 env:
   TARGET: ${{ github.event.inputs.target || github.event.release.tag_name }}
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   update-main-version:
     name: Update main version

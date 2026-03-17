@@ -13,6 +13,13 @@ on:
       - synchronize
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Test ${{ matrix.style }} on ${{ matrix.os }} (${{ matrix.shell }})
