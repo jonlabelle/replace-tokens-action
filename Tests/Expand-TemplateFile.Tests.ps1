@@ -27,7 +27,7 @@ Describe 'Expand-TemplateFile Function' {
         New-Item -Path $testDir -ItemType Directory -Force | Out-Null
 
         # Helper function to write UTF-8 without BOM (cross-version compatible)
-        function Set-Utf8Content
+        function Write-Utf8Content
         {
             param(
                 [string]$Path,
@@ -78,7 +78,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces mustache-style tokens when environment variables exist' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'mustache-style.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
 
         $env:NAME = 'Alice'
 
@@ -93,7 +93,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens if no matching environment variable exists' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'missing-env-var.txt'
-        Set-Utf8Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Welcome, {{REPLACE_TOKENS_ACTION}}!' -NoNewline
 
         # Act
         Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
@@ -106,7 +106,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Handles empty environment variable values correctly' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'empty-env-var.txt'
-        Set-Utf8Content -Path $testFile -Value 'Your ID: {{ID}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Your ID: {{ID}}' -NoNewline
 
         $env:ID = ''
 
@@ -152,7 +152,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with envsubst style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style-basic.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, ${NAME}!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, ${NAME}!' -NoNewline
 
         $env:NAME = 'Bob'
 
@@ -167,7 +167,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with brackets style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'brackets-style-basic.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, < NAME >!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, < NAME >!' -NoNewline
 
         $env:NAME = 'Billie'
 
@@ -182,7 +182,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with double-hashes style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style-basic.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, ##NAME##!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, ##NAME##!' -NoNewline
 
         $env:NAME = 'Bailey'
 
@@ -197,7 +197,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Replaces tokens with make style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'make-style-basic.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, $(NAME)!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, $(NAME)!' -NoNewline
 
         $env:NAME = 'Charlie'
 
@@ -212,7 +212,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens if file is excluded' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'excluded-file.txt'
-        Set-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
 
         $env:NAME = 'Dave'
 
@@ -227,7 +227,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Returns no modified files when no tokens are present' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'no-tokens.txt'
-        Set-Utf8Content -Path $testFile -Value 'No tokens here!' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'No tokens here!' -NoNewline
 
         # Act
         $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
@@ -239,7 +239,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Only replaces tokens with valid environment variable names (letter start)' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'valid-name.txt'
-        Set-Utf8Content -Path $testFile -Value 'Valid: {{VALID_NAME}} - Invalid: {{1INVALID}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Valid: {{VALID_NAME}} - Invalid: {{1INVALID}}' -NoNewline
 
         $env:VALID_NAME = 'ValidValue'
         $env:1INVALID = 'InvalidValue' # Won't be used as it's an invalid env var name
@@ -255,7 +255,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Allows environment variable names starting with underscore' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'underscore-name.txt'
-        Set-Utf8Content -Path $testFile -Value 'Underscore: {{_TEST_VAR}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Underscore: {{_TEST_VAR}}' -NoNewline
 
         $env:_TEST_VAR = 'UnderscoreValue'
 
@@ -270,7 +270,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Does not replace tokens with special characters in variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'special-chars.txt'
-        Set-Utf8Content -Path $testFile -Value 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Special: {{SPECIAL-CHAR}} {{SPECIAL@CHAR}} {{SPECIAL:CHAR}}' -NoNewline
 
         $env:SPECIAL = 'SpecialValue' # This won't be used
 
@@ -285,7 +285,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles envsubst style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'envsubst-style.txt'
-        Set-Utf8Content -Path $testFile -Value 'Valid: ${ENV_VAR} - Invalid: ${123VAR}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Valid: ${ENV_VAR} - Invalid: ${123VAR}' -NoNewline
 
         $env:ENV_VAR = 'EnvValue'
         $env:123VAR = 'Invalid'  # Won't be used as it's an invalid env var name
@@ -301,7 +301,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles double-hashes style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style.txt'
-        Set-Utf8Content -Path $testFile -Value 'Valid: ## HASH_VAR ## - Invalid: ##123VAR##' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Valid: ## HASH_VAR ## - Invalid: ##123VAR##' -NoNewline
 
         $env:HASH_VAR = 'HashValue'
         $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
@@ -317,7 +317,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles brackets style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'brackets-style.txt'
-        Set-Utf8Content -Path $testFile -Value 'Valid: <BRACKET_VAR> - Invalid: <123VAR>' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Valid: <BRACKET_VAR> - Invalid: <123VAR>' -NoNewline
 
         $env:BRACKET_VAR = 'BracketValue'
         $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
@@ -333,7 +333,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Correctly handles make style with valid/invalid variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'make-style.txt'
-        Set-Utf8Content -Path $testFile -Value 'Valid: $(MAKE_VAR) - Invalid: $(MAKE-VAR)' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Valid: $(MAKE_VAR) - Invalid: $(MAKE-VAR)' -NoNewline
 
         $env:MAKE_VAR = 'MakeValue'
         $env:MAKE = 'Invalid'  # Won't match the token format
@@ -410,8 +410,8 @@ Describe 'Expand-TemplateFile Function' {
         # Arrange
         $testFile1 = Join-Path -Path $testDir -ChildPath 'pipeline-test1.txt'
         $testFile2 = Join-Path -Path $testDir -ChildPath 'pipeline-test2.txt'
-        Set-Utf8Content -Path $testFile1 -Value 'Pipeline {{USER}} test 1' -NoNewline
-        Set-Utf8Content -Path $testFile2 -Value 'Pipeline {{USER}} test 2' -NoNewline
+        Write-Utf8Content -Path $testFile1 -Value 'Pipeline {{USER}} test 1' -NoNewline
+        Write-Utf8Content -Path $testFile2 -Value 'Pipeline {{USER}} test 2' -NoNewline
 
         $env:USER = 'PipelineUser'
 
@@ -438,8 +438,8 @@ Describe 'Expand-TemplateFile Function' {
 
         $testFile1 = Join-Path -Path $pipelineDir -ChildPath 'file1.tpl'
         $testFile2 = Join-Path -Path $pipelineDir -ChildPath 'file2.tpl'
-        Set-Utf8Content -Path $testFile1 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
-        Set-Utf8Content -Path $testFile2 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+        Write-Utf8Content -Path $testFile1 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
+        Write-Utf8Content -Path $testFile2 -Value 'GCI Test {{HOSTNAME}}' -NoNewline
 
         $env:HOSTNAME = 'TestHost'
 
@@ -466,8 +466,8 @@ Describe 'Expand-TemplateFile Function' {
         New-Item -Path $mixedDir -ItemType Directory -Force | Out-Null
         $mixedDirFile = Join-Path -Path $mixedDir -ChildPath 'mixed-dir-file.txt'
 
-        Set-Utf8Content -Path $mixedFile -Value 'Mixed {{TESTVAR}}' -NoNewline
-        Set-Utf8Content -Path $mixedDirFile -Value 'Mixed Dir {{TESTVAR}}' -NoNewline
+        Write-Utf8Content -Path $mixedFile -Value 'Mixed {{TESTVAR}}' -NoNewline
+        Write-Utf8Content -Path $mixedDirFile -Value 'Mixed Dir {{TESTVAR}}' -NoNewline
 
         $env:TESTVAR = 'Success'
 
@@ -490,7 +490,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Supports -WhatIf parameter without modifying files' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'whatif-test.txt'
-        Set-Utf8Content -Path $testFile -Value 'WhatIf {{TESTVAR}} test' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'WhatIf {{TESTVAR}} test' -NoNewline
 
         $env:TESTVAR = 'Modified'
 
@@ -511,7 +511,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'WhatIf prevents file modification' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'shouldprocess-test.txt'
-        Set-Utf8Content -Path $testFile -Value 'ShouldProcess {{TESTVAR}} test' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'ShouldProcess {{TESTVAR}} test' -NoNewline
 
         $env:TESTVAR = 'Modified'
 
@@ -528,7 +528,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Uses platform-appropriate case sensitivity for environment variable names' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'case-sensitive-env-var.txt'
-        Set-Utf8Content -Path $testFile -Value 'Case {{name}} test' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Case {{name}} test' -NoNewline
 
         $env:NAME = 'CaseValue'
 
@@ -554,7 +554,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Throws error when -Depth is used without -Recurse' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'depth-validation-test.txt'
-        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
 
         # Act & Assert
         { Expand-TemplateFile -Path $testFile -Depth 2 -Style 'mustache' } | Should -Throw -ExpectedMessage '*-Depth parameter can only be used when -Recurse is specified*'
@@ -565,7 +565,7 @@ Describe 'Expand-TemplateFile Function' {
         $testDir2 = Join-Path -Path $testDir -ChildPath 'depth-recurse-test'
         New-Item -Path $testDir2 -ItemType Directory -Force | Out-Null
         $testFile = Join-Path -Path $testDir2 -ChildPath 'test.txt'
-        Set-Utf8Content -Path $testFile -Value 'Depth {{VAR}} test' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Depth {{VAR}} test' -NoNewline
 
         $env:VAR = 'Works'
 
@@ -580,7 +580,7 @@ Describe 'Expand-TemplateFile Function' {
     It 'Allows -Depth with value 0 without -Recurse' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'depth-zero-test.txt'
-        Set-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
+        Write-Utf8Content -Path $testFile -Value 'Test {{VAR}}' -NoNewline
 
         $env:VAR = 'Zero'
 
