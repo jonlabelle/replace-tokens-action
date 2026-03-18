@@ -89,7 +89,7 @@ body:
         recurse: false
         depth: 0
         follow-symlinks: false
-        encoding: utf8
+        encoding: auto
         no-newline: false
         dry-run: false
         fail: false

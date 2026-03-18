@@ -6,6 +6,15 @@ if (-not (Get-Module -Name Pester -ListAvailable))
     Install-Module -Name Pester -Force -SkipPublisherCheck
 }
 
+$script:isWindowsPlatform = if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)
+{
+    [bool]$IsWindows
+}
+else
+{
+    [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+}
+
 Describe 'Expand-TemplateFile Function' {
 
     BeforeAll {
@@ -43,6 +52,59 @@ Describe 'Expand-TemplateFile Function' {
             {
                 [System.IO.File]::WriteAllText($Path, ($Value + [Environment]::NewLine), $utf8NoBom)
             }
+        }
+
+        function Write-EncodedContent
+        {
+            param(
+                [string]$Path,
+                [string]$Value,
+                [System.Text.Encoding]$Encoding,
+                [switch]$NoNewline
+            )
+
+            if ($NoNewline)
+            {
+                [System.IO.File]::WriteAllText($Path, $Value, $Encoding)
+            }
+            else
+            {
+                [System.IO.File]::WriteAllText($Path, ($Value + [Environment]::NewLine), $Encoding)
+            }
+        }
+
+        function Get-AnsiEncoding
+        {
+            if (-not (Test-IsWindows))
+            {
+                return (New-Object System.Text.UTF8Encoding $false)
+            }
+
+            return [System.Text.Encoding]::GetEncoding([System.Globalization.CultureInfo]::CurrentCulture.TextInfo.ANSICodePage)
+        }
+
+        function Test-FileStartsWithPrefix
+        {
+            param(
+                [string]$Path,
+                [byte[]]$Prefix
+            )
+
+            $bytes = [System.IO.File]::ReadAllBytes($Path)
+            if ($bytes.Length -lt $Prefix.Length)
+            {
+                return $false
+            }
+
+            for ($index = 0; $index -lt $Prefix.Length; $index++)
+            {
+                if ($bytes[$index] -ne $Prefix[$index])
+                {
+                    return $false
+                }
+            }
+
+            return $true
         }
 
         # Store list of test environment variables for cleanup
@@ -147,6 +209,93 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Hello, Avery!'
         $result[0].TokensReplaced | Should -Be 1
         $result[0].Modified | Should -Be $true
+    }
+
+    It 'Uses auto encoding by default for UTF-8 without BOM files' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'auto-utf8-no-bom.txt'
+        Write-Utf8Content -Path $testFile -Value 'Hello, {{NAME}}!' -NoNewline
+
+        $env:NAME = 'Aster'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -NoNewline
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $content | Should -Be 'Hello, Aster!'
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].Modified | Should -Be $true
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $false
+    }
+
+    It 'Preserves UTF-8 BOM files when auto encoding is used' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'auto-utf8-bom.txt'
+        $utf8Bom = New-Object System.Text.UTF8Encoding $true
+        Write-EncodedContent -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding $utf8Bom -NoNewline
+
+        $env:NAME = 'Briar'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -NoNewline
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $content | Should -Be 'Hello, Briar!'
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $true
+    }
+
+    It 'Preserves UTF-16 LE BOM files when auto encoding is used' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'auto-unicode.txt'
+        $unicodeEncoding = New-Object System.Text.UnicodeEncoding $false, $true
+        Write-EncodedContent -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding $unicodeEncoding -NoNewline
+
+        $env:NAME = 'Cedar'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -NoNewline
+        $content = [System.IO.File]::ReadAllText($testFile, $unicodeEncoding)
+
+        # Assert
+        $content | Should -Be 'Hello, Cedar!'
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
+    }
+
+    It 'Does not let a BOM override an explicit encoding request' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'explicit-encoding-overrides-bom.txt'
+        $unicodeEncoding = New-Object System.Text.UnicodeEncoding $false, $true
+        Write-EncodedContent -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding $unicodeEncoding -NoNewline
+
+        $env:NAME = 'Elm'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8' -NoNewline -ErrorAction SilentlyContinue
+        $content = [System.IO.File]::ReadAllText($testFile, $unicodeEncoding)
+
+        # Assert
+        $content | Should -Be 'Hello, {{NAME}}!'
+        $result | Should -BeNullOrEmpty
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
+    }
+
+    It 'Falls back to ANSI for no-BOM files on Windows when auto encoding is used' -Skip:(-not $script:isWindowsPlatform) {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'auto-ansi.txt'
+        $ansiEncoding = Get-AnsiEncoding
+        $ansiSample = 'Cafe' + [char]0x00E9 + ' {{NAME}}!'
+        Write-EncodedContent -Path $testFile -Value $ansiSample -Encoding $ansiEncoding -NoNewline
+
+        $env:NAME = 'Dune'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -NoNewline
+        $content = [System.IO.File]::ReadAllText($testFile, $ansiEncoding)
+
+        # Assert
+        $content | Should -Be ('Cafe' + [char]0x00E9 + ' Dune!')
     }
 
     It 'Replaces tokens with envsubst style' {
@@ -349,7 +498,8 @@ Describe 'Expand-TemplateFile Function' {
     It 'Ensures utf8 encoding produces no BOM regardless of PowerShell version' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'utf8-no-bom.txt'
-        Set-Content -Path $testFile -Value 'Test {{VAR}} content' -Encoding utf8 -NoNewline
+        $utf8Bom = New-Object System.Text.UTF8Encoding $true
+        Write-EncodedContent -Path $testFile -Value 'Test {{VAR}} content' -Encoding $utf8Bom -NoNewline
 
         $env:VAR = 'Replaced'
 
@@ -369,7 +519,8 @@ Describe 'Expand-TemplateFile Function' {
     It 'Ensures utf8NoBOM encoding produces no BOM regardless of PowerShell version' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'utf8nobom-no-bom.txt'
-        Set-Content -Path $testFile -Value 'Test {{VAR2}} content' -Encoding utf8 -NoNewline
+        $utf8Bom = New-Object System.Text.UTF8Encoding $true
+        Write-EncodedContent -Path $testFile -Value 'Test {{VAR2}} content' -Encoding $utf8Bom -NoNewline
 
         $env:VAR2 = 'Replaced2'
 
