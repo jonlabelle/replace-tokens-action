@@ -83,7 +83,7 @@ Describe 'Expand-TemplateFile Function' {
             return [System.Text.Encoding]::GetEncoding([System.Globalization.CultureInfo]::CurrentCulture.TextInfo.ANSICodePage)
         }
 
-        function Test-FileStartsWithBytes
+        function Test-FileStartsWithPrefix
         {
             param(
                 [string]$Path,
@@ -226,7 +226,7 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Hello, Aster!'
         $result[0].TokensReplaced | Should -Be 1
         $result[0].Modified | Should -Be $true
-        (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $false
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $false
     }
 
     It 'Preserves UTF-8 BOM files when auto encoding is used' {
@@ -243,7 +243,7 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $content | Should -Be 'Hello, Briar!'
-        (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $true
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xEF, 0xBB, 0xBF))) | Should -Be $true
     }
 
     It 'Preserves UTF-16 LE BOM files when auto encoding is used' {
@@ -260,7 +260,7 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $content | Should -Be 'Hello, Cedar!'
-        (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
     }
 
     It 'Does not let a BOM override an explicit encoding request' {
@@ -278,7 +278,7 @@ Describe 'Expand-TemplateFile Function' {
         # Assert
         $content | Should -Be 'Hello, {{NAME}}!'
         $result | Should -BeNullOrEmpty
-        (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
+        (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
     }
 
     It 'Falls back to ANSI for no-BOM files on Windows when auto encoding is used' -Skip:(-not $script:isWindowsPlatform) {
@@ -498,7 +498,8 @@ Describe 'Expand-TemplateFile Function' {
     It 'Ensures utf8 encoding produces no BOM regardless of PowerShell version' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'utf8-no-bom.txt'
-        Set-Content -Path $testFile -Value 'Test {{VAR}} content' -Encoding utf8 -NoNewline
+        $utf8Bom = New-Object System.Text.UTF8Encoding $true
+        Write-EncodedContent -Path $testFile -Value 'Test {{VAR}} content' -Encoding $utf8Bom -NoNewline
 
         $env:VAR = 'Replaced'
 
@@ -518,7 +519,8 @@ Describe 'Expand-TemplateFile Function' {
     It 'Ensures utf8NoBOM encoding produces no BOM regardless of PowerShell version' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'utf8nobom-no-bom.txt'
-        Set-Content -Path $testFile -Value 'Test {{VAR2}} content' -Encoding utf8 -NoNewline
+        $utf8Bom = New-Object System.Text.UTF8Encoding $true
+        Write-EncodedContent -Path $testFile -Value 'Test {{VAR2}} content' -Encoding $utf8Bom -NoNewline
 
         $env:VAR2 = 'Replaced2'
 

@@ -325,6 +325,129 @@ function Expand-TemplateFile
             return $false
         }
 
+        function Get-ByteOrderMarkInfo
+        {
+            param(
+                [System.IO.FileStream]
+                $Stream
+            )
+
+            $prefixBuffer = New-Object byte[] 4
+            $prefixBytesRead = $Stream.Read($prefixBuffer, 0, $prefixBuffer.Length)
+            $detectedName = $null
+            $preambleLength = 0
+
+            if ($prefixBytesRead -ge 4)
+            {
+                if ($prefixBuffer[0] -eq 0x00 -and $prefixBuffer[1] -eq 0x00 -and $prefixBuffer[2] -eq 0xFE -and $prefixBuffer[3] -eq 0xFF)
+                {
+                    $detectedName = 'bigendianutf32'
+                    $preambleLength = 4
+                }
+                elseif ($prefixBuffer[0] -eq 0xFF -and $prefixBuffer[1] -eq 0xFE -and $prefixBuffer[2] -eq 0x00 -and $prefixBuffer[3] -eq 0x00)
+                {
+                    $detectedName = 'utf32'
+                    $preambleLength = 4
+                }
+            }
+
+            if ($null -eq $detectedName -and $prefixBytesRead -ge 3)
+            {
+                if ($prefixBuffer[0] -eq 0xEF -and $prefixBuffer[1] -eq 0xBB -and $prefixBuffer[2] -eq 0xBF)
+                {
+                    $detectedName = 'utf8BOM'
+                    $preambleLength = 3
+                }
+            }
+
+            if ($null -eq $detectedName -and $prefixBytesRead -ge 2)
+            {
+                if ($prefixBuffer[0] -eq 0xFE -and $prefixBuffer[1] -eq 0xFF)
+                {
+                    $detectedName = 'bigendianunicode'
+                    $preambleLength = 2
+                }
+                elseif ($prefixBuffer[0] -eq 0xFF -and $prefixBuffer[1] -eq 0xFE)
+                {
+                    $detectedName = 'unicode'
+                    $preambleLength = 2
+                }
+            }
+
+            return [PSCustomObject]@{
+                Buffer = $prefixBuffer
+                BytesRead = $prefixBytesRead
+                Name = $detectedName
+                PreambleLength = $preambleLength
+            }
+        }
+
+        function Get-BomSkipLength
+        {
+            param(
+                [string]
+                $RequestedEncodingName,
+
+                [string]
+                $DetectedBomName,
+
+                [int]
+                $DetectedBomLength
+            )
+
+            if ([string]::IsNullOrWhiteSpace($DetectedBomName) -or $DetectedBomLength -le 0)
+            {
+                return 0
+            }
+
+            $requestedEncodingLower = $RequestedEncodingName.ToLower()
+            if ($requestedEncodingLower -eq 'auto')
+            {
+                return $DetectedBomLength
+            }
+
+            switch ($requestedEncodingLower)
+            {
+                { $_ -in @('utf8', 'utf-8', 'utf8nobom', 'utf8bom') }
+                {
+                    if ($DetectedBomName -eq 'utf8BOM')
+                    {
+                        return $DetectedBomLength
+                    }
+                }
+                'unicode'
+                {
+                    if ($DetectedBomName -eq 'unicode')
+                    {
+                        return $DetectedBomLength
+                    }
+                }
+                'bigendianunicode'
+                {
+                    if ($DetectedBomName -eq 'bigendianunicode')
+                    {
+                        return $DetectedBomLength
+                    }
+                }
+                'utf32'
+                {
+                    if ($DetectedBomName -eq 'utf32')
+                    {
+                        return $DetectedBomLength
+                    }
+                }
+                'bigendianutf32'
+                {
+                    if ($DetectedBomName -eq 'bigendianutf32')
+                    {
+                        return $DetectedBomLength
+                    }
+                }
+            }
+
+            return 0
+        }
+
         function Get-FileEncodingInfo
         {
             param(
@@ -336,13 +459,21 @@ function Expand-TemplateFile
             )
 
             $requestedEncodingLower = $RequestedEncodingName.ToLower()
+            $bomInfo = Get-ByteOrderMarkInfo -Stream $Stream
             if ($requestedEncodingLower -ne 'auto')
             {
-                return (Get-ExplicitEncodingInfo -EncodingName $RequestedEncodingName)
+                $explicitEncodingInfo = Get-ExplicitEncodingInfo -EncodingName $RequestedEncodingName
+
+                return [PSCustomObject]@{
+                    Name = $explicitEncodingInfo.Name
+                    ReadEncoding = $explicitEncodingInfo.ReadEncoding
+                    WriteEncoding = $explicitEncodingInfo.WriteEncoding
+                    BomLengthToSkip = (Get-BomSkipLength -RequestedEncodingName $RequestedEncodingName -DetectedBomName $bomInfo.Name -DetectedBomLength $bomInfo.PreambleLength)
+                }
             }
 
-            $prefixBuffer = New-Object byte[] 4
-            $prefixBytesRead = $Stream.Read($prefixBuffer, 0, $prefixBuffer.Length)
+            $prefixBuffer = $bomInfo.Buffer
+            $prefixBytesRead = $bomInfo.BytesRead
 
             if ($prefixBytesRead -ge 4)
             {
@@ -352,6 +483,7 @@ function Expand-TemplateFile
                         Name = 'bigendianutf32'
                         ReadEncoding = (Get-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
                         WriteEncoding = (Get-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
+                        BomLengthToSkip = $bomInfo.PreambleLength
                     }
                 }
 
@@ -361,6 +493,7 @@ function Expand-TemplateFile
                         Name = 'utf32'
                         ReadEncoding = (Get-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
                         WriteEncoding = (Get-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
+                        BomLengthToSkip = $bomInfo.PreambleLength
                     }
                 }
             }
@@ -373,6 +506,7 @@ function Expand-TemplateFile
                         Name = 'utf8BOM'
                         ReadEncoding = (Get-Utf8EncodingWithBom)
                         WriteEncoding = (Get-Utf8EncodingWithBom)
+                        BomLengthToSkip = $bomInfo.PreambleLength
                     }
                 }
             }
@@ -385,6 +519,7 @@ function Expand-TemplateFile
                         Name = 'bigendianunicode'
                         ReadEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
                         WriteEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
+                        BomLengthToSkip = $bomInfo.PreambleLength
                     }
                 }
 
@@ -394,6 +529,7 @@ function Expand-TemplateFile
                         Name = 'unicode'
                         ReadEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
                         WriteEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
+                        BomLengthToSkip = $bomInfo.PreambleLength
                     }
                 }
             }
@@ -404,6 +540,7 @@ function Expand-TemplateFile
                     Name = 'utf8'
                     ReadEncoding = (Get-Utf8EncodingNoBom)
                     WriteEncoding = (Get-Utf8EncodingNoBom)
+                    BomLengthToSkip = 0
                 }
             }
 
@@ -425,6 +562,7 @@ function Expand-TemplateFile
                     Name = 'unicode'
                     ReadEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
                     WriteEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
+                    BomLengthToSkip = 0
                 }
             }
 
@@ -434,6 +572,7 @@ function Expand-TemplateFile
                     Name = 'bigendianunicode'
                     ReadEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
                     WriteEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
+                    BomLengthToSkip = 0
                 }
             }
 
@@ -443,6 +582,7 @@ function Expand-TemplateFile
                     Name = 'utf8'
                     ReadEncoding = (Get-Utf8EncodingNoBom)
                     WriteEncoding = (Get-Utf8EncodingNoBom)
+                    BomLengthToSkip = 0
                 }
             }
 
@@ -453,6 +593,7 @@ function Expand-TemplateFile
                     Name = 'ansi'
                     ReadEncoding = $ansiEncoding
                     WriteEncoding = $ansiEncoding
+                    BomLengthToSkip = 0
                 }
             }
 
@@ -460,6 +601,7 @@ function Expand-TemplateFile
                 Name = 'utf8'
                 ReadEncoding = (Get-Utf8EncodingNoBom)
                 WriteEncoding = (Get-Utf8EncodingNoBom)
+                BomLengthToSkip = 0
             }
         }
 
@@ -480,7 +622,7 @@ function Expand-TemplateFile
             {
                 $fileStream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
                 $encodingInfo = Get-FileEncodingInfo -Stream $fileStream -RequestedEncodingName $RequestedEncodingName
-                $fileStream.Position = 0
+                $fileStream.Position = $encodingInfo.BomLengthToSkip
 
                 $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $fileStream, $encodingInfo.ReadEncoding, $false
                 $content = $reader.ReadToEnd()
