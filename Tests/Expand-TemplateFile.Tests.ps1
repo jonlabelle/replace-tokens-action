@@ -263,6 +263,24 @@ Describe 'Expand-TemplateFile Function' {
         (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
     }
 
+    It 'Does not let a BOM override an explicit encoding request' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'explicit-encoding-overrides-bom.txt'
+        $unicodeEncoding = New-Object System.Text.UnicodeEncoding $false, $true
+        Write-EncodedContent -Path $testFile -Value 'Hello, {{NAME}}!' -Encoding $unicodeEncoding -NoNewline
+
+        $env:NAME = 'Elm'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8' -NoNewline -ErrorAction SilentlyContinue
+        $content = [System.IO.File]::ReadAllText($testFile, $unicodeEncoding)
+
+        # Assert
+        $content | Should -Be 'Hello, {{NAME}}!'
+        $result | Should -BeNullOrEmpty
+        (Test-FileStartsWithBytes -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
+    }
+
     It 'Falls back to ANSI for no-BOM files on Windows when auto encoding is used' -Skip:(-not $script:isWindowsPlatform) {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'auto-ansi.txt'

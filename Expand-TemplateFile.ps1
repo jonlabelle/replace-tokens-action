@@ -134,17 +134,17 @@ function Expand-TemplateFile
             }
         }
 
-        function New-Utf8EncodingNoBom
+        function Get-Utf8EncodingNoBom
         {
             return (New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false, $true)
         }
 
-        function New-Utf8EncodingWithBom
+        function Get-Utf8EncodingWithBom
         {
             return (New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $true, $true)
         }
 
-        function New-UnicodeEncoding
+        function Get-UnicodeEncoding
         {
             param(
                 [bool]
@@ -157,7 +157,7 @@ function Expand-TemplateFile
             return (New-Object -TypeName System.Text.UnicodeEncoding -ArgumentList $BigEndian, $ByteOrderMark, $true)
         }
 
-        function New-Utf32Encoding
+        function Get-Utf32Encoding
         {
             param(
                 [bool]
@@ -174,7 +174,7 @@ function Expand-TemplateFile
         {
             if (-not (Test-IsWindows))
             {
-                return (New-Utf8EncodingNoBom)
+                return (Get-Utf8EncodingNoBom)
             }
 
             $ansiCodePage = [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.ANSICodePage
@@ -185,7 +185,7 @@ function Expand-TemplateFile
         {
             if (-not (Test-IsWindows))
             {
-                return (New-Utf8EncodingNoBom)
+                return (Get-Utf8EncodingNoBom)
             }
 
             try
@@ -208,15 +208,15 @@ function Expand-TemplateFile
             $encodingLower = $EncodingName.ToLower()
             $resolvedEncoding = switch ($encodingLower)
             {
-                { $_ -in @('utf8', 'utf-8', 'utf8nobom') } { New-Utf8EncodingNoBom; break }
-                'utf8bom' { New-Utf8EncodingWithBom; break }
+                { $_ -in @('utf8', 'utf-8', 'utf8nobom') } { Get-Utf8EncodingNoBom; break }
+                'utf8bom' { Get-Utf8EncodingWithBom; break }
                 'ascii' { [System.Text.Encoding]::ASCII; break }
                 'ansi' { Get-AnsiEncoding; break }
-                'bigendianunicode' { New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true; break }
-                'bigendianutf32' { New-Utf32Encoding -BigEndian $true -ByteOrderMark $true; break }
+                'bigendianunicode' { Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $true; break }
+                'bigendianutf32' { Get-Utf32Encoding -BigEndian $true -ByteOrderMark $true; break }
                 'oem' { Get-OemEncoding; break }
-                'unicode' { New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true; break }
-                'utf32' { New-Utf32Encoding -BigEndian $false -ByteOrderMark $true; break }
+                'unicode' { Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $true; break }
+                'utf32' { Get-Utf32Encoding -BigEndian $false -ByteOrderMark $true; break }
                 default { throw "Unknown encoding: $EncodingName" }
             }
 
@@ -296,7 +296,7 @@ function Expand-TemplateFile
                 return $true
             }
 
-            $strictUtf8 = New-Utf8EncodingNoBom
+            $strictUtf8 = Get-Utf8EncodingNoBom
 
             for ($trimCount = 0; $trimCount -le 3; $trimCount++)
             {
@@ -314,9 +314,11 @@ function Expand-TemplateFile
                 }
                 catch [System.Text.DecoderFallbackException]
                 {
+                    Write-Verbose 'UTF-8 detection skipped current sample because decoder fallback was triggered.'
                 }
                 catch [System.ArgumentException]
                 {
+                    Write-Verbose 'UTF-8 detection skipped current sample because the byte sequence ended mid-character.'
                 }
             }
 
@@ -348,8 +350,8 @@ function Expand-TemplateFile
                 {
                     return [PSCustomObject]@{
                         Name = 'bigendianutf32'
-                        ReadEncoding = (New-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
-                        WriteEncoding = (New-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
+                        ReadEncoding = (Get-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
+                        WriteEncoding = (Get-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
                     }
                 }
 
@@ -357,8 +359,8 @@ function Expand-TemplateFile
                 {
                     return [PSCustomObject]@{
                         Name = 'utf32'
-                        ReadEncoding = (New-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
-                        WriteEncoding = (New-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
+                        ReadEncoding = (Get-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
+                        WriteEncoding = (Get-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
                     }
                 }
             }
@@ -369,8 +371,8 @@ function Expand-TemplateFile
                 {
                     return [PSCustomObject]@{
                         Name = 'utf8BOM'
-                        ReadEncoding = (New-Utf8EncodingWithBom)
-                        WriteEncoding = (New-Utf8EncodingWithBom)
+                        ReadEncoding = (Get-Utf8EncodingWithBom)
+                        WriteEncoding = (Get-Utf8EncodingWithBom)
                     }
                 }
             }
@@ -381,8 +383,8 @@ function Expand-TemplateFile
                 {
                     return [PSCustomObject]@{
                         Name = 'bigendianunicode'
-                        ReadEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
-                        WriteEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
+                        ReadEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
+                        WriteEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
                     }
                 }
 
@@ -390,8 +392,8 @@ function Expand-TemplateFile
                 {
                     return [PSCustomObject]@{
                         Name = 'unicode'
-                        ReadEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
-                        WriteEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
+                        ReadEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
+                        WriteEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
                     }
                 }
             }
@@ -400,8 +402,8 @@ function Expand-TemplateFile
             {
                 return [PSCustomObject]@{
                     Name = 'utf8'
-                    ReadEncoding = (New-Utf8EncodingNoBom)
-                    WriteEncoding = (New-Utf8EncodingNoBom)
+                    ReadEncoding = (Get-Utf8EncodingNoBom)
+                    WriteEncoding = (Get-Utf8EncodingNoBom)
                 }
             }
 
@@ -421,8 +423,8 @@ function Expand-TemplateFile
             {
                 return [PSCustomObject]@{
                     Name = 'unicode'
-                    ReadEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
-                    WriteEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
+                    ReadEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
+                    WriteEncoding = (Get-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
                 }
             }
 
@@ -430,8 +432,8 @@ function Expand-TemplateFile
             {
                 return [PSCustomObject]@{
                     Name = 'bigendianunicode'
-                    ReadEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
-                    WriteEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
+                    ReadEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
+                    WriteEncoding = (Get-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
                 }
             }
 
@@ -439,8 +441,8 @@ function Expand-TemplateFile
             {
                 return [PSCustomObject]@{
                     Name = 'utf8'
-                    ReadEncoding = (New-Utf8EncodingNoBom)
-                    WriteEncoding = (New-Utf8EncodingNoBom)
+                    ReadEncoding = (Get-Utf8EncodingNoBom)
+                    WriteEncoding = (Get-Utf8EncodingNoBom)
                 }
             }
 
@@ -456,8 +458,8 @@ function Expand-TemplateFile
 
             return [PSCustomObject]@{
                 Name = 'utf8'
-                ReadEncoding = (New-Utf8EncodingNoBom)
-                WriteEncoding = (New-Utf8EncodingNoBom)
+                ReadEncoding = (Get-Utf8EncodingNoBom)
+                WriteEncoding = (Get-Utf8EncodingNoBom)
             }
         }
 
@@ -480,7 +482,7 @@ function Expand-TemplateFile
                 $encodingInfo = Get-FileEncodingInfo -Stream $fileStream -RequestedEncodingName $RequestedEncodingName
                 $fileStream.Position = 0
 
-                $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $fileStream, $encodingInfo.ReadEncoding, $true
+                $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $fileStream, $encodingInfo.ReadEncoding, $false
                 $content = $reader.ReadToEnd()
 
                 return [PSCustomObject]@{
@@ -596,7 +598,7 @@ function Expand-TemplateFile
         Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
 
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string,string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string, string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
         {
             # Use script-scoped variables for per-file counters so they work inside scriptblocks
             $script:tokensInFile = 0
