@@ -261,9 +261,7 @@ steps:
 ```
 
 > [!TIP]
-> Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations.
-> [!NOTE]
-> When `dry-run: true` and `fail: true` are used together, the action fails only if no files would change.
+> Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations. When `dry-run: true` and `fail: true` are used together, the action fails only if no files would change.
 
 ### Fail on no-op
 
