@@ -32,22 +32,22 @@
 
 See [action.yml](action.yml).
 
-| name              | description                      | type    | required | default    | example       |
-| ----------------- | -------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`           | File paths to process [^1]       | string  | false    | `.`        | `./prod.json` |
-| `style`           | [Token style](#token-style)      | string  | false    | `mustache` | `envsubst`    |
-| `filter`          | Filename filter [^2]             | string  | false    | none       | `*.json`      |
-| `exclude`         | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
-| `recurse`         | Search subdirectories            | boolean | false    | `false`    | `true`        |
-| `depth`           | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
-| `follow-symlinks` | Follow symbolic links            | boolean | false    | `false`    | `true`        |
-| `dry-run`         | Preview without modifying files  | boolean | false    | `false`    | `true`        |
-| `fail`            | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
-| `fail-on-skipped` | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
-| `case-insensitive` | Ignore environment variable name casing | boolean | false | `false` | `true` |
-| `encoding`        | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
-| `no-newline`      | Skip the final newline           | boolean | false    | `false`    | `true`        |
-| `verbose`         | Enable verbose logging           | boolean | false    | `false`    | `true`        |
+| name               | description                             | type    | required | default    | example       |
+| ------------------ | --------------------------------------- | ------- | -------- | ---------- | ------------- |
+| `paths`            | File paths to process [^1]              | string  | false    | `.`        | `./prod.json` |
+| `style`            | [Token style](#token-style)             | string  | false    | `mustache` | `envsubst`    |
+| `filter`           | Filename filter [^2]                    | string  | false    | none       | `*.json`      |
+| `exclude`          | Exclude patterns [^3]                   | string  | false    | none       | `*dev*.json`  |
+| `recurse`          | Search subdirectories                   | boolean | false    | `false`    | `true`        |
+| `depth`            | Recursion depth (`0` = no limit)        | number  | false    | `0`        | `2`           |
+| `follow-symlinks`  | Follow symbolic links                   | boolean | false    | `false`    | `true`        |
+| `dry-run`          | Preview without modifying files         | boolean | false    | `false`    | `true`        |
+| `fail`             | Fail if nothing changes [^4]            | boolean | false    | `false`    | `true`        |
+| `fail-on-skipped`  | Fail if any token is unresolved         | boolean | false    | `false`    | `true`        |
+| `case-insensitive` | Ignore environment variable name casing | boolean | false    | `false`    | `true`        |
+| `encoding`         | [File encoding](#file-encoding)         | string  | false    | `auto`     | `unicode`     |
+| `no-newline`       | Skip the final newline                  | boolean | false    | `false`    | `true`        |
+| `verbose`          | Enable verbose logging                  | boolean | false    | `false`    | `true`        |
 
 ## Outputs
 
