@@ -20,6 +20,7 @@
   - [Exclude items and patterns](#exclude-items-and-patterns)
   - [Preview changes with dry-run](#preview-changes-with-dry-run)
   - [Fail on no-op](#fail-on-no-op)
+  - [Fail on unresolved tokens](#fail-on-unresolved-tokens)
   - [Custom file encoding](#custom-file-encoding)
   - [No newline at EOF](#no-newline-at-eof)
 - [Token style](#token-style)
@@ -41,6 +42,7 @@ See [action.yml](action.yml).
 | `follow-symlinks` | Follow symbolic links            | boolean | false    | `false`    | `true`        |
 | `dry-run`         | Preview without modifying files  | boolean | false    | `false`    | `true`        |
 | `fail`            | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
+| `fail-on-skipped` | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
 | `encoding`        | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
 | `no-newline`      | Skip the final newline           | boolean | false    | `false`    | `true`        |
 | `verbose`         | Enable verbose logging           | boolean | false    | `false`    | `true`        |
@@ -282,6 +284,22 @@ steps:
 > [!NOTE]  
 > A warning is written to the log when a token does not have a matching environment variable.
 
+### Fail on unresolved tokens
+
+Fail the step if one or more tokens are skipped because a matching environment variable is missing or empty.
+
+```yaml
+steps:
+  - name: Fail when a token cannot be resolved
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      fail-on-skipped: true
+    env:
+      NAME: jon
+```
+
 ### Custom file encoding
 
 Specify the encoding used for file reads and writes.
@@ -302,7 +320,9 @@ steps:
 
 ### No newline at EOF
 
-Do not add a trailing newline after token replacement.
+Do not append a trailing newline after token replacement.
+
+By default, the action preserves an existing trailing newline and avoids appending a duplicate newline when the file already ends with one.
 
 ```yaml
 steps:

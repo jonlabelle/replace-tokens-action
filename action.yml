@@ -71,8 +71,9 @@ inputs:
 
   no-newline:
     description: >-
-      Do not add a trailing newline to the file.
-      By default, a trailing newline is added.
+      Do not append a trailing newline to the file.
+      By default, an existing trailing newline is preserved and a newline is
+      appended only when the file does not already end with one.
     required: false
     default: 'false'
 
@@ -88,6 +89,13 @@ inputs:
     description: >-
       Fail the step if no files were changed.
       When `dry-run` is enabled, fail if no files would change.
+    required: false
+    default: 'false'
+
+  fail-on-skipped:
+    description: >-
+      Fail the step if one or more tokens are skipped because a matching value
+      was missing or empty.
     required: false
     default: 'false'
 
@@ -148,4 +156,5 @@ runs:
           -NoNewline '${{ inputs.no-newline }}' `
           -DryRun '${{ inputs.dry-run }}' `
           -Fail '${{ inputs.fail }}' `
+          -FailOnSkipped '${{ inputs.fail-on-skipped }}' `
           -VerboseInput '${{ inputs.verbose }}'

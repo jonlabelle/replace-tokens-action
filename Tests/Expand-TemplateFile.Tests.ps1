@@ -107,6 +107,33 @@ Describe 'Expand-TemplateFile Function' {
             return $true
         }
 
+        function Get-CurrentPowerShellPath
+        {
+            $commandNames = @()
+
+            if ($PSVersionTable.PSEdition -eq 'Core')
+            {
+                $commandNames += 'pwsh'
+                $commandNames += 'powershell'
+            }
+            else
+            {
+                $commandNames += 'powershell'
+                $commandNames += 'pwsh'
+            }
+
+            foreach ($commandName in $commandNames)
+            {
+                $command = Get-Command -Name $commandName -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($null -ne $command)
+                {
+                    return $command.Source
+                }
+            }
+
+            throw 'Unable to resolve a PowerShell executable for the fail-on-skipped test.'
+        }
+
         # Store list of test environment variables for cleanup
         $script:testEnvVars = @(
             'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
@@ -700,6 +727,67 @@ Describe 'Expand-TemplateFile Function' {
             $result[0].TokensReplaced | Should -Be 0
             $result[0].Modified | Should -Be $false
         }
+    }
+
+    It 'Preserves an existing trailing newline without appending a duplicate newline' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'preserve-trailing-newline.txt'
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($testFile, "Line {{VAR}}`r`n", $utf8NoBom)
+
+        $env:VAR = 'Done'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM'
+        $content = [System.IO.File]::ReadAllText($testFile, $utf8NoBom)
+
+        # Assert
+        $content | Should -Be "Line Done`r`n"
+    }
+
+    It 'Invoke-ReplaceTokens fails when fail-on-skipped is enabled and tokens are unresolved' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'fail-on-skipped.txt'
+        $outputFile = Join-Path -Path $testDir -ChildPath 'fail-on-skipped-output.txt'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $powershellPath = Get-CurrentPowerShellPath
+        Write-Utf8Content -Path $testFile -Value 'Hello {{NAME}} {{MISSING_TOKEN}}' -NoNewline
+
+        $env:NAME = 'Avery'
+
+        if (Test-Path -Path $outputFile)
+        {
+            Remove-Item -Path $outputFile -Force
+        }
+
+        $previousGithubOutput = $env:GITHUB_OUTPUT
+        $env:GITHUB_OUTPUT = $outputFile
+
+        try
+        {
+            $commandOutput = & $powershellPath -NoProfile -File $scriptPath -PathsInput $testFile -Style 'mustache' -NoNewline 'true' -FailOnSkipped 'true' 2>&1 | Out-String
+            $exitCode = $LASTEXITCODE
+        }
+        finally
+        {
+            if ([string]::IsNullOrWhiteSpace($previousGithubOutput))
+            {
+                Remove-Item Env:GITHUB_OUTPUT -ErrorAction SilentlyContinue
+            }
+            else
+            {
+                $env:GITHUB_OUTPUT = $previousGithubOutput
+            }
+        }
+
+        # Assert
+        $exitCode | Should -Be 1
+        $commandOutput | Should -Match 'Unresolved tokens'
+        $commandOutput | Should -Match 'Skipped: 1'
+
+        $actionOutput = Get-Content -Path $outputFile -Raw
+        $actionOutput | Should -Match 'tokens-skipped=1'
+        $actionOutput | Should -Match 'tokens-replaced=1'
     }
 
     It 'Throws error when -Depth is used without -Recurse' {
