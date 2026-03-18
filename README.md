@@ -14,6 +14,7 @@
   - [Replace tokens in a file](#replace-tokens-in-a-file)
   - [Using a path filter](#using-a-path-filter)
   - [Search multiple paths](#search-multiple-paths)
+  - [Case-insensitive environment variable matching](#case-insensitive-environment-variable-matching)
   - [Replace other token styles](#replace-other-token-styles)
   - [Search paths recursively](#search-paths-recursively)
   - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
@@ -31,21 +32,22 @@
 
 See [action.yml](action.yml).
 
-| name              | description                      | type    | required | default    | example       |
-| ----------------- | -------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`           | File paths to process [^1]       | string  | false    | `.`        | `./prod.json` |
-| `style`           | [Token style](#token-style)      | string  | false    | `mustache` | `envsubst`    |
-| `filter`          | Filename filter [^2]             | string  | false    | none       | `*.json`      |
-| `exclude`         | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
-| `recurse`         | Search subdirectories            | boolean | false    | `false`    | `true`        |
-| `depth`           | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
-| `follow-symlinks` | Follow symbolic links            | boolean | false    | `false`    | `true`        |
-| `dry-run`         | Preview without modifying files  | boolean | false    | `false`    | `true`        |
-| `fail`            | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
-| `fail-on-skipped` | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
-| `encoding`        | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
-| `no-newline`      | Skip the final newline           | boolean | false    | `false`    | `true`        |
-| `verbose`         | Enable verbose logging           | boolean | false    | `false`    | `true`        |
+| name               | description                      | type    | required | default    | example       |
+| ------------------ | -------------------------------- | ------- | -------- | ---------- | ------------- |
+| `paths`            | File paths to process [^1]       | string  | false    | `.`        | `./prod.json` |
+| `style`            | [Token style](#token-style)      | string  | false    | `mustache` | `envsubst`    |
+| `filter`           | Filename filter [^2]             | string  | false    | none       | `*.json`      |
+| `exclude`          | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
+| `recurse`          | Search subdirectories            | boolean | false    | `false`    | `true`        |
+| `depth`            | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
+| `follow-symlinks`  | Follow symbolic links            | boolean | false    | `false`    | `true`        |
+| `dry-run`          | Preview without modifying files  | boolean | false    | `false`    | `true`        |
+| `fail`             | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
+| `fail-on-skipped`  | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
+| `case-insensitive` | Ignore env variable casing       | boolean | false    | `false`    | `true`        |
+| `encoding`         | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
+| `no-newline`       | Skip the final newline           | boolean | false    | `false`    | `true`        |
+| `verbose`          | Enable verbose logging           | boolean | false    | `false`    | `true`        |
 
 ## Outputs
 
@@ -58,7 +60,8 @@ See [action.yml](action.yml).
 
 - GitHub-hosted runners execute the composite action with PowerShell Core (`pwsh`).
 - On self-hosted Windows runners, GitHub Actions falls back to Windows PowerShell when `pwsh` is not installed, so the action remains usable in both environments.
-- Environment variable name matching follows platform conventions: case-insensitive on Windows, case-sensitive on Linux and macOS.
+- Environment variable name matching follows platform conventions by default: case-insensitive on Windows, case-sensitive on Linux and macOS.
+- Set `case-insensitive: true` to use case-insensitive environment variable name matching on any runner.
 - The `Expand-TemplateFile.ps1` script remains compatible with Windows PowerShell 5.1 and PowerShell Core 6+ for self-hosted fallback and direct script usage.
 
 ## Examples
@@ -79,7 +82,22 @@ steps:
 ```
 
 > [!NOTE]  
-> Environment variable names are matched case-insensitively on Windows, and case-sensitively on Linux and macOS.
+> Environment variable names are matched case-insensitively on Windows, and case-sensitively on Linux and macOS by default. Set `case-insensitive: true` to opt into case-insensitive matching everywhere.
+
+### Case-insensitive environment variable matching
+
+Use `case-insensitive: true` when token casing does not need to match the environment variable name exactly.
+
+```yaml
+steps:
+  - name: Replace tokens with case-insensitive environment variable matching
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/template.json
+      case-insensitive: true
+    env:
+      NAME: jon
+```
 
 ### Using a path filter
 

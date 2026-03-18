@@ -57,6 +57,10 @@
         or more tokens are skipped because a matching environment variable was not
         available or its value was empty.
 
+    .PARAMETER CaseInsensitive
+        A string boolean value that enables case-insensitive environment variable
+        name matching on all platforms.
+
     .PARAMETER VerboseInput
         A string boolean value that enables verbose output from
         Expand-TemplateFile.ps1.
@@ -99,6 +103,12 @@
 
         Fails the command if any token is left unresolved because a matching
         environment variable is missing or empty.
+
+    .EXAMPLE
+        ./Invoke-ReplaceTokens.ps1 -PathsInput './template.txt' -CaseInsensitive true
+
+        Enables case-insensitive environment variable name matching even on
+        Linux and macOS runners.
 #>
 param(
     [string]
@@ -136,6 +146,9 @@ param(
 
     [string]
     $FailOnSkipped = 'false',
+
+    [string]
+    $CaseInsensitive = 'false',
 
     [string]
     $VerboseInput = 'false'
@@ -188,6 +201,7 @@ $exclude = Split-MultilineInput -Value $ExcludeInput
 $dryRunEnabled = [System.Convert]::ToBoolean($DryRun)
 $failEnabled = [System.Convert]::ToBoolean($Fail)
 $failOnSkippedEnabled = [System.Convert]::ToBoolean($FailOnSkipped)
+$caseInsensitiveEnabled = [System.Convert]::ToBoolean($CaseInsensitive)
 
 $params = @{
     Path = $paths
@@ -198,6 +212,11 @@ $params = @{
     Encoding = $Encoding
     NoNewline = [System.Convert]::ToBoolean($NoNewline)
     Verbose = [System.Convert]::ToBoolean($VerboseInput)
+}
+
+if ($caseInsensitiveEnabled)
+{
+    $params.CaseInsensitive = $true
 }
 
 if (-not [string]::IsNullOrWhiteSpace($Filter))
