@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.34.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.33.0...v1.34.0) (2026-03-18)
+
+
+### Features
+
+* fail-on-skipped and preserve EOF newline behavior ([#13](https://github.com/jonlabelle/replace-tokens-action/issues/13)) ([bb31c8d](https://github.com/jonlabelle/replace-tokens-action/commit/bb31c8d9c17e90ffee0f6ee841a3b2ed9bd99bb8))
+
 # [1.33.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.32.0...v1.33.0) (2026-03-18)
 
 
