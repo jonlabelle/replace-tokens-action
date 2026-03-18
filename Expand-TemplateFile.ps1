@@ -31,7 +31,7 @@ function Expand-TemplateFile
         Specify the file encoding. Default: auto
 
     .PARAMETER NoNewline
-        Do not add a newline at the end of the file.
+        Do not append a newline at the end of the file when writing changes.
 
     .PARAMETER Exclude
         Specify files or directories to exclude from processing.
@@ -60,7 +60,7 @@ function Expand-TemplateFile
     .OUTPUTS
         PSCustomObject[]
         Returns an array of objects with file processing details.
-        Each object contains: FilePath, TokensReplaced, TokensSkipped, Modified
+        Each object contains: FilePath, TokensReplaced, TokensSkipped, WouldModify, Modified
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([PSCustomObject[]])]
@@ -96,7 +96,7 @@ function Expand-TemplateFile
         [string]
         $Encoding = 'auto',
 
-        [Parameter(HelpMessage = 'Do not add a newline at the end of the file')]
+        [Parameter(HelpMessage = 'Do not append a newline at the end of the file when writing changes')]
         [switch]
         $NoNewline,
 
@@ -666,14 +666,23 @@ function Expand-TemplateFile
 
             try
             {
+                $finalContent = $Content
+                if (-not $NoNewline)
+                {
+                    $endsWithCrLf = $finalContent.EndsWith("`r`n", [System.StringComparison]::Ordinal)
+                    $endsWithLf = $finalContent.EndsWith("`n", [System.StringComparison]::Ordinal)
+                    $endsWithCr = $finalContent.EndsWith("`r", [System.StringComparison]::Ordinal)
+
+                    if (-not ($endsWithCrLf -or $endsWithLf -or $endsWithCr))
+                    {
+                        $finalContent += [Environment]::NewLine
+                    }
+                }
+
                 $fileStream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Create), ([System.IO.FileAccess]::Write), ([System.IO.FileShare]::None)
                 $writer = New-Object -TypeName System.IO.StreamWriter -ArgumentList $fileStream, $EncodingObject
 
-                $writer.Write($Content)
-                if (-not $NoNewline)
-                {
-                    $writer.Write([Environment]::NewLine)
-                }
+                $writer.Write($finalContent)
 
                 $writer.Flush()
             }

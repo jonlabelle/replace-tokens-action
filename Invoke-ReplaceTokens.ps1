@@ -52,6 +52,11 @@
         A string boolean value that causes the script to exit with code 1 when no
         files are changed, or when DryRun is true, when no files would change.
 
+    .PARAMETER FailOnSkipped
+        A string boolean value that causes the script to exit with code 1 when one
+        or more tokens are skipped because a matching environment variable was not
+        available.
+
     .PARAMETER VerboseInput
         A string boolean value that enables verbose output from
         Expand-TemplateFile.ps1.
@@ -88,6 +93,12 @@
 
         Runs the helper the same way the composite action does and writes action
         outputs to the file referenced by GITHUB_OUTPUT.
+
+    .EXAMPLE
+        ./Invoke-ReplaceTokens.ps1 -PathsInput './template.txt' -FailOnSkipped true
+
+        Fails the command if any token is left unresolved because a matching
+        environment variable is missing or empty.
 #>
 param(
     [string]
@@ -122,6 +133,9 @@ param(
 
     [string]
     $Fail = 'false',
+
+    [string]
+    $FailOnSkipped = 'false',
 
     [string]
     $VerboseInput = 'false'
@@ -173,6 +187,7 @@ if ($paths.Count -eq 0)
 $exclude = Split-MultilineInput -Value $ExcludeInput
 $dryRunEnabled = [System.Convert]::ToBoolean($DryRun)
 $failEnabled = [System.Convert]::ToBoolean($Fail)
+$failOnSkippedEnabled = [System.Convert]::ToBoolean($FailOnSkipped)
 
 $params = @{
     Path = $paths
@@ -226,12 +241,6 @@ if ($null -eq $totalTokensSkipped)
     $totalTokensSkipped = 0
 }
 
-if ($failEnabled -and $reportedFiles.Count -eq 0)
-{
-    Write-Output '::error title=No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace.'
-    exit 1
-}
-
 $summaryPrefix = if ($dryRunEnabled)
 {
     'Tokens would be replaced in the following file(s):'
@@ -257,3 +266,15 @@ Write-ActionOutput -Name 'tokens-replaced' -Value $totalTokensReplaced
 Write-ActionOutput -Name 'tokens-skipped' -Value $totalTokensSkipped
 Write-ActionOutput -Name 'modified-files-count' -Value $modifiedFiles.Count
 Write-ActionOutput -Name 'would-modify-files-count' -Value $wouldModifyFiles.Count
+
+if ($failEnabled -and $reportedFiles.Count -eq 0)
+{
+    Write-Output '::error title=No operation performed::Ensure your token file paths are correct, and you have defined the appropriate tokens to replace.'
+    exit 1
+}
+
+if ($failOnSkippedEnabled -and $totalTokensSkipped -gt 0)
+{
+    Write-Output '::error title=Unresolved tokens::One or more tokens were skipped because a matching value was not available.'
+    exit 1
+}
