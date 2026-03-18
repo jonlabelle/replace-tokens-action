@@ -745,6 +745,55 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be "Line Done`r`n"
     }
 
+    It 'Appends a trailing newline using the existing CRLF line ending style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'append-existing-crlf-newline.txt'
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($testFile, "Line {{VAR}}`r`nNext {{VAR}}", $utf8NoBom)
+
+        $env:VAR = 'Done'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM'
+        $content = [System.IO.File]::ReadAllText($testFile, $utf8NoBom)
+
+        # Assert
+        $content | Should -Be "Line Done`r`nNext Done`r`n"
+    }
+
+    It 'Appends a trailing newline using the existing LF line ending style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'append-existing-lf-newline.txt'
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($testFile, "Line {{VAR}}`nNext {{VAR}}", $utf8NoBom)
+
+        $env:VAR = 'Done'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM'
+        $content = [System.IO.File]::ReadAllText($testFile, $utf8NoBom)
+
+        # Assert
+        $content | Should -Be "Line Done`nNext Done`n"
+    }
+
+    It 'Falls back to the environment newline when the file has no existing line endings' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'append-environment-newline.txt'
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($testFile, 'Line {{VAR}}', $utf8NoBom)
+
+        $env:VAR = 'Done'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM'
+        $content = [System.IO.File]::ReadAllText($testFile, $utf8NoBom)
+        $expected = 'Line Done' + [Environment]::NewLine
+
+        # Assert
+        $content | Should -Be $expected
+    }
+
     It 'Invoke-ReplaceTokens fails when fail-on-skipped is enabled and tokens are unresolved' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'fail-on-skipped.txt'

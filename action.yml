@@ -73,7 +73,8 @@ inputs:
     description: >-
       Do not append a trailing newline to the file.
       By default, an existing trailing newline is preserved and a newline is
-      appended only when the file does not already end with one.
+      appended only when the file does not already end with one, using the
+      file's detected line ending style when possible.
     required: false
     default: 'false'
 

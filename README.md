@@ -322,7 +322,7 @@ steps:
 
 Do not append a trailing newline after token replacement.
 
-By default, the action preserves an existing trailing newline and avoids appending a duplicate newline when the file already ends with one.
+By default, the action preserves an existing trailing newline, avoids appending a duplicate newline when the file already ends with one, and reuses the file's detected line ending style when a trailing newline needs to be added. If no existing line ending can be inferred, it falls back to the runner environment newline.
 
 ```yaml
 steps:
