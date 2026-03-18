@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.33.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.32.0...v1.33.0) (2026-03-18)
+
+
+### Features
+
+* update default file encoding to auto ([#12](https://github.com/jonlabelle/replace-tokens-action/issues/12)) ([cd3928b](https://github.com/jonlabelle/replace-tokens-action/commit/cd3928bdc93e84011a76431e79d4bb34fdb0bf40))
+
 # [1.32.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.31.0...v1.32.0) (2026-03-18)
 
 
