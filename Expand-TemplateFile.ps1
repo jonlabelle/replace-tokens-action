@@ -645,6 +645,61 @@ function Expand-TemplateFile
             }
         }
 
+        function Get-PreferredNewlineSequence
+        {
+            param(
+                [string]
+                $Content
+            )
+
+            if ([string]::IsNullOrEmpty($Content))
+            {
+                return $null
+            }
+
+            $crLfCount = 0
+            $lfCount = 0
+            $crCount = 0
+
+            for ($index = 0; $index -lt $Content.Length; $index++)
+            {
+                if ($Content[$index] -eq "`r")
+                {
+                    if (($index + 1) -lt $Content.Length -and $Content[$index + 1] -eq "`n")
+                    {
+                        $crLfCount++
+                        $index++
+                        continue
+                    }
+
+                    $crCount++
+                    continue
+                }
+
+                if ($Content[$index] -eq "`n")
+                {
+                    $lfCount++
+                }
+            }
+
+            if ($crLfCount -eq 0 -and $lfCount -eq 0 -and $crCount -eq 0)
+            {
+                return $null
+            }
+
+            if ($crLfCount -ge $lfCount -and $crLfCount -ge $crCount)
+            {
+                return "`r`n"
+            }
+
+            if ($lfCount -ge $crCount)
+            {
+                return "`n"
+            }
+
+            return "`r"
+        }
+
         function Write-FileContent
         {
             param(
@@ -656,6 +711,9 @@ function Expand-TemplateFile
 
                 [System.Text.Encoding]
                 $EncodingObject,
+
+                [string]
+                $OriginalContent,
 
                 [bool]
                 $NoNewline
@@ -675,7 +733,16 @@ function Expand-TemplateFile
 
                     if (-not ($endsWithCrLf -or $endsWithLf -or $endsWithCr))
                     {
-                        $finalContent += [Environment]::NewLine
+                        $newlineSequence = Get-PreferredNewlineSequence -Content $OriginalContent
+
+                        if ([string]::IsNullOrEmpty($NewlineSequence))
+                        {
+                            $finalContent += [Environment]::NewLine
+                        }
+                        else
+                        {
+                            $finalContent += $NewlineSequence
+                        }
                     }
                 }
 
@@ -799,7 +866,7 @@ function Expand-TemplateFile
                     # Use ShouldProcess for -WhatIf support
                     if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
-                        Write-FileContent -File $File -Content $content -EncodingObject $encodingInfo.WriteEncoding -NoNewline $NoNewline
+                        Write-FileContent -File $File -Content $content -EncodingObject $encodingInfo.WriteEncoding -OriginalContent $originalContent -NoNewline $NoNewline
                         $modified = $true
                     }
 
