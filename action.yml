@@ -1,5 +1,5 @@
 name: Replace tokens action
-description: A GitHub action to replace tokens in a file, similar to envsubst
+description: A GitHub Action that replaces tokens in files, similar to envsubst
 author: Jon LaBelle
 branding:
   icon: repeat
@@ -8,94 +8,93 @@ branding:
 inputs:
   paths:
     description: >-
-      Replacement file path(s).
-      Specifies a path to one or more locations.
+      File path or paths to process.
       Specify multiple paths on separate lines using a multiline string `|`.
-      Wildcards are accepted.
-      The default location is the current directory (`.`).
+      Wildcards are supported.
+      Defaults to the current directory (`.`).
       Example: `./path/to/my/settings.json`
     required: false
     default: '.'
 
   style:
     description: >-
-      The style (or format) of the tokens that will be replaced.
-      Accepted values are `mustache` (ex: `{{ VARIABLE }}`), `handlebars` (ex: `{{ VARIABLE }}`), `brackets` (ex: `< VARIABLE >`), `double-hashes` (ex: `## VARIABLE ##`), `envsubst` (ex: `${VARIABLE}`), and `make` (ex: `$(VARIABLE)`).
-      The default token style is `mustache`.
+      Token style to replace.
+      Accepted values are `mustache` (for example, `{{ VARIABLE }}`), `handlebars` (for example, `{{ VARIABLE }}`), `brackets` (for example, `< VARIABLE >`), `double-hashes` (for example, `## VARIABLE ##`), `envsubst` (for example, `${VARIABLE}`), and `make` (for example, `$(VARIABLE)`).
+      Defaults to `mustache`.
     required: false
     default: 'mustache'
 
   filter:
     description: >-
-      Filter to qualify the `paths` parameter.
-      Only supports `*` and `?` wildcards.
+      Filter applied to the resolved `paths` results.
+      Supports only `*` and `?` wildcards.
       Example: `*.json`
     required: false
 
   exclude:
     description: >-
-      One or more string items or patterns to be matched, and excluded from the results.
-      Wildcard characters are accepted.
+      File or directory names and patterns to exclude from the results.
+      Wildcards are supported.
       Specify multiple exclusions on separate lines using a multiline string `|`.
       Example: `*dev*.json`
     required: false
 
   recurse:
     description: >-
-      Whether or not to recurse directories.
-      The default is `false`, or no directory recursion.
+      Whether to search subdirectories recursively.
+      Defaults to `false`.
     required: false
     default: 'false'
 
   depth:
     description: >-
-      Depth of directory recursion.
-      Only valid if the `recurse` option is enabled.
-      There default depth is not set.
+      Maximum recursion depth.
+      Valid only when `recurse` is enabled.
+      A value of `0` means no depth limit.
     required: false
     default: '0'
 
   follow-symlinks:
     description: >-
-      Whether or not to follow symbolic links.
-      The default behavior is not to follow symbolic links.
+      Whether to follow symbolic links.
+      Defaults to `false`.
     required: false
     default: 'false'
 
   encoding:
     description: >-
-      Encoding for file read/write operations.
-      The default is `utf8`, without the byte order mark (BOM).
-      Acceptable values are: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
+      File encoding to use when reading and writing files.
+      Defaults to `utf8` without a byte order mark (BOM).
+      Accepted values: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
     required: false
     default: 'utf8'
 
   no-newline:
     description: >-
-      Do not insert a newline at the end of the file.
-      The default behavior is to insert a newline at the end of the file.
+      Do not add a trailing newline to the file.
+      By default, a trailing newline is added.
     required: false
     default: 'false'
 
   dry-run:
     description: >-
-      Run in dry-run mode without modifying files.
-      Shows what changes would be made.
-      The default behavior is to modify files.
+      Preview changes without modifying files.
+      Shows what would change.
+      By default, files are modified.
     required: false
     default: 'false'
 
   fail:
     description: >-
       Fail the step if no files were changed.
-      When `dry-run` is enabled, fail the step if no files would be changed.
+      When `dry-run` is enabled, fail if no files would change.
     required: false
     default: 'false'
 
   verbose:
     description: >-
       Enable verbose output.
-      The default behavior is to suppress verbose output.
+      By default, verbose output is suppressed.
     required: false
     default: 'false'
 

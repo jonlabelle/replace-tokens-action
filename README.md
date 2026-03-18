@@ -3,7 +3,7 @@
 [![test](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml)
 [![latest release](https://img.shields.io/github/v/tag/jonlabelle/replace-tokens-action.svg?label=version&sort=semver)](https://github.com/jonlabelle/replace-tokens-action/releases)
 
-> A GitHub action to replace tokens in a file, similar to envsubst.
+> A GitHub Action that replaces tokens in files, similar to envsubst.
 
 ## Table of contents
 
@@ -11,39 +11,39 @@
 - [Outputs](#outputs)
 - [Platform support](#platform-support)
 - [Examples](#examples)
-  - [Replace tokens in path](#replace-tokens-in-path)
+  - [Replace tokens in a file](#replace-tokens-in-a-file)
   - [Using a path filter](#using-a-path-filter)
   - [Search multiple paths](#search-multiple-paths)
-  - [Replace handlebars, envsubst, brackets, double-hashes, and make styled tokens](#replace-handlebars-envsubst-brackets-double-hashes-and-make-styled-tokens)
+  - [Replace other token styles](#replace-other-token-styles)
   - [Search paths recursively](#search-paths-recursively)
   - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
   - [Exclude items and patterns](#exclude-items-and-patterns)
   - [Preview changes with dry-run](#preview-changes-with-dry-run)
   - [Fail on no-op](#fail-on-no-op)
   - [Custom file encoding](#custom-file-encoding)
-  - [No Newline at eof](#no-newline-at-eof)
+  - [No newline at EOF](#no-newline-at-eof)
 - [Token style](#token-style)
 - [File encoding](#file-encoding)
 - [License](#license)
 
 ## Usage
 
-See [action.yml](action.yml)
+See [action.yml](action.yml).
 
-| name              | description                        | type    | required | default    | example       |
-| ----------------- | ---------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`           | Token file paths [^1]              | string  | false    | `.`        | `./prod.json` |
-| `style`           | [Token style/format](#token-style) | string  | false    | `mustache` | `envsubst`    |
-| `filter`          | Filter pattern [^2]                | string  | false    | none       | `*.json`      |
-| `exclude`         | Exclusion patterns [^3]            | string  | false    | none       | `*dev*.json`  |
-| `recurse`         | Recurse directories                | boolean | false    | `false`    | `false`       |
-| `depth`           | Depth of recursion                 | number  | false    | none       | `2`           |
-| `follow-symlinks` | Follow symbolic links              | boolean | false    | `false`    | `false`       |
-| `dry-run`         | Preview without modifying          | boolean | false    | `false`    | `true`        |
-| `fail`            | Fail if no files change [^4]       | boolean | false    | `false`    | `false`       |
-| `encoding`        | [File encoding](#file-encoding)    | string  | false    | `utf8`     | `unicode`     |
-| `no-newline`      | No newline at end-of-file          | boolean | false    | `false`    | `true`        |
-| `verbose`         | Enable verbose output              | boolean | false    | `false`    | `true`        |
+| name              | description                      | type    | required | default    | example       |
+| ----------------- | -------------------------------- | ------- | -------- | ---------- | ------------- |
+| `paths`           | File paths to process [^1]       | string  | false    | `.`        | `./prod.json` |
+| `style`           | [Token style](#token-style)      | string  | false    | `mustache` | `envsubst`    |
+| `filter`          | Filename filter [^2]             | string  | false    | none       | `*.json`      |
+| `exclude`         | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
+| `recurse`         | Search subdirectories            | boolean | false    | `false`    | `true`        |
+| `depth`           | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
+| `follow-symlinks` | Follow symbolic links            | boolean | false    | `false`    | `true`        |
+| `dry-run`         | Preview without modifying files  | boolean | false    | `false`    | `true`        |
+| `fail`            | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
+| `encoding`        | [File encoding](#file-encoding)  | string  | false    | `utf8`     | `unicode`     |
+| `no-newline`      | Skip the final newline           | boolean | false    | `false`    | `true`        |
+| `verbose`         | Enable verbose logging           | boolean | false    | `false`    | `true`        |
 
 ## Outputs
 
@@ -61,10 +61,10 @@ See [action.yml](action.yml)
 
 ## Examples
 
-### Replace tokens in path
+### Replace tokens in a file
 
-Replace **mustache** styled tokens `{{ NAME }}` in `./path/to/template.json`
-with environment variable `NAME`.
+Replace a **mustache** token such as `{{ NAME }}` in `./path/to/template.json`
+with the value of the `NAME` environment variable.
 
 ```yaml
 steps:
@@ -81,7 +81,7 @@ steps:
 
 ### Using a path filter
 
-Search and replace all tokens in `*.json` files found in the `./path/to/search` directory.
+Search `./path/to/search` and replace tokens in all `*.json` files.
 
 ```yaml
 steps:
@@ -96,7 +96,7 @@ steps:
 
 ### Search multiple paths
 
-Search three paths and replace matching tokens in `*.json*` files.
+Search three paths and replace matching tokens in `*.json` files.
 
 ```yaml
 steps:
@@ -112,9 +112,9 @@ steps:
       NAME: jon
 ```
 
-### Replace handlebars, envsubst, brackets, double-hashes, and make styled tokens
+### Replace other token styles
 
-Replace tokens using the **handlebars** style/format, e.g. `{{VARIABLE}}`.
+Replace tokens using the **handlebars** style, for example `{{VARIABLE}}`.
 
 ```yaml
 steps:
@@ -128,7 +128,7 @@ steps:
       NAME: jon
 ```
 
-Replace tokens using the **envsubst** style/format, e.g. `${VARIABLE}`.
+Replace tokens using the **envsubst** style, for example `${VARIABLE}`.
 
 ```yaml
 steps:
@@ -142,7 +142,7 @@ steps:
       NAME: jon
 ```
 
-Replace tokens using the **brackets** style/format, e.g. `<VARIABLE>`.
+Replace tokens using the **brackets** style, for example `<VARIABLE>`.
 
 ```yaml
 steps:
@@ -159,7 +159,7 @@ steps:
 > [!WARNING]  
 > The `brackets` style (`<VARIABLE>`) can collide with HTML and XML tags. If an environment variable name matches a tag name (e.g. `div`, `span`), those tags will be replaced unintentionally. Avoid using this style on HTML/XML files, or use the `filter`/`exclude` inputs to restrict processing to non-markup files.
 
-Replace tokens using the **double-hashes** style/format, e.g. `##VARIABLE##`.
+Replace tokens using the **double-hashes** style, for example `##VARIABLE##`.
 
 ```yaml
 steps:
@@ -173,7 +173,7 @@ steps:
       NAME: jon
 ```
 
-Replace tokens using the **make** style/format, e.g. `$(VARIABLE)`.
+Replace tokens using the **make** style, for example `$(VARIABLE)`.
 
 ```yaml
 steps:
@@ -189,7 +189,7 @@ steps:
 
 ### Search paths recursively
 
-Search and replace tokens from the specified paths, recursively, two directories deep.
+Search the specified paths recursively, up to two directories deep, and replace matching tokens.
 
 ```yaml
 steps:
@@ -208,7 +208,7 @@ steps:
 
 ### Replace an API key and URL in .env files
 
-Replace URL and API key tokens in .env files.
+Replace `API_URL` and `API_KEY` tokens in `.env` files.
 
 ```yaml
 steps:
@@ -225,7 +225,7 @@ steps:
 
 ### Exclude items and patterns
 
-Exclude certain file or directory patterns from results.
+Exclude file or directory patterns from the search results.
 
 ```yaml
 steps:
@@ -246,7 +246,7 @@ steps:
 
 ### Preview changes with dry-run
 
-Preview what changes would be made without actually modifying files.
+Preview the changes without modifying any files.
 
 ```yaml
 steps:
@@ -263,7 +263,7 @@ steps:
 > [!TIP]
 > Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations.
 > [!NOTE]
-> When `dry-run: true` and `fail: true` are used together, the action fails only if no files would be changed.
+> When `dry-run: true` and `fail: true` are used together, the action fails only if no files would change.
 
 ### Fail on no-op
 
@@ -282,11 +282,11 @@ steps:
 ```
 
 > [!NOTE]  
-> A warning will be printed to console output if a token doesn't have a matching environment variable.
+> A warning is written to the log when a token does not have a matching environment variable.
 
 ### Custom file encoding
 
-Specify the encoding to use for file read/writes.
+Specify the encoding used for file reads and writes.
 
 ```yaml
 steps:
@@ -300,9 +300,9 @@ steps:
       NAME: jon
 ```
 
-### No newline at eof
+### No newline at EOF
 
-Don't insert a final newline after tokens are replaced.
+Do not add a trailing newline after token replacement.
 
 ```yaml
 steps:
@@ -318,7 +318,7 @@ steps:
 
 ## Token style
 
-Tokens must be in one of following formats to be replaced:
+Use one of the following token formats:
 
 | name                 | style            | examples                   |
 | -------------------- | ---------------- | -------------------------- |
@@ -329,22 +329,21 @@ Tokens must be in one of following formats to be replaced:
 | `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
 | `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
 
-Where `VARIABLE` has a matching environment variable name whose value will be
-used in token replacement. Similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
+If an environment variable named `VARIABLE` exists, its value is used for replacement. This behavior is similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
 
 ## File encoding
 
-The default file encoding for read/write operations is set to `utf8`, _without_ the byte order mark (BOM). The following additional file `encoding` formats are supported.
+The default encoding for file reads and writes is `utf8` without a byte order mark (BOM). The following `encoding` values are also supported.
 
-- `utf8`: Encodes in UTF-8 format, without the Byte Order Mark (BOM)
-- `utf8BOM`: Encodes in UTF-8 format with Byte Order Mark (BOM)
-- `ascii`: Uses the encoding for the ASCII (7-bit) character set
-- `ansi`: Uses the encoding for the for the current culture's ANSI code page
-- `bigendianunicode`: Encodes in UTF-16 format using the big-endian byte order
-- `bigendianutf32`: Encodes in UTF-32 format using the big-endian byte order
+- `utf8`: Encodes as UTF-8 without a byte order mark (BOM)
+- `utf8BOM`: Encodes as UTF-8 with a byte order mark (BOM)
+- `ascii`: Uses the ASCII (7-bit) character set
+- `ansi`: Uses the current culture's ANSI code page
+- `bigendianunicode`: Encodes as UTF-16 using big-endian byte order
+- `bigendianutf32`: Encodes as UTF-32 using big-endian byte order
 - `oem`: Uses the default encoding for MS-DOS and console programs
-- `unicode`: Encodes in UTF-16 format using the little-endian byte order
-- `utf32`: Encodes in UTF-32 format
+- `unicode`: Encodes as UTF-16 using little-endian byte order
+- `utf32`: Encodes as UTF-32
 
 On Windows PowerShell 5.1, `ansi` is normalized to `Default`, and UTF-8 BOM behavior is normalized internally so `utf8` remains BOM-less by default while `utf8BOM` writes a BOM.
 
@@ -352,10 +351,10 @@ On Windows PowerShell 5.1, `ansi` is normalized to `Default`, and UTF-8 BOM beha
 
 [MIT](LICENSE)
 
-[^1]: A path to one or more locations. Wildcards are accepted. If omitted, the action defaults to the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
+[^1]: One or more file or directory paths. Wildcards are supported. If omitted, the action defaults to the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
 
 [^2]: `filter` only supports `*` and `?` wildcards.
 
-[^3]: One or more string items or patterns to be matched, and excluded from the results. Wildcard characters are accepted. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) docs for more information.
+[^3]: One or more names or patterns to exclude from the results. Wildcards are supported. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) documentation for more information.
 
 [^4]: When `dry-run` is enabled, `fail` checks whether any files would change instead of whether any files were written.
