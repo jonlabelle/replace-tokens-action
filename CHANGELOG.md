@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.36.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.35.0...v1.36.0) (2026-03-18)
+
+
+### Features
+
+* add opt-in case-insensitive environment variable matching ([#15](https://github.com/jonlabelle/replace-tokens-action/issues/15)) ([cc6545f](https://github.com/jonlabelle/replace-tokens-action/commit/cc6545f382f884f36fc5cc95670050ef8f6c40c8))
+
 # [1.35.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.34.0...v1.35.0) (2026-03-18)
 
 
