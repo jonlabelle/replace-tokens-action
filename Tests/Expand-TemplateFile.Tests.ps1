@@ -109,7 +109,29 @@ Describe 'Expand-TemplateFile Function' {
 
         function Get-CurrentPowerShellPath
         {
-            return (Get-Process -Id $PID).Path
+            $commandNames = @()
+
+            if ($PSVersionTable.PSEdition -eq 'Core')
+            {
+                $commandNames += 'pwsh'
+                $commandNames += 'powershell'
+            }
+            else
+            {
+                $commandNames += 'powershell'
+                $commandNames += 'pwsh'
+            }
+
+            foreach ($commandName in $commandNames)
+            {
+                $command = Get-Command -Name $commandName -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($null -ne $command)
+                {
+                    return $command.Source
+                }
+            }
+
+            throw 'Unable to resolve a PowerShell executable for the fail-on-skipped test.'
         }
 
         # Store list of test environment variables for cleanup

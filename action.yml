@@ -95,7 +95,7 @@ inputs:
   fail-on-skipped:
     description: >-
       Fail the step if one or more tokens are skipped because a matching value
-      was not available.
+      was missing or empty.
     required: false
     default: 'false'
 

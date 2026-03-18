@@ -55,7 +55,7 @@
     .PARAMETER FailOnSkipped
         A string boolean value that causes the script to exit with code 1 when one
         or more tokens are skipped because a matching environment variable was not
-        available.
+        available or its value was empty.
 
     .PARAMETER VerboseInput
         A string boolean value that enables verbose output from
