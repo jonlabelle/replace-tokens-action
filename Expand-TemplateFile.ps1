@@ -28,7 +28,7 @@ function Expand-TemplateFile
         Follow symbolic links when traversing directories.
 
     .PARAMETER Encoding
-        Specify the file encoding. Default: utf8
+        Specify the file encoding. Default: auto
 
     .PARAMETER NoNewline
         Do not add a newline at the end of the file.
@@ -92,9 +92,9 @@ function Expand-TemplateFile
         $FollowSymlinks,
 
         [Parameter(HelpMessage = 'Specify the file encoding')]
-        [ValidateSet('utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', IgnoreCase = $true)]
+        [ValidateSet('auto', 'utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', IgnoreCase = $true)]
         [string]
-        $Encoding = 'utf8',
+        $Encoding = 'auto',
 
         [Parameter(HelpMessage = 'Do not add a newline at the end of the file')]
         [switch]
@@ -116,6 +116,437 @@ function Expand-TemplateFile
 
             return [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
         }
+
+        function Register-CodePagesEncodingProvider
+        {
+            try
+            {
+                $providerType = [System.Type]::GetType('System.Text.CodePagesEncodingProvider, System.Text.Encoding.CodePages', $false)
+
+                if ($null -ne $providerType)
+                {
+                    [System.Text.Encoding]::RegisterProvider($providerType::Instance)
+                }
+            }
+            catch
+            {
+                Write-Verbose 'Code pages encoding provider registration was skipped.'
+            }
+        }
+
+        function New-Utf8EncodingNoBom
+        {
+            return (New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false, $true)
+        }
+
+        function New-Utf8EncodingWithBom
+        {
+            return (New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $true, $true)
+        }
+
+        function New-UnicodeEncoding
+        {
+            param(
+                [bool]
+                $BigEndian,
+
+                [bool]
+                $ByteOrderMark
+            )
+
+            return (New-Object -TypeName System.Text.UnicodeEncoding -ArgumentList $BigEndian, $ByteOrderMark, $true)
+        }
+
+        function New-Utf32Encoding
+        {
+            param(
+                [bool]
+                $BigEndian,
+
+                [bool]
+                $ByteOrderMark
+            )
+
+            return (New-Object -TypeName System.Text.UTF32Encoding -ArgumentList $BigEndian, $ByteOrderMark, $true)
+        }
+
+        function Get-AnsiEncoding
+        {
+            if (-not (Test-IsWindows))
+            {
+                return (New-Utf8EncodingNoBom)
+            }
+
+            $ansiCodePage = [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.ANSICodePage
+            return [System.Text.Encoding]::GetEncoding($ansiCodePage)
+        }
+
+        function Get-OemEncoding
+        {
+            if (-not (Test-IsWindows))
+            {
+                return (New-Utf8EncodingNoBom)
+            }
+
+            try
+            {
+                return [System.Text.Encoding]::GetEncoding([System.Console]::OutputEncoding.CodePage)
+            }
+            catch
+            {
+                return (Get-AnsiEncoding)
+            }
+        }
+
+        function Get-ExplicitEncodingInfo
+        {
+            param(
+                [string]
+                $EncodingName
+            )
+
+            $encodingLower = $EncodingName.ToLower()
+            $resolvedEncoding = switch ($encodingLower)
+            {
+                { $_ -in @('utf8', 'utf-8', 'utf8nobom') } { New-Utf8EncodingNoBom; break }
+                'utf8bom' { New-Utf8EncodingWithBom; break }
+                'ascii' { [System.Text.Encoding]::ASCII; break }
+                'ansi' { Get-AnsiEncoding; break }
+                'bigendianunicode' { New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true; break }
+                'bigendianutf32' { New-Utf32Encoding -BigEndian $true -ByteOrderMark $true; break }
+                'oem' { Get-OemEncoding; break }
+                'unicode' { New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true; break }
+                'utf32' { New-Utf32Encoding -BigEndian $false -ByteOrderMark $true; break }
+                default { throw "Unknown encoding: $EncodingName" }
+            }
+
+            return [PSCustomObject]@{
+                Name = $EncodingName
+                ReadEncoding = $resolvedEncoding
+                WriteEncoding = $resolvedEncoding
+            }
+        }
+
+        function Test-IsLikelyUtf16
+        {
+            param(
+                [byte[]]
+                $Bytes,
+
+                [int]
+                $Count,
+
+                [bool]
+                $BigEndian
+            )
+
+            if ($Count -lt 4)
+            {
+                return $false
+            }
+
+            $pairCount = [int][Math]::Floor($Count / 2)
+            $nullByteMatches = 0
+            $nonNullTextBytes = 0
+
+            for ($index = 0; $index -lt ($pairCount * 2); $index += 2)
+            {
+                if ($BigEndian)
+                {
+                    $nullByte = $Bytes[$index]
+                    $textByte = $Bytes[$index + 1]
+                }
+                else
+                {
+                    $textByte = $Bytes[$index]
+                    $nullByte = $Bytes[$index + 1]
+                }
+
+                if ($nullByte -eq 0 -and $textByte -ne 0)
+                {
+                    $nullByteMatches++
+                }
+
+                if ($textByte -ne 0)
+                {
+                    $nonNullTextBytes++
+                }
+            }
+
+            if ($nonNullTextBytes -lt 2)
+            {
+                return $false
+            }
+
+            return $nullByteMatches -ge [Math]::Max(2, [int][Math]::Floor($pairCount * 0.6))
+        }
+
+        function Test-IsLikelyUtf8
+        {
+            param(
+                [byte[]]
+                $Bytes,
+
+                [int]
+                $Count
+            )
+
+            if ($Count -le 0)
+            {
+                return $true
+            }
+
+            $strictUtf8 = New-Utf8EncodingNoBom
+
+            for ($trimCount = 0; $trimCount -le 3; $trimCount++)
+            {
+                $lengthToTest = $Count - $trimCount
+
+                if ($lengthToTest -le 0)
+                {
+                    continue
+                }
+
+                try
+                {
+                    [void]$strictUtf8.GetCharCount($Bytes, 0, $lengthToTest)
+                    return $true
+                }
+                catch [System.Text.DecoderFallbackException]
+                {
+                }
+                catch [System.ArgumentException]
+                {
+                }
+            }
+
+            return $false
+        }
+
+        function Get-FileEncodingInfo
+        {
+            param(
+                [System.IO.FileStream]
+                $Stream,
+
+                [string]
+                $RequestedEncodingName
+            )
+
+            $requestedEncodingLower = $RequestedEncodingName.ToLower()
+            if ($requestedEncodingLower -ne 'auto')
+            {
+                return (Get-ExplicitEncodingInfo -EncodingName $RequestedEncodingName)
+            }
+
+            $prefixBuffer = New-Object byte[] 4
+            $prefixBytesRead = $Stream.Read($prefixBuffer, 0, $prefixBuffer.Length)
+
+            if ($prefixBytesRead -ge 4)
+            {
+                if ($prefixBuffer[0] -eq 0x00 -and $prefixBuffer[1] -eq 0x00 -and $prefixBuffer[2] -eq 0xFE -and $prefixBuffer[3] -eq 0xFF)
+                {
+                    return [PSCustomObject]@{
+                        Name = 'bigendianutf32'
+                        ReadEncoding = (New-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
+                        WriteEncoding = (New-Utf32Encoding -BigEndian $true -ByteOrderMark $true)
+                    }
+                }
+
+                if ($prefixBuffer[0] -eq 0xFF -and $prefixBuffer[1] -eq 0xFE -and $prefixBuffer[2] -eq 0x00 -and $prefixBuffer[3] -eq 0x00)
+                {
+                    return [PSCustomObject]@{
+                        Name = 'utf32'
+                        ReadEncoding = (New-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
+                        WriteEncoding = (New-Utf32Encoding -BigEndian $false -ByteOrderMark $true)
+                    }
+                }
+            }
+
+            if ($prefixBytesRead -ge 3)
+            {
+                if ($prefixBuffer[0] -eq 0xEF -and $prefixBuffer[1] -eq 0xBB -and $prefixBuffer[2] -eq 0xBF)
+                {
+                    return [PSCustomObject]@{
+                        Name = 'utf8BOM'
+                        ReadEncoding = (New-Utf8EncodingWithBom)
+                        WriteEncoding = (New-Utf8EncodingWithBom)
+                    }
+                }
+            }
+
+            if ($prefixBytesRead -ge 2)
+            {
+                if ($prefixBuffer[0] -eq 0xFE -and $prefixBuffer[1] -eq 0xFF)
+                {
+                    return [PSCustomObject]@{
+                        Name = 'bigendianunicode'
+                        ReadEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
+                        WriteEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $true)
+                    }
+                }
+
+                if ($prefixBuffer[0] -eq 0xFF -and $prefixBuffer[1] -eq 0xFE)
+                {
+                    return [PSCustomObject]@{
+                        Name = 'unicode'
+                        ReadEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
+                        WriteEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $true)
+                    }
+                }
+            }
+
+            if ($prefixBytesRead -eq 0)
+            {
+                return [PSCustomObject]@{
+                    Name = 'utf8'
+                    ReadEncoding = (New-Utf8EncodingNoBom)
+                    WriteEncoding = (New-Utf8EncodingNoBom)
+                }
+            }
+
+            $sampleBuffer = New-Object byte[] 4096
+            [System.Array]::Copy($prefixBuffer, 0, $sampleBuffer, 0, $prefixBytesRead)
+
+            $remainingSampleCapacity = $sampleBuffer.Length - $prefixBytesRead
+            $additionalBytesRead = 0
+            if ($remainingSampleCapacity -gt 0)
+            {
+                $additionalBytesRead = $Stream.Read($sampleBuffer, $prefixBytesRead, $remainingSampleCapacity)
+            }
+
+            $totalSampleBytesRead = $prefixBytesRead + $additionalBytesRead
+
+            if (Test-IsLikelyUtf16 -Bytes $sampleBuffer -Count $totalSampleBytesRead -BigEndian $false)
+            {
+                return [PSCustomObject]@{
+                    Name = 'unicode'
+                    ReadEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
+                    WriteEncoding = (New-UnicodeEncoding -BigEndian $false -ByteOrderMark $false)
+                }
+            }
+
+            if (Test-IsLikelyUtf16 -Bytes $sampleBuffer -Count $totalSampleBytesRead -BigEndian $true)
+            {
+                return [PSCustomObject]@{
+                    Name = 'bigendianunicode'
+                    ReadEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
+                    WriteEncoding = (New-UnicodeEncoding -BigEndian $true -ByteOrderMark $false)
+                }
+            }
+
+            if (Test-IsLikelyUtf8 -Bytes $sampleBuffer -Count $totalSampleBytesRead)
+            {
+                return [PSCustomObject]@{
+                    Name = 'utf8'
+                    ReadEncoding = (New-Utf8EncodingNoBom)
+                    WriteEncoding = (New-Utf8EncodingNoBom)
+                }
+            }
+
+            if (Test-IsWindows)
+            {
+                $ansiEncoding = Get-AnsiEncoding
+                return [PSCustomObject]@{
+                    Name = 'ansi'
+                    ReadEncoding = $ansiEncoding
+                    WriteEncoding = $ansiEncoding
+                }
+            }
+
+            return [PSCustomObject]@{
+                Name = 'utf8'
+                ReadEncoding = (New-Utf8EncodingNoBom)
+                WriteEncoding = (New-Utf8EncodingNoBom)
+            }
+        }
+
+        function Read-FileContent
+        {
+            param(
+                [string]
+                $File,
+
+                [string]
+                $RequestedEncodingName
+            )
+
+            $fileStream = $null
+            $reader = $null
+
+            try
+            {
+                $fileStream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
+                $encodingInfo = Get-FileEncodingInfo -Stream $fileStream -RequestedEncodingName $RequestedEncodingName
+                $fileStream.Position = 0
+
+                $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $fileStream, $encodingInfo.ReadEncoding, $true
+                $content = $reader.ReadToEnd()
+
+                return [PSCustomObject]@{
+                    Content = $content
+                    EncodingInfo = $encodingInfo
+                }
+            }
+            finally
+            {
+                if ($null -ne $reader)
+                {
+                    $reader.Dispose()
+                }
+                elseif ($null -ne $fileStream)
+                {
+                    $fileStream.Dispose()
+                }
+            }
+        }
+
+        function Write-FileContent
+        {
+            param(
+                [string]
+                $File,
+
+                [string]
+                $Content,
+
+                [System.Text.Encoding]
+                $EncodingObject,
+
+                [bool]
+                $NoNewline
+            )
+
+            $fileStream = $null
+            $writer = $null
+
+            try
+            {
+                $fileStream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Create), ([System.IO.FileAccess]::Write), ([System.IO.FileShare]::None)
+                $writer = New-Object -TypeName System.IO.StreamWriter -ArgumentList $fileStream, $EncodingObject
+
+                $writer.Write($Content)
+                if (-not $NoNewline)
+                {
+                    $writer.Write([Environment]::NewLine)
+                }
+
+                $writer.Flush()
+            }
+            finally
+            {
+                if ($null -ne $writer)
+                {
+                    $writer.Dispose()
+                }
+                elseif ($null -ne $fileStream)
+                {
+                    $fileStream.Dispose()
+                }
+            }
+        }
+
+        Register-CodePagesEncodingProvider
 
         # Validate that -Depth is only used with -Recurse
         if ($Depth -gt 0 -and -not $Recurse)
@@ -164,69 +595,8 @@ function Expand-TemplateFile
         $EnvVars = New-Object 'System.Collections.Generic.Dictionary[string,string]' $envComparer
         Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
 
-        # Helper function to normalize encoding settings
-        function Get-NormalizedEncoding
-        {
-            param ([string] $EncodingName)
-
-            $psVersion = $PSVersionTable.PSVersion.Major
-            $encodingLower = $EncodingName.ToLower()
-
-            # Create encoding configuration object
-            $config = [PSCustomObject]@{
-                FileEncoding = $EncodingName
-                StripBOM = $false
-                AddBOM = $false
-            }
-
-            # Handle UTF-8 variants based on PowerShell version
-            switch ($encodingLower)
-            {
-                { $_ -in @('utf8', 'utf-8', 'utf8nobom') }
-                {
-                    if ($psVersion -ge 6)
-                    {
-                        $config.FileEncoding = 'utf8NoBOM'
-                    }
-                    else
-                    {
-                        # PS 5.1: utf8 adds BOM, so we need to strip it manually
-                        $config.FileEncoding = 'utf8'
-                        $config.StripBOM = $true
-                    }
-                }
-                'utf8bom'
-                {
-                    if ($psVersion -ge 6)
-                    {
-                        # PS 6+: Manually add BOM
-                        $config.FileEncoding = 'utf8'
-                        $config.AddBOM = $true
-                    }
-                    else
-                    {
-                        # PS 5.1: utf8 encoding adds BOM by default
-                        $config.FileEncoding = 'utf8'
-                    }
-                }
-                'ansi'
-                {
-                    if ($psVersion -lt 6)
-                    {
-                        # PS 5.1 uses Default for the active ANSI code page
-                        $config.FileEncoding = 'Default'
-                    }
-                }
-            }
-
-            return $config
-        }
-
-        # Normalize encoding for PowerShell version compatibility
-        $encodingConfig = Get-NormalizedEncoding -EncodingName $Encoding
-
         # Function to replace tokens in a file
-        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string,string]] $EnvironmentVars, [PSCustomObject] $EncodingConfig, [bool] $NoNewline)
+        function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string,string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
         {
             # Use script-scoped variables for per-file counters so they work inside scriptblocks
             $script:tokensInFile = 0
@@ -234,7 +604,9 @@ function Expand-TemplateFile
 
             try
             {
-                $content = Get-Content -Path $File -Raw -Encoding $EncodingConfig.FileEncoding -ErrorAction Stop
+                $fileState = Read-FileContent -File $File -RequestedEncodingName $RequestedEncodingName
+                $encodingInfo = $fileState.EncodingInfo
+                $content = $fileState.Content
                 $originalContent = $content
 
                 # Replace tokens using a regex evaluator with pre-compiled pattern
@@ -274,40 +646,11 @@ function Expand-TemplateFile
                     # Use ShouldProcess for -WhatIf support
                     if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
-                        if ($EncodingConfig.StripBOM)
-                        {
-                            # For PowerShell 5.1, manually write without BOM
-                            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-                            if ($NoNewline)
-                            {
-                                [System.IO.File]::WriteAllText($File, $content, $utf8NoBom)
-                            }
-                            else
-                            {
-                                [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8NoBom)
-                            }
-                        }
-                        elseif ($EncodingConfig.AddBOM)
-                        {
-                            # Manually write with BOM (works in all PS versions)
-                            $utf8WithBom = New-Object System.Text.UTF8Encoding $true
-                            if ($NoNewline)
-                            {
-                                [System.IO.File]::WriteAllText($File, $content, $utf8WithBom)
-                            }
-                            else
-                            {
-                                [System.IO.File]::WriteAllText($File, ($content + [Environment]::NewLine), $utf8WithBom)
-                            }
-                        }
-                        else
-                        {
-                            Set-Content -Path $File -Value $content -Encoding $EncodingConfig.FileEncoding -NoNewline:$NoNewline -Force -ErrorAction Stop
-                        }
+                        Write-FileContent -File $File -Content $content -EncodingObject $encodingInfo.WriteEncoding -NoNewline $NoNewline
                         $modified = $true
                     }
 
-                    Write-Verbose "[$File] Replaced $($script:tokensInFile) token(s) (skipped $($script:skippedInFile))"
+                    Write-Verbose "[$File] Replaced $($script:tokensInFile) token(s) (skipped $($script:skippedInFile)) using $($encodingInfo.Name) encoding"
                 }
 
                 # Create result object for this file
@@ -350,7 +693,7 @@ function Expand-TemplateFile
         # Process each file
         foreach ($file in $files)
         {
-            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -EncodingConfig $encodingConfig -NoNewline $NoNewline
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -RequestedEncodingName $Encoding -NoNewline $NoNewline
         }
     }
 

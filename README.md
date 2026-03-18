@@ -41,7 +41,7 @@ See [action.yml](action.yml).
 | `follow-symlinks` | Follow symbolic links            | boolean | false    | `false`    | `true`        |
 | `dry-run`         | Preview without modifying files  | boolean | false    | `false`    | `true`        |
 | `fail`            | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
-| `encoding`        | [File encoding](#file-encoding)  | string  | false    | `utf8`     | `unicode`     |
+| `encoding`        | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
 | `no-newline`      | Skip the final newline           | boolean | false    | `false`    | `true`        |
 | `verbose`         | Enable verbose logging           | boolean | false    | `false`    | `true`        |
 
@@ -286,6 +286,8 @@ steps:
 
 Specify the encoding used for file reads and writes.
 
+By default, the action uses `auto`, which sniffs a BOM with a minimal read, applies lightweight UTF-16/UTF-8 heuristics when no BOM is present, and then writes the file back using the detected encoding.
+
 ```yaml
 steps:
   - name: Set a non-default encoding option for reading/writing files
@@ -331,8 +333,9 @@ If an environment variable named `VARIABLE` exists, its value is used for replac
 
 ## File encoding
 
-The default encoding for file reads and writes is `utf8` without a byte order mark (BOM). The following `encoding` values are also supported.
+The default encoding for file reads and writes is `auto`. In auto mode, the action first checks for a BOM, then uses lightweight heuristics for common no-BOM UTF-16 and UTF-8 files, and finally falls back to the Windows ANSI code page on Windows or UTF-8 without BOM on Linux and macOS. The following explicit `encoding` values are also supported.
 
+- `auto`: Detects the existing file encoding and writes the updated file back using that encoding when possible
 - `utf8`: Encodes as UTF-8 without a byte order mark (BOM)
 - `utf8BOM`: Encodes as UTF-8 with a byte order mark (BOM)
 - `ascii`: Uses the ASCII (7-bit) character set
@@ -343,7 +346,7 @@ The default encoding for file reads and writes is `utf8` without a byte order ma
 - `unicode`: Encodes as UTF-16 using little-endian byte order
 - `utf32`: Encodes as UTF-32
 
-On Windows PowerShell 5.1, `ansi` is normalized to `Default`, and UTF-8 BOM behavior is normalized internally so `utf8` remains BOM-less by default while `utf8BOM` writes a BOM.
+On Windows PowerShell 5.1, the action uses explicit .NET encodings internally so `auto`, `utf8`, and `utf8BOM` behave consistently with PowerShell Core while still preserving Windows ANSI fallback behavior when auto-detecting no-BOM files.
 
 ## License
 

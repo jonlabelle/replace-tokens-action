@@ -64,10 +64,10 @@ inputs:
   encoding:
     description: >-
       File encoding to use when reading and writing files.
-      Defaults to `utf8` without a byte order mark (BOM).
-      Accepted values: `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
+      Defaults to `auto`, which attempts to preserve the file's existing encoding.
+      Accepted values: `auto`, `utf8`, `utf8BOM`, `ascii`, `ansi`, `bigendianunicode`, `bigendianutf32`, `oem`, `unicode`, `utf32`
     required: false
-    default: 'utf8'
+    default: 'auto'
 
   no-newline:
     description: >-

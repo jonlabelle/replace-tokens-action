@@ -112,7 +112,7 @@ param(
     $FollowSymlinks = 'false',
 
     [string]
-    $Encoding = 'utf8',
+    $Encoding = 'auto',
 
     [string]
     $NoNewline = 'false',
