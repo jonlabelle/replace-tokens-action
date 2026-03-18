@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.35.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.34.0...v1.35.0) (2026-03-18)
+
+
+### Features
+
+* infer existing newlines ([#14](https://github.com/jonlabelle/replace-tokens-action/issues/14)) ([aa53c2a](https://github.com/jonlabelle/replace-tokens-action/commit/aa53c2ade3bd1dcd0a29ad9a3146073e8b12d5ca))
+
 # [1.34.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.33.0...v1.34.0) (2026-03-18)
 
 
