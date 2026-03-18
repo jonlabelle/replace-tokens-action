@@ -630,7 +630,6 @@ function Expand-TemplateFile
                 return [PSCustomObject]@{
                     Content = $content
                     EncodingInfo = $encodingInfo
-                    NewlineSequence = (Get-PreferredNewlineSequence -Content $content)
                 }
             }
             finally
@@ -714,7 +713,7 @@ function Expand-TemplateFile
                 $EncodingObject,
 
                 [string]
-                $NewlineSequence,
+                $OriginalContent,
 
                 [bool]
                 $NoNewline
@@ -734,6 +733,8 @@ function Expand-TemplateFile
 
                     if (-not ($endsWithCrLf -or $endsWithLf -or $endsWithCr))
                     {
+                        $newlineSequence = Get-PreferredNewlineSequence -Content $OriginalContent
+
                         if ([string]::IsNullOrEmpty($NewlineSequence))
                         {
                             $finalContent += [Environment]::NewLine
@@ -826,7 +827,6 @@ function Expand-TemplateFile
                 $fileState = Read-FileContent -File $File -RequestedEncodingName $RequestedEncodingName
                 $encodingInfo = $fileState.EncodingInfo
                 $content = $fileState.Content
-                $newlineSequence = $fileState.NewlineSequence
                 $originalContent = $content
 
                 # Replace tokens using a regex evaluator with pre-compiled pattern
@@ -866,7 +866,7 @@ function Expand-TemplateFile
                     # Use ShouldProcess for -WhatIf support
                     if ($PSCmdlet.ShouldProcess($File, 'Replace tokens'))
                     {
-                        Write-FileContent -File $File -Content $content -EncodingObject $encodingInfo.WriteEncoding -NewlineSequence $newlineSequence -NoNewline $NoNewline
+                        Write-FileContent -File $File -Content $content -EncodingObject $encodingInfo.WriteEncoding -OriginalContent $originalContent -NoNewline $NoNewline
                         $modified = $true
                     }
 
