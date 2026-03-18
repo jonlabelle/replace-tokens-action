@@ -33,6 +33,9 @@ function Expand-TemplateFile
     .PARAMETER NoNewline
         Do not append a newline at the end of the file when writing changes.
 
+    .PARAMETER CaseInsensitive
+        Match environment variable names without regard to case on all platforms.
+
     .PARAMETER Exclude
         Specify files or directories to exclude from processing.
 
@@ -99,6 +102,10 @@ function Expand-TemplateFile
         [Parameter(HelpMessage = 'Do not append a newline at the end of the file when writing changes')]
         [switch]
         $NoNewline,
+
+        [Parameter(HelpMessage = 'Match environment variable names without regard to case on all platforms')]
+        [switch]
+        $CaseInsensitive,
 
         [Parameter(HelpMessage = 'Specify files or directories to exclude')]
         [string[]]
@@ -803,7 +810,7 @@ function Expand-TemplateFile
 
         # Cache environment variables for better performance
         # Avoid repeated Test-Path and Get-Item calls
-        $envComparer = if (Test-IsWindows)
+        $envComparer = if ($CaseInsensitive -or (Test-IsWindows))
         {
             [System.StringComparer]::OrdinalIgnoreCase
         }

@@ -703,7 +703,7 @@ Describe 'Expand-TemplateFile Function' {
         $result[0].Modified | Should -Be $false
     }
 
-    It 'Uses platform-appropriate case sensitivity for environment variable names' {
+    It 'Uses platform-appropriate case sensitivity for environment variable names by default' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'case-sensitive-env-var.txt'
         Write-Utf8Content -Path $testFile -Value 'Case {{name}} test' -NoNewline
@@ -727,6 +727,23 @@ Describe 'Expand-TemplateFile Function' {
             $result[0].TokensReplaced | Should -Be 0
             $result[0].Modified | Should -Be $false
         }
+    }
+
+    It 'Supports opt-in case-insensitive environment variable matching on all platforms' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'case-insensitive-env-var.txt'
+        Write-Utf8Content -Path $testFile -Value 'Case {{name}} test' -NoNewline
+
+        $env:NAME = 'CaseValue'
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -CaseInsensitive
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $content | Should -Be 'Case CaseValue test'
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].Modified | Should -Be $true
     }
 
     It 'Preserves an existing trailing newline without appending a duplicate newline' {
@@ -837,6 +854,52 @@ Describe 'Expand-TemplateFile Function' {
         $actionOutput = Get-Content -Path $outputFile -Raw
         $actionOutput | Should -Match 'tokens-skipped=1'
         $actionOutput | Should -Match 'tokens-replaced=1'
+    }
+
+    It 'Invoke-ReplaceTokens supports case-insensitive matching when enabled' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'invoke-case-insensitive.txt'
+        $outputFile = Join-Path -Path $testDir -ChildPath 'invoke-case-insensitive-output.txt'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $powershellPath = Get-CurrentPowerShellPath
+        Write-Utf8Content -Path $testFile -Value 'Hello {{name}}' -NoNewline
+
+        $env:NAME = 'Avery'
+
+        if (Test-Path -Path $outputFile)
+        {
+            Remove-Item -Path $outputFile -Force
+        }
+
+        $previousGithubOutput = $env:GITHUB_OUTPUT
+        $env:GITHUB_OUTPUT = $outputFile
+
+        try
+        {
+            $commandOutput = & $powershellPath -NoProfile -File $scriptPath -PathsInput $testFile -Style 'mustache' -NoNewline 'true' -CaseInsensitive 'true' 2>&1 | Out-String
+            $exitCode = $LASTEXITCODE
+        }
+        finally
+        {
+            if ([string]::IsNullOrWhiteSpace($previousGithubOutput))
+            {
+                Remove-Item Env:GITHUB_OUTPUT -ErrorAction SilentlyContinue
+            }
+            else
+            {
+                $env:GITHUB_OUTPUT = $previousGithubOutput
+            }
+        }
+
+        # Assert
+        $exitCode | Should -Be 0
+        $commandOutput | Should -Match 'Replaced: 1, Skipped: 0'
+        (Get-Content -Path $testFile -Raw) | Should -Be 'Hello Avery'
+
+        $actionOutput = Get-Content -Path $outputFile -Raw
+        $actionOutput | Should -Match 'tokens-replaced=1'
+        $actionOutput | Should -Match 'tokens-skipped=0'
+        $actionOutput | Should -Match 'modified-files-count=1'
     }
 
     It 'Throws error when -Depth is used without -Recurse' {
