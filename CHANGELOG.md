@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.1...v1.38.2) (2026-03-20)
+
+
+### Bug Fixes
+
+* format test yaml file ([9048adb](https://github.com/jonlabelle/replace-tokens-action/commit/9048adb2410f2ef59ce8200ac017db32ca93996c))
+
 ## [1.38.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.0...v1.38.1) (2026-03-20)
 
 
