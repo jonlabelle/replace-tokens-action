@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.39.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.4...v1.39.0) (2026-03-20)
+
+
+### Features
+
+* rename action entry script ([47edb3e](https://github.com/jonlabelle/replace-tokens-action/commit/47edb3ec9d7f048b4b42baf70552d976b003b9da))
+
 ## [1.38.4](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.3...v1.38.4) (2026-03-20)
 
 
