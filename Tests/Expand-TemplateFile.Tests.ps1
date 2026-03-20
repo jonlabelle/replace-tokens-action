@@ -444,11 +444,13 @@ Describe 'Expand-TemplateFile Function' {
         $originalName = if (Test-Path Env:NAME) { $env:NAME } else { $null }
         $originalUnderscoreName = if (Test-Path Env:_NAME) { $env:_NAME } else { $null }
 
-        try {
+        try
+        {
             $env:NAME = 'jon'
             $env:_NAME = 'shadow'
 
-            foreach ($style in $styles) {
+            foreach ($style in $styles)
+            {
                 $subject = Join-Path -Path $testDir -ChildPath "stub-$style.tpl"
                 $untouched = Join-Path -Path $testDir -ChildPath "stub-$style-untouched.tpl"
                 $pristine = Join-Path -Path (Join-Path -Path $stubsDir -ChildPath 'pristine') -ChildPath "$style.tpl"
@@ -469,16 +471,24 @@ Describe 'Expand-TemplateFile Function' {
                 $untouchedResult.TokensReplaced | Should -Be 0
                 $untouchedResult.Modified | Should -BeFalse
             }
-        } finally {
-            if ($null -eq $originalName) {
+        }
+        finally
+        {
+            if ($null -eq $originalName)
+            {
                 Remove-Item Env:NAME -ErrorAction SilentlyContinue
-            } else {
+            }
+            else
+            {
                 $env:NAME = $originalName
             }
 
-            if ($null -eq $originalUnderscoreName) {
+            if ($null -eq $originalUnderscoreName)
+            {
                 Remove-Item Env:_NAME -ErrorAction SilentlyContinue
-            } else {
+            }
+            else
+            {
                 $env:_NAME = $originalUnderscoreName
             }
         }

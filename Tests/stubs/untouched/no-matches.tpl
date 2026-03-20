@@ -8,7 +8,7 @@ NAME}
 {NAME}}
 {{NAME}
 {NAME}
-{{ __NAME }}
+{{ I_DO_NOT_EXIST_STUB_E98AF1 }}
 {{ my.NAME.is.mud }}
 {{ 123NAME }}
 {{
@@ -33,7 +33,7 @@ ${123NAME}
 __ I_DO_NOT_EXIST_I63ERM __
 $(NAME}
 ${NAME)
-$(__NAME)
+$(I_DO_NOT_EXIST_STUB_E98AF1)
 $(NAME
 $( NAME )
 $(NAME )
