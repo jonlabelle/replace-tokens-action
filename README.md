@@ -179,16 +179,16 @@ steps:
 > [!WARNING]  
 > The `brackets` style (`<VARIABLE>`) can collide with HTML and XML tags. If an environment variable name matches a tag name (e.g. `div`, `span`), those tags will be replaced unintentionally. Avoid using this style on HTML/XML files, or use the `filter`/`exclude` inputs to restrict processing to non-markup files.
 
-Replace tokens using the **double-hashes** style, for example `##VARIABLE##`.
+Replace tokens using the **hashes** style, for example `##VARIABLE##`.
 
 ```yaml
 steps:
-  - name: Replace double-hashes styled tokens
+  - name: Replace hashes styled tokens
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
-      style: double-hashes
+      style: hashes
     env:
       NAME: jon
 ```
@@ -363,7 +363,7 @@ Use one of the following token formats:
 | `mustache` (default) | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `handlebars`         | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `brackets`           | `< VARIABLE >`   | `<TOKEN>`, `< TOKEN >`     |
-| `double-hashes`      | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
+| `hashes`             | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
 | `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
 | `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
 

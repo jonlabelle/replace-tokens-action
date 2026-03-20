@@ -17,7 +17,7 @@
 
     .PARAMETER Style
         The token style to replace. Valid values are mustache, handlebars,
-        brackets, double-hashes, envsubst, and make.
+        brackets, hashes, envsubst, and make.
 
     .PARAMETER Filter
         An optional Get-ChildItem filter used to limit matching files.

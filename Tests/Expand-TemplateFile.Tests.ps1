@@ -355,9 +355,24 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Hello, Billie!'
     }
 
-    It 'Replaces tokens with double-hashes style' {
+    It 'Replaces tokens with hashes style' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style-basic.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'hashes-style-basic.txt'
+        Write-Utf8Content -Path $testFile -Value 'Hello, ##NAME##!' -NoNewline
+
+        $env:NAME = 'Bailey'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'hashes' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Bailey!'
+    }
+
+    It 'Accepts the hashes token format with the alternate style value' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'hashes-alternate-style-basic.txt'
         Write-Utf8Content -Path $testFile -Value 'Hello, ##NAME##!' -NoNewline
 
         $env:NAME = 'Bailey'
@@ -474,16 +489,16 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Valid: EnvValue - Invalid: ${123VAR}'
     }
 
-    It 'Correctly handles double-hashes style with valid/invalid variable names' {
+    It 'Correctly handles hashes style with valid/invalid variable names' {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'double-hashes-style.txt'
+        $testFile = Join-Path -Path $testDir -ChildPath 'hashes-style.txt'
         Write-Utf8Content -Path $testFile -Value 'Valid: ## HASH_VAR ## - Invalid: ##123VAR##' -NoNewline
 
         $env:HASH_VAR = 'HashValue'
         $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
 
         # Act
-        Expand-TemplateFile -Path $testFile -Style 'double-hashes' -Encoding 'utf8NoBOM' -NoNewline
+        Expand-TemplateFile -Path $testFile -Style 'hashes' -Encoding 'utf8NoBOM' -NoNewline
         $result = Get-Content -Path $testFile -Raw
 
         # Assert
@@ -809,6 +824,25 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $content | Should -Be $expected
+    }
+
+    It 'Invoke-ReplaceTokens supports hashes style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'invoke-hashes-style.txt'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $powershellPath = Get-CurrentPowerShellPath
+        Write-Utf8Content -Path $testFile -Value 'Hello ##NAME##' -NoNewline
+
+        $env:NAME = 'Avery'
+
+        # Act
+        $commandOutput = & $powershellPath -NoProfile -File $scriptPath -PathsInput $testFile -Style 'hashes' -Encoding 'utf8NoBOM' -NoNewline 'true' 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
+
+        # Assert
+        $exitCode | Should -Be 0
+        $commandOutput | Should -Match 'Replaced: 1, Skipped: 0'
+        (Get-Content -Path $testFile -Raw) | Should -Be 'Hello Avery'
     }
 
     It 'Invoke-ReplaceTokens fails when fail-on-skipped is enabled and tokens are unresolved' {
