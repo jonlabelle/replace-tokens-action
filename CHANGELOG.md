@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.37.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.36.0...v1.37.0) (2026-03-20)
+
+
+### Features
+
+* add hashes token style support ([7539383](https://github.com/jonlabelle/replace-tokens-action/commit/7539383e0dfb32596d045212b8e2e28b2e402051))
+
 # [1.36.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.35.0...v1.36.0) (2026-03-18)
 
 
