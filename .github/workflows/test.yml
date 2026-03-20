@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        style: [mustache, handlebars, brackets, double-hashes, envsubst, make]
+        style: [mustache, handlebars, brackets, hashes, underscores, envsubst, make]
         os: [ubuntu-latest, windows-latest, macos-latest]
         shell: [pwsh]
         include:
@@ -45,7 +45,10 @@ jobs:
             style: brackets
             shell: powershell
           - os: windows-latest
-            style: double-hashes
+            style: hashes
+            shell: powershell
+          - os: windows-latest
+            style: underscores
             shell: powershell
           - os: windows-latest
             style: envsubst
