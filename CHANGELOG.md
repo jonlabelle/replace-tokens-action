@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.38.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.37.0...v1.38.0) (2026-03-20)
+
+
+### Features
+
+* add underscores token style ([#16](https://github.com/jonlabelle/replace-tokens-action/issues/16)) ([cc006a1](https://github.com/jonlabelle/replace-tokens-action/commit/cc006a18c9e18b987e418ad5bf1e54ef325a09c8))
+
 # [1.37.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.36.0...v1.37.0) (2026-03-20)
 
 
