@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.0...v1.38.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* missing tests ([b054c49](https://github.com/jonlabelle/replace-tokens-action/commit/b054c497678780a91eb086d9ef1e18cda114a1f0))
+
 # [1.38.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.37.0...v1.38.0) (2026-03-20)
 
 
