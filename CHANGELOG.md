@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.3](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.2...v1.38.3) (2026-03-20)
+
+
+### Bug Fixes
+
+* multi-line underscores token replacement ([2a0d32c](https://github.com/jonlabelle/replace-tokens-action/commit/2a0d32cad970f80e5885834b4b65ce5616ff4313))
+
 ## [1.38.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.1...v1.38.2) (2026-03-20)
 
 
