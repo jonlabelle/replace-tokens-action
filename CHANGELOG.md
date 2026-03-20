@@ -1,5 +1,11 @@
 # Changelog
 
+# Unreleased
+
+### Features
+
+* add underscores token style support
+
 # [1.37.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.36.0...v1.37.0) (2026-03-20)
 
 

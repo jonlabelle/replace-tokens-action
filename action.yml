@@ -19,7 +19,7 @@ inputs:
   style:
     description: >-
       Token style to replace.
-      Accepted values are `mustache` (for example, `{{ VARIABLE }}`), `handlebars` (for example, `{{ VARIABLE }}`), `brackets` (for example, `< VARIABLE >`), `hashes` (for example, `## VARIABLE ##`), `envsubst` (for example, `${VARIABLE}`), and `make` (for example, `$(VARIABLE)`).
+      Accepted values are `mustache` (for example, `{{ VARIABLE }}`), `handlebars` (for example, `{{ VARIABLE }}`), `brackets` (for example, `< VARIABLE >`), `hashes` (for example, `## VARIABLE ##`), `underscores` (for example, `__ VARIABLE __`), `envsubst` (for example, `${VARIABLE}`), and `make` (for example, `$(VARIABLE)`).
       Defaults to `mustache`.
     required: false
     default: 'mustache'

@@ -370,6 +370,21 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Hello, Bailey!'
     }
 
+    It 'Replaces tokens with underscores style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'underscores-style-basic.txt'
+        Write-Utf8Content -Path $testFile -Value 'Hello, __NAME__!' -NoNewline
+
+        $env:NAME = 'Parker'
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'underscores' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Hello, Parker!'
+    }
+
     It 'Accepts the hashes token format with the alternate style value' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'hashes-alternate-style-basic.txt'
@@ -503,6 +518,22 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Valid: HashValue - Invalid: ##123VAR##'
+    }
+
+    It 'Correctly handles underscores style with valid/invalid variable names' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'underscores-style.txt'
+        Write-Utf8Content -Path $testFile -Value 'Valid: __ HASH_VAR __ - Invalid: __123VAR__' -NoNewline
+
+        $env:HASH_VAR = 'HashValue'
+        $env:123VAR = 'Invalid'  # Won't be matched - token variable names must start with a letter or underscore
+
+        # Act
+        Expand-TemplateFile -Path $testFile -Style 'underscores' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $result | Should -Be 'Valid: HashValue - Invalid: __123VAR__'
     }
 
     It 'Correctly handles brackets style with valid/invalid variable names' {
@@ -837,6 +868,25 @@ Describe 'Expand-TemplateFile Function' {
 
         # Act
         $commandOutput = & $powershellPath -NoProfile -File $scriptPath -PathsInput $testFile -Style 'hashes' -Encoding 'utf8NoBOM' -NoNewline 'true' 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
+
+        # Assert
+        $exitCode | Should -Be 0
+        $commandOutput | Should -Match 'Replaced: 1, Skipped: 0'
+        (Get-Content -Path $testFile -Raw) | Should -Be 'Hello Avery'
+    }
+
+    It 'Invoke-ReplaceTokens supports underscores style' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'invoke-underscores-style.txt'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $powershellPath = Get-CurrentPowerShellPath
+        Write-Utf8Content -Path $testFile -Value 'Hello __NAME__' -NoNewline
+
+        $env:NAME = 'Avery'
+
+        # Act
+        $commandOutput = & $powershellPath -NoProfile -File $scriptPath -PathsInput $testFile -Style 'underscores' -Encoding 'utf8NoBOM' -NoNewline 'true' 2>&1 | Out-String
         $exitCode = $LASTEXITCODE
 
         # Assert
