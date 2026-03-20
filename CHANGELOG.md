@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.4](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.3...v1.38.4) (2026-03-20)
+
+
+### Bug Fixes
+
+* ensure consistent formatting in underscores template ([e27a1d0](https://github.com/jonlabelle/replace-tokens-action/commit/e27a1d09d930f154c9af0624ef6fadd800d6efb8))
+
 ## [1.38.3](https://github.com/jonlabelle/replace-tokens-action/compare/v1.38.2...v1.38.3) (2026-03-20)
 
 
