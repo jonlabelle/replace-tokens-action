@@ -6,13 +6,13 @@ function Expand-TemplateFile
 
     .DESCRIPTION
         Expands template files by replacing tokens with values from environment variables.
-        Supports multiple token styles: mustache/handlebars ({{VAR}}), brackets (<VAR>), hashes (##VAR##), envsubst (${VAR}), and make ($(VAR)).
+        Supports multiple token styles: mustache/handlebars ({{VAR}}), brackets (<VAR>), hashes (##VAR##), underscores (__VAR__), envsubst (${VAR}), and make ($(VAR)).
 
     .PARAMETER Path
         Specify the path(s) to process. Can be files or directories.
 
     .PARAMETER Style
-        Specify the token style to use. Valid values: mustache, handlebars, brackets, hashes, envsubst, make.
+        Specify the token style to use. Valid values: mustache, handlebars, brackets, hashes, underscores, envsubst, make.
         Default: mustache
 
     .PARAMETER Filter
@@ -74,7 +74,7 @@ function Expand-TemplateFile
         $Path,
 
         [Parameter(HelpMessage = 'Specify the token style to use')]
-        [ValidateSet('mustache', 'handlebars', 'brackets', 'hashes', 'double-hashes', 'envsubst', 'make', IgnoreCase = $true)]
+        [ValidateSet('mustache', 'handlebars', 'brackets', 'hashes', 'double-hashes', 'underscores', 'envsubst', 'make', IgnoreCase = $true)]
         [string]
         $Style = 'mustache',
 
@@ -790,6 +790,7 @@ function Expand-TemplateFile
         $mustachePattern = '\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
         $bracketsPattern = '<\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*>' # brackets pattern, e.g. <VARIABLE>; NOTE: avoid using on HTML/XML files as this pattern matches tag names
         $hashesPattern = '##\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*##' # hashes pattern, e.g. ##VARIABLE##
+        $underscoresPattern = '__\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*__' # underscores pattern, e.g. __VARIABLE__
         $envsubstPattern = '\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}' # envsubst template pattern, e.g. ${VARIABLE}
         $makePattern = '\$\(([a-zA-Z_][a-zA-Z0-9_]*)\)' # make pattern, e.g. $(VARIABLE)
 
@@ -801,6 +802,7 @@ function Expand-TemplateFile
             'brackets' { $bracketsPattern }
             'hashes' { $hashesPattern }
             'double-hashes' { $hashesPattern }
+            'underscores' { $underscoresPattern }
             'envsubst' { $envsubstPattern }
             'make' { $makePattern }
             default { throw "Unknown token style: $Style" }

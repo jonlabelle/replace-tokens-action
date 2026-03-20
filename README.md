@@ -193,6 +193,20 @@ steps:
       NAME: jon
 ```
 
+Replace tokens using the **underscores** style, for example `__VARIABLE__`.
+
+```yaml
+steps:
+  - name: Replace underscore styled tokens
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./path/to/search
+      filter: '*.json'
+      style: underscores
+    env:
+      NAME: jon
+```
+
 Replace tokens using the **make** style, for example `$(VARIABLE)`.
 
 ```yaml
@@ -364,6 +378,7 @@ Use one of the following token formats:
 | `handlebars`         | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
 | `brackets`           | `< VARIABLE >`   | `<TOKEN>`, `< TOKEN >`     |
 | `hashes`             | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
+| `underscores`        | `__ VARIABLE __` | `__TOKEN__`, `__ TOKEN __` |
 | `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
 | `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
 
