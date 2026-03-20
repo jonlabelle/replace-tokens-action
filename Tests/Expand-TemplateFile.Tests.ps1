@@ -434,6 +434,66 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Hello, Charlie!'
     }
 
+    It 'Stub fixtures cover edge-case replacements for every supported style' {
+        # Arrange
+        $styles = @('mustache', 'handlebars', 'brackets', 'hashes', 'underscores', 'envsubst', 'make')
+        $stubsDir = Join-Path -Path $PSScriptRoot -ChildPath 'stubs'
+        $expectedPath = Join-Path -Path (Join-Path -Path $stubsDir -ChildPath 'expected') -ChildPath 'replaced.tpl'
+        $untouchedFixture = Join-Path -Path (Join-Path -Path $stubsDir -ChildPath 'untouched') -ChildPath 'no-matches.tpl'
+        $expectedContent = Get-Content -Path $expectedPath -Raw
+        $originalName = if (Test-Path Env:NAME) { $env:NAME } else { $null }
+        $originalUnderscoreName = if (Test-Path Env:_NAME) { $env:_NAME } else { $null }
+
+        try
+        {
+            $env:NAME = 'jon'
+            $env:_NAME = 'shadow'
+
+            foreach ($style in $styles)
+            {
+                $subject = Join-Path -Path $testDir -ChildPath "stub-$style.tpl"
+                $untouched = Join-Path -Path $testDir -ChildPath "stub-$style-untouched.tpl"
+                $pristine = Join-Path -Path (Join-Path -Path $stubsDir -ChildPath 'pristine') -ChildPath "$style.tpl"
+
+                Copy-Item -Path $pristine -Destination $subject -Force
+                Copy-Item -Path $untouchedFixture -Destination $untouched -Force
+
+                $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
+                $fileResults = Expand-TemplateFile -Path $subject, $untouched -Style $style -Encoding 'auto' -NoNewline -WarningAction SilentlyContinue
+                $subjectResult = $fileResults | Where-Object { $_.FilePath -eq $subject }
+                $untouchedResult = $fileResults | Where-Object { $_.FilePath -eq $untouched }
+
+                (Get-Content -Path $subject -Raw) | Should -Be $expectedContent
+                (Get-FileHash -Path $untouched -Algorithm SHA256).Hash | Should -Be $untouchedHash
+                $subjectResult.TokensReplaced | Should -Be 6
+                $subjectResult.TokensSkipped | Should -Be 0
+                $subjectResult.Modified | Should -BeTrue
+                $untouchedResult.TokensReplaced | Should -Be 0
+                $untouchedResult.Modified | Should -BeFalse
+            }
+        }
+        finally
+        {
+            if ($null -eq $originalName)
+            {
+                Remove-Item Env:NAME -ErrorAction SilentlyContinue
+            }
+            else
+            {
+                $env:NAME = $originalName
+            }
+
+            if ($null -eq $originalUnderscoreName)
+            {
+                Remove-Item Env:_NAME -ErrorAction SilentlyContinue
+            }
+            else
+            {
+                $env:_NAME = $originalUnderscoreName
+            }
+        }
+    }
+
     It 'Does not replace tokens if file is excluded' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'excluded-file.txt'

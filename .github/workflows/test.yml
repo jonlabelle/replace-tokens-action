@@ -104,6 +104,7 @@ jobs:
           verbose: true
         env:
           NAME: jon
+          _NAME: shadow
 
       - name: Show actual result for ${{ matrix.style }} test on ${{ matrix.os }}
         run: cat "${{ steps.test-setup.outputs.subject-path }}"
@@ -184,6 +185,7 @@ jobs:
           no-newline: true
         env:
           NAME: jon
+          _NAME: shadow
 
       - name: Assert dry-run file is unchanged on ${{ matrix.os }}
         run: |
@@ -209,8 +211,8 @@ jobs:
             exit 1
           }
 
-          if ('${{ steps.dry-run-action.outputs.tokens-replaced }}' -ne '5') {
-            Write-Host '::error title=FAIL Dry-run replacement count mismatch::Expected tokens-replaced to be 5.'
+          if ('${{ steps.dry-run-action.outputs.tokens-replaced }}' -ne '6') {
+            Write-Host '::error title=FAIL Dry-run replacement count mismatch::Expected tokens-replaced to be 6.'
             exit 1
           }
 

@@ -787,9 +787,9 @@ function Expand-TemplateFile
         $script:tokensSkipped = 0
 
         # Define token patterns with validation for environment variable names
-        $mustachePattern = '\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}
-        $bracketsPattern = '<\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*>' # brackets pattern, e.g. <VARIABLE>; NOTE: avoid using on HTML/XML files as this pattern matches tag names
-        $hashesPattern = '##\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*##' # hashes pattern, e.g. ##VARIABLE##
+        $mustachePattern = '\{\{[ \t]*([a-zA-Z_][a-zA-Z0-9_]*)[ \t]*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}; allow horizontal whitespace, but not newlines
+        $bracketsPattern = '<[ \t]*([a-zA-Z_][a-zA-Z0-9_]*)[ \t]*>' # brackets pattern, e.g. <VARIABLE>; NOTE: avoid using on HTML/XML files as this pattern matches tag names
+        $hashesPattern = '##[ \t]*([a-zA-Z_][a-zA-Z0-9_]*)[ \t]*##' # hashes pattern, e.g. ##VARIABLE##; allow horizontal whitespace, but not newlines
         $underscoresPattern = '__[ \t]*([a-zA-Z_][a-zA-Z0-9_]*?)[ \t]*__' # underscores pattern, e.g. __VARIABLE__; keep matches on one line and stop before the closing delimiter
         $envsubstPattern = '\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}' # envsubst template pattern, e.g. ${VARIABLE}
         $makePattern = '\$\(([a-zA-Z_][a-zA-Z0-9_]*)\)' # make pattern, e.g. $(VARIABLE)
