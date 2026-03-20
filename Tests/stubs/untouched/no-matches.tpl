@@ -8,14 +8,34 @@ NAME}
 {NAME}}
 {{NAME}
 {NAME}
-{{ _NAME }}
+{{ __NAME }}
 {{ my.NAME.is.mud }}
+{{ 123NAME }}
+{{
+NAME
+}}
+<123NAME>
+<
+NAME
+>
+##123NAME##
+##
+NAME
+##
+__123NAME__
+__
+NAME
+__
 ${I_DO_NOT_EXIST_I63ERM}
+${123NAME}
 {{ I_DO_NOT_EXIST_I63ERM }}
+## I_DO_NOT_EXIST_I63ERM ##
+__ I_DO_NOT_EXIST_I63ERM __
 $(NAME}
 ${NAME)
-$(_NAME)
+$(__NAME)
 $(NAME
 $( NAME )
 $(NAME )
 $( NAME)
+$(123NAME)
