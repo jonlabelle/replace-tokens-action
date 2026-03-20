@@ -107,8 +107,7 @@
     .EXAMPLE
         ./action.ps1 -PathsInput './template.txt' -CaseInsensitive true
 
-        Enables case-insensitive environment variable name matching even on
-        Linux and macOS runners.
+        Enables case-insensitive environment variable name matching even on Linux and macOS runners.
 #>
 param(
     [string]
