@@ -385,6 +385,25 @@ Describe 'Expand-TemplateFile Function' {
         $result | Should -Be 'Hello, Parker!'
     }
 
+    It 'Replaces multi-line underscores tokens without consuming closing delimiters' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'underscores-style-multiline.txt'
+        $inputContent = "__ NAME __`n    __NAME__`n        __NAME__`n    __NAME__`n__ NAME __"
+        $expectedContent = "Morgan`n    Morgan`n        Morgan`n    Morgan`nMorgan"
+        Write-Utf8Content -Path $testFile -Value $inputContent -NoNewline
+
+        $env:NAME = 'Morgan'
+
+        # Act
+        $fileResult = Expand-TemplateFile -Path $testFile -Style 'underscores' -Encoding 'utf8NoBOM' -NoNewline
+        $result = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $fileResult[0].TokensReplaced | Should -Be 5
+        $fileResult[0].TokensSkipped | Should -Be 0
+        $result | Should -Be $expectedContent
+    }
+
     It 'Accepts the hashes token format with the alternate style value' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'hashes-alternate-style-basic.txt'
