@@ -936,10 +936,10 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be $expected
     }
 
-    It 'Invoke-ReplaceTokens supports hashes style' {
+    It 'action.ps1 supports hashes style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'invoke-hashes-style.txt'
-        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
         $powershellPath = Get-CurrentPowerShellPath
         Write-Utf8Content -Path $testFile -Value 'Hello ##NAME##' -NoNewline
 
@@ -955,10 +955,10 @@ Describe 'Expand-TemplateFile Function' {
         (Get-Content -Path $testFile -Raw) | Should -Be 'Hello Avery'
     }
 
-    It 'Invoke-ReplaceTokens supports underscores style' {
+    It 'action.ps1 supports underscores style' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'invoke-underscores-style.txt'
-        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
         $powershellPath = Get-CurrentPowerShellPath
         Write-Utf8Content -Path $testFile -Value 'Hello __NAME__' -NoNewline
 
@@ -974,11 +974,11 @@ Describe 'Expand-TemplateFile Function' {
         (Get-Content -Path $testFile -Raw) | Should -Be 'Hello Avery'
     }
 
-    It 'Invoke-ReplaceTokens fails when fail-on-skipped is enabled and tokens are unresolved' {
+    It 'action.ps1 fails when fail-on-skipped is enabled and tokens are unresolved' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'fail-on-skipped.txt'
         $outputFile = Join-Path -Path $testDir -ChildPath 'fail-on-skipped-output.txt'
-        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
         $powershellPath = Get-CurrentPowerShellPath
         Write-Utf8Content -Path $testFile -Value 'Hello {{NAME}} {{MISSING_TOKEN}}' -NoNewline
 
@@ -1019,11 +1019,11 @@ Describe 'Expand-TemplateFile Function' {
         $actionOutput | Should -Match 'tokens-replaced=1'
     }
 
-    It 'Invoke-ReplaceTokens supports case-insensitive matching when enabled' {
+    It 'action.ps1 supports case-insensitive matching when enabled' {
         # Arrange
         $testFile = Join-Path -Path $testDir -ChildPath 'invoke-case-insensitive.txt'
         $outputFile = Join-Path -Path $testDir -ChildPath 'invoke-case-insensitive-output.txt'
-        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $scriptPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.ps1'
         $powershellPath = Get-CurrentPowerShellPath
         Write-Utf8Content -Path $testFile -Value 'Hello {{name}}' -NoNewline
 

@@ -151,7 +151,7 @@ runs:
         ${{ inputs.encoding }}
         '@
 
-        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'Invoke-ReplaceTokens.ps1'
+        $scriptPath = Join-Path -Path '${{ github.action_path }}' -ChildPath 'action.ps1'
         & $scriptPath `
           -PathsInput $pathsInput `
           -Style $styleInput `

@@ -66,13 +66,13 @@
         Expand-TemplateFile.ps1.
 
     .EXAMPLE
-        ./Invoke-ReplaceTokens.ps1
+        ./action.ps1
 
         Runs the action helper with its defaults, processing the current directory
         with mustache token style.
 
     .EXAMPLE
-        ./Invoke-ReplaceTokens.ps1 -PathsInput './appsettings.template.json' -Style envsubst -DryRun true
+        ./action.ps1 -PathsInput './appsettings.template.json' -Style envsubst -DryRun true
 
         Previews envsubst-style token replacement for a single file without writing
         any changes.
@@ -86,26 +86,26 @@
         *.bak
         *.example
         '@
-        ./Invoke-ReplaceTokens.ps1 -PathsInput $paths -ExcludeInput $exclude -Filter '*.json' -Recurse true -Depth 2
+        ./action.ps1 -PathsInput $paths -ExcludeInput $exclude -Filter '*.json' -Recurse true -Depth 2
 
         Processes multiple paths recursively, limits matching files to *.json, and
         excludes backup and example files.
 
     .EXAMPLE
         $env:GITHUB_OUTPUT = (Join-Path -Path $PWD -ChildPath 'action-output.txt')
-        ./Invoke-ReplaceTokens.ps1 -PathsInput './template.txt' -NoNewline true -Fail true
+        ./action.ps1 -PathsInput './template.txt' -NoNewline true -Fail true
 
         Runs the helper the same way the composite action does and writes action
         outputs to the file referenced by GITHUB_OUTPUT.
 
     .EXAMPLE
-        ./Invoke-ReplaceTokens.ps1 -PathsInput './template.txt' -FailOnSkipped true
+        ./action.ps1 -PathsInput './template.txt' -FailOnSkipped true
 
         Fails the command if any token is left unresolved because a matching
         environment variable is missing or empty.
 
     .EXAMPLE
-        ./Invoke-ReplaceTokens.ps1 -PathsInput './template.txt' -CaseInsensitive true
+        ./action.ps1 -PathsInput './template.txt' -CaseInsensitive true
 
         Enables case-insensitive environment variable name matching even on
         Linux and macOS runners.
