@@ -30,7 +30,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        style: [mustache, handlebars, brackets, hashes, underscores, envsubst, make]
+        style:
+          [mustache, handlebars, brackets, hashes, underscores, envsubst, make]
         os: [ubuntu-latest, windows-latest, macos-latest]
         shell: [pwsh]
         include:
