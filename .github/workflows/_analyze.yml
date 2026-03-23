@@ -1,26 +1,8 @@
-name: analyze pwsh
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Analyze
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**.ps1'
-      - '**.psd1'
-      - '**.psm1'
-      - '.github/workflows/analyze-pwsh.yml'
-  pull_request:
-    types:
-      - opened
-      - edited
-      - synchronize
-    paths:
-      - '**.ps1'
-      - '**.psd1'
-      - '**.psm1'
-      - '.github/workflows/analyze-pwsh.yml'
-    branches:
-      - main
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -28,13 +10,9 @@ permissions:
   contents: read
   security-events: write
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  analyze:
-    name: PowerShell analysis
+  pwsh:
+    name: PSScriptAnalyzer
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -80,3 +58,31 @@ jobs:
         if: ${{ always() }}
         with:
           sarif_file: results.sarif
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@main
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Auto-build
+        uses: github/codeql-action/autobuild@main
+        if: ${{ matrix.build-mode == 'autobuild' }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@main
+        with:
+          category: '/language:${{matrix.language}}'

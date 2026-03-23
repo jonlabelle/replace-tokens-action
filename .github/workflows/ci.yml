@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+#
+# Gated CI pipeline
+#
+#   Gate 1: Lint      - YAML, Markdown, Prettier (parallel)
+#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL  (parallel, needs: lint)
+#   Gate 3: Test      - Matrix + dry-run tests    (needs: analyze)
+#   Gate 4: Release   - Semantic release           (needs: test, push to main only)
+#
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+  security-events: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Gate 1: Lint & Format ────────────────────────────────────────────
+  lint:
+    name: Lint
+    uses: ./.github/workflows/_lint.yml
+    permissions:
+      contents: read
+
+  # ── Gate 2: Static Analysis ─────────────────────────────────────────
+  analyze:
+    name: Analyze
+    needs: lint
+    uses: ./.github/workflows/_analyze.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  # ── Gate 3: Tests ───────────────────────────────────────────────────
+  test:
+    name: Test
+    needs: analyze
+    uses: ./.github/workflows/_test.yml
+    permissions:
+      contents: read
+
+  # ── Gate 4: Release (push to main only) ─────────────────────────────
+  release:
+    name: Semantic release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@main
+        with:
+          node-version: 'lts/*'
+
+      - name: Install semantic-release
+        run: >-
+          npm install -g
+          semantic-release
+          @semantic-release/commit-analyzer
+          @semantic-release/exec
+          @semantic-release/git
+          @semantic-release/release-notes-generator
+          @semantic-release/changelog
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx semantic-release --ci
