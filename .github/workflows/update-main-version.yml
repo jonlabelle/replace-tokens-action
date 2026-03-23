@@ -1,6 +1,6 @@
 # Re-tags the latest release with its major version (e.g. v1.2.0 -> v1).
 # Triggers: after a release is published, or via manual dispatch.
-#
+
 name: update main version
 
 on:

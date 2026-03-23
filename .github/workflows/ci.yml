@@ -1,13 +1,12 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 #
-# Gated CI pipeline
-#
+# Gated CI pipeline:
 #   Gate 1: Lint      - YAML, Markdown, Prettier (parallel)
-#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL  (parallel, needs: lint)
-#   Gate 3: Test      - Matrix + dry-run tests    (needs: analyze)
-#   Gate 4: Release   - Semantic release           (needs: test, push to main only)
+#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL (parallel, needs: lint)
+#   Gate 3: Test      - Matrix + dry-run tests   (needs: analyze)
+#   Gate 4: Release   - Semantic release         (needs: test, push to main only)
 
-name: ci
+name: CI
 
 on:
   push:
@@ -34,14 +33,12 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
-  # ── Gate 1: Lint & Format ────────────────────────────────────────────
   lint:
     name: Lint
     uses: ./.github/workflows/_lint.yml
     permissions:
       contents: read
 
-  # ── Gate 2: Static Analysis ─────────────────────────────────────────
   analyze:
     name: Analyze
     needs: lint
@@ -51,7 +48,6 @@ jobs:
       contents: read
       security-events: write
 
-  # ── Gate 3: Tests ───────────────────────────────────────────────────
   test:
     name: Test
     needs: analyze
@@ -59,7 +55,6 @@ jobs:
     permissions:
       contents: read
 
-  # ── Gate 4: Release (push to main only) ─────────────────────────────
   release:
     name: Semantic release
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
