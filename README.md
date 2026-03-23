@@ -1,6 +1,6 @@
 # Replace Tokens Action
 
-[![test](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/test.yml)
+[![ci](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/ci.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/ci.yml)
 [![latest release](https://img.shields.io/github/v/tag/jonlabelle/replace-tokens-action.svg?label=version&sort=semver)](https://github.com/jonlabelle/replace-tokens-action/releases)
 
 > A GitHub Action that replaces tokens in files, similar to envsubst.
