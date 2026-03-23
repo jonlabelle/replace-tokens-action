@@ -88,23 +88,25 @@ jobs:
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npx semantic-release --ci
+        run: npx semantic-release --ci 2>&1 | tee /tmp/release.log
 
-  summary:
-    name: CI summary
-    if: always()
-    needs: [lint, analyze, test, release]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Write summary
+      - name: Write release summary
+        if: always()
         run: |
-          echo '## CI Pipeline Summary' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '| Gate | Status |' >> $GITHUB_STEP_SUMMARY
-          echo '| ---- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| Lint | ${{ needs.lint.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Analyze | ${{ needs.analyze.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Test | ${{ needs.test.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Release | ${{ needs.release.result == 'success' && ':white_check_mark: Pass' || needs.release.result == 'skipped' && ':white_circle: Skipped' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          if [ ! -f /tmp/release.log ]; then
+            echo '### :x: Release Failed' >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          clean=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/release.log)
+          version=$(echo "$clean" | grep -oP 'Published release \K\S+' || true)
+          if [ -n "$version" ]; then
+            echo "### :package: Released v${version}" >> $GITHUB_STEP_SUMMARY
+          elif echo "$clean" | grep -qi 'no relevant changes'; then
+            echo '### :white_circle: No Release' >> $GITHUB_STEP_SUMMARY
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo 'No relevant changes since the last release.' >> $GITHUB_STEP_SUMMARY
+          else
+            echo '### :x: Release Failed' >> $GITHUB_STEP_SUMMARY
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo 'Check the job log for details.' >> $GITHUB_STEP_SUMMARY
+          fi
