@@ -6,8 +6,8 @@
 #   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL  (parallel, needs: lint)
 #   Gate 3: Test      - Matrix + dry-run tests    (needs: analyze)
 #   Gate 4: Release   - Semantic release           (needs: test, push to main only)
-#
-name: CI
+
+name: ci
 
 on:
   push:

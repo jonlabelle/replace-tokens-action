@@ -1,9 +1,7 @@
+# Re-tags the latest release with its major version (e.g. v1.2.0 -> v1).
+# Triggers: after a release is published, or via manual dispatch.
+#
 name: update main version
-
-# Re-tags the latest main version, using the latest tag's major version
-# Examples: `v1.2.0 -> v1` or `v2.9.0 -> v2`
-# Triggers: after a release is published, or manually dispatched
-# Similar to: https://github.com/actions/checkout/blob/main/.github/workflows/update-main-version.yml
 
 on:
   release:

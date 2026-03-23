@@ -1,4 +1,7 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+#
+# Reusable analysis gate: PSScriptAnalyzer (with SARIF upload) and CodeQL in parallel.
+#
 name: Analyze
 
 on:

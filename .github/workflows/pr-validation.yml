@@ -1,4 +1,7 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+#
+# PR hygiene: validates semantic PR title and reviews dependency changes.
+#
 name: PR validation
 
 on:

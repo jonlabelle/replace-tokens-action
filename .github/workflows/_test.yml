@@ -1,4 +1,8 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+#
+# Reusable test gate: token replacement matrix (7 styles x 3 OS x 2 shells)
+# and dry-run validation across all platforms.
+#
 name: Test
 
 on:
