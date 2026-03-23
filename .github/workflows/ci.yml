@@ -90,16 +90,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           set -o pipefail
-          npx semantic-release --ci 2>&1 | tee /tmp/release.log
+          npx semantic-release --ci 2>&1 | tee "$RUNNER_TEMP/release.log"
 
       - name: Write release summary
         if: always()
         run: |
-          if [ ! -f /tmp/release.log ]; then
+          if [ ! -f "$RUNNER_TEMP/release.log" ]; then
             echo '### :x: Release Failed' >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
-          clean=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/release.log)
+          clean=$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/release.log")
           version=$(echo "$clean" | grep -oP 'Published release \K\S+' || true)
           if [ -n "$version" ]; then
             echo "### :package: Released v${version}" >> $GITHUB_STEP_SUMMARY
