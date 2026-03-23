@@ -61,6 +61,6 @@ jobs:
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '| Check | Status |' >> $GITHUB_STEP_SUMMARY
           echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| YAML | ${{ needs.yaml.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Markdown | ${{ needs.markdown.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Prettier | ${{ needs.format.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| YAML | ${{ needs.yaml.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Markdown | ${{ needs.markdown.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Prettier | ${{ needs.format.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY

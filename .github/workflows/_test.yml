@@ -222,5 +222,5 @@ jobs:
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '| Suite | Status |' >> $GITHUB_STEP_SUMMARY
           echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| Matrix (7 styles x 3 OS x 2 shells) | ${{ needs.test.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dry run (3 OS x 2 shells) | ${{ needs.dry-run.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Matrix (7 styles x 3 OS x 2 shells) | ${{ needs.test.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry run (3 OS x 2 shells) | ${{ needs.dry-run.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY

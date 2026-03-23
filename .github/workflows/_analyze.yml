@@ -102,5 +102,5 @@ jobs:
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '| Check | Status |' >> $GITHUB_STEP_SUMMARY
           echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| PSScriptAnalyzer | ${{ needs.pwsh.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| CodeQL | ${{ needs.codeql.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| PSScriptAnalyzer | ${{ needs.pwsh.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL | ${{ needs.codeql.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY

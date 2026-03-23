@@ -104,6 +104,6 @@ jobs:
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '| Gate | Status |' >> $GITHUB_STEP_SUMMARY
           echo '| ---- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| Gate 1: Lint | ${{ needs.lint.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Gate 2: Analyze | ${{ needs.analyze.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Gate 3: Test | ${{ needs.test.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Analyze | ${{ needs.analyze.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ${{ needs.test.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
