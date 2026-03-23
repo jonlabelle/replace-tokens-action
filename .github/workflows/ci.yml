@@ -88,7 +88,9 @@ jobs:
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npx semantic-release --ci 2>&1 | tee /tmp/release.log
+        run: |
+          set -o pipefail
+          npx semantic-release --ci 2>&1 | tee /tmp/release.log
 
       - name: Write release summary
         if: always()
