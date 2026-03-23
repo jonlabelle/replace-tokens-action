@@ -209,18 +209,3 @@ jobs:
           }
 
           Write-Host 'PASS: Dry-run outputs are correct'
-
-  summary:
-    name: Test summary
-    if: always()
-    needs: [test, dry-run]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Write summary
-        run: |
-          echo '### Test Results' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '| Suite | Status |' >> $GITHUB_STEP_SUMMARY
-          echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
-          echo "| Matrix | ${{ needs.test.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dry run | ${{ needs.dry-run.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
