@@ -24,14 +24,14 @@ on:
 
 permissions:
   actions: read
-  contents: write
-  security-events: write
-  pull-requests: write
-  issues: write
+  contents: read
+  security-events: read
+  pull-requests: read
+  issues: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   # ── Gate 1: Lint & Format ────────────────────────────────────────────
