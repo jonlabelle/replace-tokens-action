@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.41.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.40.0...v1.41.0) (2026-03-23)
+
+
+### Features
+
+* add job summaries to CI pipeline ([#19](https://github.com/jonlabelle/replace-tokens-action/issues/19)) ([b54908c](https://github.com/jonlabelle/replace-tokens-action/commit/b54908c1e638ccd8ce3e9bb93b7329d38a8f12fd))
+
 # [1.40.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.39.0...v1.40.0) (2026-03-20)
 
 
