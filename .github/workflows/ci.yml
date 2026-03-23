@@ -89,3 +89,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx semantic-release --ci
+
+  summary:
+    name: CI summary
+    if: always()
+    needs: [lint, analyze, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Write summary
+        run: |
+          echo '## CI Pipeline Summary' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| Gate | Status |' >> $GITHUB_STEP_SUMMARY
+          echo '| ---- | ------ |' >> $GITHUB_STEP_SUMMARY
+          echo "| Gate 1: Lint | ${{ needs.lint.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate 2: Analyze | ${{ needs.analyze.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate 3: Test | ${{ needs.test.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY

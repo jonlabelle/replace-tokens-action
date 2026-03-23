@@ -89,3 +89,18 @@ jobs:
         uses: github/codeql-action/analyze@main
         with:
           category: '/language:${{matrix.language}}'
+
+  summary:
+    name: Analyze summary
+    if: always()
+    needs: [pwsh, codeql]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write summary
+        run: |
+          echo '### Analysis Results' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| Check | Status |' >> $GITHUB_STEP_SUMMARY
+          echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
+          echo "| PSScriptAnalyzer | ${{ needs.pwsh.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL | ${{ needs.codeql.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
