@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.0...v1.41.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* replace workflow summaries with semantic-release output summary ([#20](https://github.com/jonlabelle/replace-tokens-action/issues/20)) ([7af9e22](https://github.com/jonlabelle/replace-tokens-action/commit/7af9e226b2347b3828490b6a5d8b9bd10110a7c4))
+
 # [1.41.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.40.0...v1.41.0) (2026-03-23)
 
 
