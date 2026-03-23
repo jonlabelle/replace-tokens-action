@@ -77,3 +77,15 @@ jobs:
         run: |
           git push origin "${MAJOR_VER}" --force
           echo "::notice title=Main version tagged::Tagged "${TARGET}" with "${MAJOR_VER}""
+
+      - name: Write summary
+        if: ${{ always() }}
+        run: |
+          echo '### Update Main Version' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target** | \`${{ env.TARGET }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Major version** | \`${{ github.event.inputs.version || '(auto-detected)' }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trigger** | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status == 'success' && ':white_check_mark: Tagged' || ':x: Failed' }} |" >> $GITHUB_STEP_SUMMARY

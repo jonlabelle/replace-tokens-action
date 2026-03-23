@@ -48,3 +48,19 @@ jobs:
 
       - name: Run Prettier format check
         run: npx prettier --check --log-level log '**.{md,yaml,yml,js,json}'
+
+  summary:
+    name: Lint summary
+    if: always()
+    needs: [yaml, markdown, format]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write summary
+        run: |
+          echo '### Lint Results' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| Check | Status |' >> $GITHUB_STEP_SUMMARY
+          echo '| ----- | ------ |' >> $GITHUB_STEP_SUMMARY
+          echo "| YAML | ${{ needs.yaml.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Markdown | ${{ needs.markdown.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Prettier | ${{ needs.format.result == 'success' && ':white_check_mark: Pass' || ':x: Fail' }} |" >> $GITHUB_STEP_SUMMARY
