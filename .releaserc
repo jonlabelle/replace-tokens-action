@@ -2,7 +2,7 @@
   "branches": "main",
   "repositoryUrl": "https://github.com/jonlabelle/replace-tokens-action.git",
   "tagFormat": "v${version}",
-  "debug": "false",
+  "debug": false,
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
