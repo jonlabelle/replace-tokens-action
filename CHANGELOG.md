@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.42.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.2...v1.42.0) (2026-03-24)
+
+
+### Features
+
+* enhance release summary with GitHub Marketplace instructions ([40e97da](https://github.com/jonlabelle/replace-tokens-action/commit/40e97da069c7795ab632fa6fc790b2375062574b))
+
 ## [1.41.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.1...v1.41.2) (2026-03-24)
 
 
