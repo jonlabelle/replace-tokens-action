@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.2](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.1...v1.41.2) (2026-03-24)
+
+
+### Bug Fixes
+
+* **ci:** publish GitHub releases from semantic-release ([#21](https://github.com/jonlabelle/replace-tokens-action/issues/21)) ([a08e4b8](https://github.com/jonlabelle/replace-tokens-action/commit/a08e4b86cbfe8ba2587cd0e93c89a0299210e0ad))
+
 ## [1.41.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.0...v1.41.1) (2026-03-23)
 
 
