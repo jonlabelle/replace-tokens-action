@@ -14,7 +14,6 @@ jobs:
   semantic-tag:
     name: Semantic release
     runs-on: ubuntu-latest
-    # Keep this workflow reusable-only so releases stay gated by ci.yml.
 
     # https://github.com/semantic-release/semantic-release/blob/master/docs/recipes/ci-configurations/github-actions.md
     permissions:
