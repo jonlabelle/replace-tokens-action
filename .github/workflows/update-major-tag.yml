@@ -1,7 +1,7 @@
-# Re-tags the latest release with its major version (e.g. v1.2.0 -> v1).
+# Re-tags the latest release with its moving major tag (e.g. v1.2.0 -> v1).
 # Triggers: after a release is published, or via manual dispatch.
 
-name: Update main version
+name: Update major tag
 
 on:
   release:
@@ -16,7 +16,7 @@ on:
         required: true
       version:
         description: |
-          The major version to update. Example: v1
+          The major tag to update. Example: v1
         required: true
         default: 'v1'
 
@@ -31,8 +31,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update-main-version:
-    name: Update main version
+  update-major-tag:
+    name: Update major tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -46,7 +46,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "226837+jonlabelle@users.noreply.github.com"
 
-      - name: Auto-tag latest major version with ${{ env.TARGET }}
+      - name: Auto-update major tag with ${{ env.TARGET }}
         if: ${{ github.event_name != 'workflow_dispatch' }}
         run: |
           if [[ "${TARGET}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -54,7 +54,7 @@ jobs:
             if [[ "${TARGET}" != "${MAJOR_VER}" ]]; then
               git tag -f "${MAJOR_VER}" "${TARGET}"
               git push origin "${MAJOR_VER}" --force
-              echo "::notice title=Main version tagged::Tagged ${TARGET} with ${MAJOR_VER}"
+              echo "::notice title=Major tag updated::Tagged ${TARGET} with ${MAJOR_VER}"
             else
               echo "::warning title=Already tagged::Target is already tagged with ${MAJOR_VER}. Nothing to do."
               exit 1
@@ -76,4 +76,4 @@ jobs:
           MAJOR_VER: ${{ github.event.inputs.version }}
         run: |
           git push origin "${MAJOR_VER}" --force
-          echo "::notice title=Main version tagged::Tagged "${TARGET}" with "${MAJOR_VER}""
+          echo "::notice title=Major tag updated::Tagged "${TARGET}" with "${MAJOR_VER}""
