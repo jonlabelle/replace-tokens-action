@@ -55,60 +55,14 @@ jobs:
     permissions:
       contents: read
 
-  release:
+  semantic-tag:
     name: Semantic release
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/_semantic-tag.yml
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     permissions:
       contents: write
       issues: write
       pull-requests: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@main
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@main
-        with:
-          node-version: 'lts/*'
-
-      - name: Install semantic-release
-        run: >-
-          npm install -g
-          semantic-release
-          @semantic-release/commit-analyzer
-          @semantic-release/exec
-          @semantic-release/git
-          @semantic-release/release-notes-generator
-          @semantic-release/changelog
-
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          set -o pipefail
-          npx semantic-release --ci 2>&1 | tee "$RUNNER_TEMP/release.log"
-
-      - name: Write release summary
-        if: always()
-        run: |
-          if [ ! -f "$RUNNER_TEMP/release.log" ]; then
-            echo '### :x: Release Failed' >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
-          clean=$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/release.log")
-          version=$(echo "$clean" | grep -oP 'Published release \K\S+' || true)
-          if [ -n "$version" ]; then
-            echo "### :package: Released v${version}" >> $GITHUB_STEP_SUMMARY
-          elif echo "$clean" | grep -qi 'no relevant changes'; then
-            echo '### :white_circle: No Release' >> $GITHUB_STEP_SUMMARY
-            echo '' >> $GITHUB_STEP_SUMMARY
-            echo 'No relevant changes since the last release.' >> $GITHUB_STEP_SUMMARY
-          else
-            echo '### :x: Release Failed' >> $GITHUB_STEP_SUMMARY
-            echo '' >> $GITHUB_STEP_SUMMARY
-            echo 'Check the job log for details.' >> $GITHUB_STEP_SUMMARY
-          fi
