@@ -781,9 +781,17 @@ function Expand-TemplateFile
             throw 'The -Depth parameter can only be used when -Recurse is specified.'
         }
 
+        # Check whether Get-ChildItem supports -FollowSymlink (not available on Windows PowerShell 5.1)
+        $script:followSymlinkSupported = (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')
+
         if ($FollowSymlinks -and -not $Recurse)
         {
             Write-Warning 'The -FollowSymlinks parameter has no effect without -Recurse.'
+        }
+
+        if ($FollowSymlinks -and -not $script:followSymlinkSupported)
+        {
+            Write-Warning 'The -FollowSymlinks parameter is not supported on this version of PowerShell and will be ignored.'
         }
 
         # Initialize tracking variables
@@ -919,7 +927,7 @@ function Expand-TemplateFile
         if (-not [string]::IsNullOrWhiteSpace($Filter)) { $params.Add('Filter', $Filter) }
         if ($Recurse) { $params.Add('Recurse', $true) }
         if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
-        if ($FollowSymlinks) { $params.Add('FollowSymlink', $true) }
+        if ($FollowSymlinks -and $script:followSymlinkSupported) { $params.Add('FollowSymlink', $true) }
         if ($Exclude) { $params.Add('Exclude', $Exclude) }
 
         # Get files to process

@@ -238,11 +238,12 @@ $functionPath = Join-Path -Path $PSScriptRoot -ChildPath 'Expand-TemplateFile.ps
 
 try
 {
-    $result = @(Expand-TemplateFile @params)
+    $result = @(Expand-TemplateFile @params -ErrorAction Stop)
 }
 catch
 {
-    Write-Output ('::error title=Failed::{0}' -f $_.Exception.Message)
+    $escapedMessage = $_.Exception.Message -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
+    Write-Output ('::error title=Failed::{0}' -f $escapedMessage)
     exit 1
 }
 
