@@ -136,7 +136,7 @@ Describe 'Expand-TemplateFile Function' {
 
         # Store list of test environment variables for cleanup
         $script:testEnvVars = @(
-            'NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
+            'NAME', '_NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
             'ENV_VAR', '123VAR', 'BRACKET_VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
             '1INVALID'
@@ -1104,5 +1104,32 @@ Describe 'Expand-TemplateFile Function' {
         # Assert
         $content = Get-Content -Path $testFile -Raw
         $content | Should -Be 'Test Zero'
+    }
+
+    It 'Warns when -FollowSymlinks is used without -Recurse' {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'symlinks-no-recurse.txt'
+        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
+
+        # Act
+        $null = Expand-TemplateFile -Path $testFile -Style 'mustache' -FollowSymlinks -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
+
+        # Assert
+        $warnings.Count | Should -BeGreaterThan 0
+        ($warnings | Out-String) | Should -Match 'FollowSymlinks'
+    }
+
+    It 'Does not warn about -FollowSymlinks when -Recurse is also specified' {
+        # Arrange
+        $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlinks-with-recurse'
+        New-Item -Path $symlinkDir -ItemType Directory -Force | Out-Null
+        $testFile = Join-Path -Path $symlinkDir -ChildPath 'test.txt'
+        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
+
+        # Act
+        $null = Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -FollowSymlinks -Recurse -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
+
+        # Assert
+        $warnings.Count | Should -Be 0
     }
 }

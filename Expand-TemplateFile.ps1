@@ -781,6 +781,11 @@ function Expand-TemplateFile
             throw 'The -Depth parameter can only be used when -Recurse is specified.'
         }
 
+        if ($FollowSymlinks -and -not $Recurse)
+        {
+            Write-Warning 'The -FollowSymlinks parameter has no effect without -Recurse.'
+        }
+
         # Initialize tracking variables
         $script:fileResults = New-Object System.Collections.Generic.List[PSCustomObject]
         $script:tokensReplaced = 0
@@ -918,7 +923,7 @@ function Expand-TemplateFile
         if ($Exclude) { $params.Add('Exclude', $Exclude) }
 
         # Get files to process
-        $files = Get-ChildItem @params | Where-Object { -not $_.PSIsContainer }
+        $files = Get-ChildItem @params
 
         # Process each file
         foreach ($file in $files)
