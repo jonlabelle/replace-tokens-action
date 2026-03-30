@@ -32,10 +32,6 @@
     .PARAMETER Depth
         A string integer value that sets the recursion depth when Recurse is true.
 
-    .PARAMETER FollowSymlinks
-        A string boolean value that controls whether symbolic links are followed
-        while traversing directories.
-
     .PARAMETER Encoding
         The file encoding passed to Expand-TemplateFile.ps1 for read and write
         operations.
@@ -129,9 +125,6 @@ param(
     $Depth = '0',
 
     [string]
-    $FollowSymlinks = 'false',
-
-    [string]
     $Encoding = 'auto',
 
     [string]
@@ -207,7 +200,6 @@ $params = @{
     Style = $Style
     Recurse = [System.Convert]::ToBoolean($Recurse)
     Depth = [System.Convert]::ToInt32($Depth)
-    FollowSymlinks = [System.Convert]::ToBoolean($FollowSymlinks)
     Encoding = $Encoding
     NoNewline = [System.Convert]::ToBoolean($NoNewline)
     Verbose = [System.Convert]::ToBoolean($VerboseInput)

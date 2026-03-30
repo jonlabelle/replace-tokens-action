@@ -54,13 +54,6 @@ inputs:
     required: false
     default: '0'
 
-  follow-symlinks:
-    description: >-
-      Whether to follow symbolic links.
-      Defaults to `false`.
-    required: false
-    default: 'false'
-
   encoding:
     description: >-
       File encoding to use when reading and writing files.
@@ -159,7 +152,6 @@ runs:
           -ExcludeInput $excludeInput `
           -Recurse '${{ inputs.recurse }}' `
           -Depth '${{ inputs.depth }}' `
-          -FollowSymlinks '${{ inputs.follow-symlinks }}' `
           -Encoding $encodingInput `
           -NoNewline '${{ inputs.no-newline }}' `
           -DryRun '${{ inputs.dry-run }}' `

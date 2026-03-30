@@ -88,7 +88,6 @@ body:
         exclude: ''
         recurse: false
         depth: 0
-        follow-symlinks: false
         encoding: auto
         no-newline: false
         dry-run: false
@@ -143,4 +142,4 @@ body:
     id: additional_context
     attributes:
       label: Additional context
-      description: Include details such as encoding, symlink usage, path patterns, line ending expectations, or platform-specific differences.
+      description: Include details such as encoding, path patterns, line ending expectations, or platform-specific differences.

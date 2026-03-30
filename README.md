@@ -40,7 +40,6 @@ See [action.yml](action.yml).
 | `exclude`          | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
 | `recurse`          | Search subdirectories            | boolean | false    | `false`    | `true`        |
 | `depth`            | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
-| `follow-symlinks`  | Follow symbolic links            | boolean | false    | `false`    | `true`        |
 | `dry-run`          | Preview without modifying files  | boolean | false    | `false`    | `true`        |
 | `fail`             | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
 | `fail-on-skipped`  | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |

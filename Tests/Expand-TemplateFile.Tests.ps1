@@ -1106,43 +1106,4 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Test Zero'
     }
 
-    It 'Warns when -FollowSymlinks is used without -Recurse' {
-        # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'symlinks-no-recurse.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
-
-        # Act
-        $null = Expand-TemplateFile -Path $testFile -Style 'mustache' -FollowSymlinks -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
-
-        # Assert
-        $warnings.Count | Should -BeGreaterThan 0
-        ($warnings | Out-String) | Should -Match 'FollowSymlinks'
-    }
-
-    It 'Does not warn about -FollowSymlinks when -Recurse is also specified' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
-        # Arrange
-        $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlinks-with-recurse'
-        New-Item -Path $symlinkDir -ItemType Directory -Force | Out-Null
-        $testFile = Join-Path -Path $symlinkDir -ChildPath 'test.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
-
-        # Act
-        $null = Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -FollowSymlinks -Recurse -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
-
-        # Assert
-        $warnings.Count | Should -Be 0
-    }
-
-    It 'Warns when -FollowSymlinks is used on a PowerShell version that does not support it' -Skip:((Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
-        # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'symlinks-unsupported.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
-
-        # Act
-        $null = Expand-TemplateFile -Path $testFile -Style 'mustache' -FollowSymlinks -Recurse -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
-
-        # Assert
-        $warnings.Count | Should -BeGreaterThan 0
-        ($warnings | Out-String) | Should -Match 'not supported'
-    }
 }
