@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 #
 # Gated CI pipeline:
-#   Gate 1: Lint      - YAML, Markdown, Prettier (parallel)
-#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL (parallel, needs: lint)
-#   Gate 3: Test      - Matrix + dry-run tests   (needs: analyze)
-#   Gate 4: Release   - Semantic release         (needs: test, push to main only)
+#   Gate 1: Lint      - YAML, Markdown, Prettier   (parallel)
+#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL   (needs: lint)
+#   Gate 3: Test      - Matrix + dry-run tests     (needs: analyze)
+#   Gate 4: Release   - Semantic release           (needs: test, push to main only)
 
 name: CI
 
@@ -24,25 +24,56 @@ on:
 permissions:
   actions: read
   contents: read
-  security-events: read
-  pull-requests: read
   issues: read
+  pull-requests: read
+  security-events: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
-  lint:
-    name: Lint
-    uses: ./.github/workflows/_lint.yml
+  lint-yaml:
+    name: Lint YAML
+    uses: ./.github/workflows/_lint-yaml.yml
     permissions:
       contents: read
 
-  analyze:
-    name: Analyze
-    needs: lint
-    uses: ./.github/workflows/_analyze.yml
+  lint-markdown:
+    name: Lint Markdown
+    uses: ./.github/workflows/_lint-markdown.yml
+    permissions:
+      contents: read
+
+  format-check:
+    name: Prettier
+    uses: ./.github/workflows/_format-check.yml
+    permissions:
+      contents: read
+
+  codeql:
+    name: CodeQL
+    uses: ./.github/workflows/_codeql.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  devskim:
+    name: DevSkim
+    uses: ./.github/workflows/_devskim.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  analyze-pwsh:
+    name: Analyze PowerShell
+    needs:
+      - lint-yaml
+      - lint-markdown
+      - format-check
+    uses: ./.github/workflows/_analyze-pwsh.yml
     permissions:
       actions: read
       contents: read
@@ -50,7 +81,7 @@ jobs:
 
   test:
     name: Test
-    needs: analyze
+    needs: analyze-pwsh
     uses: ./.github/workflows/_test.yml
     permissions:
       contents: read

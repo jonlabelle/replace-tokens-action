@@ -1,8 +1,4 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-#
-# Reusable analysis gate: PSScriptAnalyzer (with SARIF upload) and CodeQL in parallel.
-
-name: Analyze
+name: Analyze PowerShell
 
 on:
   workflow_call:
@@ -14,7 +10,7 @@ permissions:
   security-events: write
 
 jobs:
-  pwsh:
+  analyze:
     name: PSScriptAnalyzer
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +31,6 @@ jobs:
           Import-Module -Name ConvertToSARIF
 
           $injectionHunterRules = (Get-Module -list InjectionHunter).Path
-
           $params = @{
             Settings = 'PSScriptAnalyzerSettings.psd1'
             CustomRulePath = $injectionHunterRules
@@ -61,31 +56,3 @@ jobs:
         if: ${{ always() }}
         with:
           sarif_file: results.sarif
-
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: actions
-            build-mode: none
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@main
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@main
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-
-      - name: Auto-build
-        uses: github/codeql-action/autobuild@main
-        if: ${{ matrix.build-mode == 'autobuild' }}
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@main
-        with:
-          category: '/language:${{matrix.language}}'
