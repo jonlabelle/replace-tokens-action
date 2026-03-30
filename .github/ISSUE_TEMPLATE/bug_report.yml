@@ -11,8 +11,8 @@ body:
 
         Include a minimal reproduction when possible. This project supports:
         - Windows PowerShell 5.1 on Windows runners
-        - PowerShell Core on Linux and macOS runners
-        - Token styles: mustache, handlebars, brackets, double-hashes, envsubst, make
+        - PowerShell Core on Windows, Linux, and macOS runners
+        - Token styles: mustache, handlebars, brackets, hashes, underscores, envsubst, make
 
   - type: checkboxes
     id: checks
@@ -69,7 +69,8 @@ body:
         - mustache
         - handlebars
         - brackets
-        - double-hashes
+        - hashes
+        - underscores
         - envsubst
         - make
         - Multiple
@@ -92,6 +93,8 @@ body:
         no-newline: false
         dry-run: false
         fail: false
+        fail-on-skipped: false
+        case-insensitive: false
         verbose: true
       render: yaml
     validations:
