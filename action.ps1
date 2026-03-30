@@ -236,10 +236,14 @@ if ($dryRunEnabled)
 $functionPath = Join-Path -Path $PSScriptRoot -ChildPath 'Expand-TemplateFile.ps1'
 . $functionPath
 
-$result = @(Expand-TemplateFile @params)
-if ($? -eq $false)
+try
 {
-    Write-Output '::error title=Failed::Review console output for errors'
+    $result = @(Expand-TemplateFile @params -ErrorAction Stop)
+}
+catch
+{
+    $escapedMessage = $_.Exception.Message -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
+    Write-Output ('::error title=Failed::{0}' -f $escapedMessage)
     exit 1
 }
 
