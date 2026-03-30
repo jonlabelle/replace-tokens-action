@@ -1106,4 +1106,42 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Test Zero'
     }
 
+    It 'Follows symlinks by default during recursive traversal when supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
+        # Arrange
+        $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlink-auto'
+        New-Item -Path $symlinkDir -ItemType Directory -Force | Out-Null
+
+        $targetDir = Join-Path -Path $testDir -ChildPath 'symlink-target'
+        New-Item -Path $targetDir -ItemType Directory -Force | Out-Null
+
+        $targetFile = Join-Path -Path $targetDir -ChildPath 'linked.txt'
+        $env:SYMLINK_VAR = 'Resolved'
+        Write-Utf8Content -Path $targetFile -Value '{{SYMLINK_VAR}}' -NoNewline
+
+        $linkPath = Join-Path -Path $symlinkDir -ChildPath 'link'
+        New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetDir -Force | Out-Null
+
+        # Act
+        $result = @(Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -Recurse -Encoding 'utf8NoBOM' -NoNewline)
+
+        # Assert - the file behind the symlink should be processed
+        $result.Count | Should -BeGreaterThan 0
+        $content = Get-Content -Path $targetFile -Raw
+        $content | Should -Be 'Resolved'
+    }
+
+    It 'Does not fail on versions that lack -FollowSymlink support' -Skip:((Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
+        # Arrange
+        $testFile = Join-Path -Path $testDir -ChildPath 'no-followsymlink-support.txt'
+        $env:NOSYM = 'ok'
+        Write-Utf8Content -Path $testFile -Value '{{NOSYM}}' -NoNewline
+
+        # Act - should succeed without errors even though FollowSymlink is not available
+        { Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
+
+        # Assert
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'ok'
+    }
+
 }
