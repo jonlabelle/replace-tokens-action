@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.42.0...v1.42.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* improve error handling, parameter validation, and test cleanup ([#23](https://github.com/jonlabelle/replace-tokens-action/issues/23)) ([ef41131](https://github.com/jonlabelle/replace-tokens-action/commit/ef41131a487a27a8ef93cc00edf056c23e2ac139))
+
 # [1.42.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.41.2...v1.42.0) (2026-03-24)
 
 
