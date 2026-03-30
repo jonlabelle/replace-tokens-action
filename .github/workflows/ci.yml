@@ -1,10 +1,11 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 #
 # Gated CI pipeline:
-#   Gate 1: Lint      - YAML, Markdown, Prettier   (parallel)
-#   Gate 2: Analyze   - PSScriptAnalyzer, CodeQL   (needs: lint)
-#   Gate 3: Test      - Matrix + dry-run tests     (needs: analyze)
-#   Gate 4: Release   - Semantic release           (needs: test, push to main only)
+#   Gate 1: Lint        - YAML, Markdown, Prettier             (parallel)
+#   Gate 2: Analyze     - PSScriptAnalyzer (analyze-pwsh)      (needs: lint-yaml, lint-markdown, format-check)
+#   Gate 3: Test        - Matrix + dry-run tests               (needs: analyze-pwsh)
+#   Gate 4: Release     - Semantic release                     (needs: test, push to main only)
+#   Non-gating: CodeQL, DevSkim - Security analysis            (run independently)
 
 name: CI
 

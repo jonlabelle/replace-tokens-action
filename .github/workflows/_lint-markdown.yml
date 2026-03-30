@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Lint markdown
 
 on:
@@ -15,7 +17,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@main
 
-      - uses: DavidAnson/markdownlint-cli2-action@main
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@main
         with:
           config: .markdownlint-cli2.jsonc
           globs: |
