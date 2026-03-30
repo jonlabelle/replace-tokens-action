@@ -1106,43 +1106,42 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Test Zero'
     }
 
-    It 'Warns when -FollowSymlinks is used without -Recurse' {
+    It 'Follows symlinks by default during recursive traversal when supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'symlinks-no-recurse.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
-
-        # Act
-        $null = Expand-TemplateFile -Path $testFile -Style 'mustache' -FollowSymlinks -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
-
-        # Assert
-        $warnings.Count | Should -BeGreaterThan 0
-        ($warnings | Out-String) | Should -Match 'FollowSymlinks'
-    }
-
-    It 'Does not warn about -FollowSymlinks when -Recurse is also specified' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
-        # Arrange
-        $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlinks-with-recurse'
+        $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlink-auto'
         New-Item -Path $symlinkDir -ItemType Directory -Force | Out-Null
-        $testFile = Join-Path -Path $symlinkDir -ChildPath 'test.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
+
+        $targetDir = Join-Path -Path $testDir -ChildPath 'symlink-target'
+        New-Item -Path $targetDir -ItemType Directory -Force | Out-Null
+
+        $targetFile = Join-Path -Path $targetDir -ChildPath 'linked.txt'
+        $env:SYMLINK_VAR = 'Resolved'
+        Write-Utf8Content -Path $targetFile -Value '{{SYMLINK_VAR}}' -NoNewline
+
+        $linkPath = Join-Path -Path $symlinkDir -ChildPath 'link'
+        New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetDir -Force | Out-Null
 
         # Act
-        $null = Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -FollowSymlinks -Recurse -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
+        $result = @(Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -Recurse -Encoding 'utf8NoBOM' -NoNewline)
 
-        # Assert
-        $warnings.Count | Should -Be 0
+        # Assert - the file behind the symlink should be processed
+        $result.Count | Should -BeGreaterThan 0
+        $content = Get-Content -Path $targetFile -Raw
+        $content | Should -Be 'Resolved'
     }
 
-    It 'Warns when -FollowSymlinks is used on a PowerShell version that does not support it' -Skip:((Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
+    It 'Does not fail on versions that lack -FollowSymlink support' -Skip:((Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
         # Arrange
-        $testFile = Join-Path -Path $testDir -ChildPath 'symlinks-unsupported.txt'
-        Write-Utf8Content -Path $testFile -Value 'Test content' -NoNewline
+        $testFile = Join-Path -Path $testDir -ChildPath 'no-followsymlink-support.txt'
+        $env:NOSYM = 'ok'
+        Write-Utf8Content -Path $testFile -Value '{{NOSYM}}' -NoNewline
 
-        # Act
-        $null = Expand-TemplateFile -Path $testFile -Style 'mustache' -FollowSymlinks -Recurse -Encoding 'utf8NoBOM' -NoNewline -WarningVariable warnings
+        # Act - should succeed without errors even though FollowSymlink is not available
+        { Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline } | Should -Not -Throw
 
         # Assert
-        $warnings.Count | Should -BeGreaterThan 0
-        ($warnings | Out-String) | Should -Match 'not supported'
+        $content = Get-Content -Path $testFile -Raw
+        $content | Should -Be 'ok'
     }
+
 }

@@ -24,9 +24,6 @@ function Expand-TemplateFile
     .PARAMETER Depth
         Specify the depth of recursion. Only valid when Recurse is specified.
 
-    .PARAMETER FollowSymlinks
-        Follow symbolic links when traversing directories.
-
     .PARAMETER Encoding
         Specify the file encoding. Default: auto
 
@@ -89,10 +86,6 @@ function Expand-TemplateFile
         [Parameter(HelpMessage = 'Specify the depth of recursion')]
         [int]
         $Depth,
-
-        [Parameter(HelpMessage = 'Follow symbolic links')]
-        [switch]
-        $FollowSymlinks,
 
         [Parameter(HelpMessage = 'Specify the file encoding')]
         [ValidateSet('auto', 'utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', IgnoreCase = $true)]
@@ -784,16 +777,6 @@ function Expand-TemplateFile
         # Check whether Get-ChildItem supports -FollowSymlink (not available on Windows PowerShell 5.1)
         $followSymlinkSupported = (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')
 
-        if ($FollowSymlinks -and -not $Recurse)
-        {
-            Write-Warning 'The -FollowSymlinks parameter has no effect without -Recurse.'
-        }
-
-        if ($FollowSymlinks -and -not $followSymlinkSupported)
-        {
-            Write-Warning 'The -FollowSymlinks parameter is not supported on this version of PowerShell and will be ignored.'
-        }
-
         # Initialize tracking variables
         $script:fileResults = New-Object System.Collections.Generic.List[PSCustomObject]
         $script:tokensReplaced = 0
@@ -927,7 +910,7 @@ function Expand-TemplateFile
         if (-not [string]::IsNullOrWhiteSpace($Filter)) { $params.Add('Filter', $Filter) }
         if ($Recurse) { $params.Add('Recurse', $true) }
         if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
-        if ($FollowSymlinks -and $followSymlinkSupported) { $params.Add('FollowSymlink', $true) }
+        if ($followSymlinkSupported) { $params.Add('FollowSymlink', $true) }
         if ($Exclude) { $params.Add('Exclude', $Exclude) }
 
         # Get files to process
