@@ -11,7 +11,7 @@ body:
 
         Keep compatibility in mind:
         - Windows PowerShell 5.1 must remain supported
-        - PowerShell Core on Linux and macOS must remain supported
+        - PowerShell Core on Windows, Linux, and macOS must remain supported
         - Changes usually need tests and documentation updates
 
   - type: checkboxes
@@ -71,6 +71,7 @@ body:
       description: Mark the environments or concerns that apply.
       options:
         - label: This needs to work on Windows PowerShell 5.1.
+        - label: This needs to work on PowerShell Core on Windows.
         - label: This needs to work on PowerShell Core on Linux.
         - label: This needs to work on PowerShell Core on macOS.
         - label: This may affect existing token styles or matching rules.
