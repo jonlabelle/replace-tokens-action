@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.43.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.42.1...v1.43.0) (2026-03-30)
+
+
+### Features
+
+* issue template updates ([#25](https://github.com/jonlabelle/replace-tokens-action/issues/25)) ([8f492d3](https://github.com/jonlabelle/replace-tokens-action/commit/8f492d3b7b9e047850305bdcb40f9015ef80ea17))
+
 ## [1.42.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.42.0...v1.42.1) (2026-03-30)
 
 
