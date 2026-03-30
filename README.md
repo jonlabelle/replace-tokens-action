@@ -41,14 +41,15 @@ See [action.yml](action.yml).
 | `recurse`          | Search subdirectories            | boolean | false    | `false`    | `true`        |
 | `depth`            | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
 | `dry-run`          | Preview without modifying files  | boolean | false    | `false`    | `true`        |
-
-> **Note:** When `recurse` is enabled, symbolic links are followed automatically on PowerShell Core 6+. On Windows PowerShell 5.1, symbolic links are not followed because the underlying `Get-ChildItem -FollowSymlink` parameter is not available.
 | `fail`             | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
 | `fail-on-skipped`  | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
 | `case-insensitive` | Ignore env variable casing       | boolean | false    | `false`    | `true`        |
 | `encoding`         | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
 | `no-newline`       | Skip the final newline           | boolean | false    | `false`    | `true`        |
 | `verbose`          | Enable verbose logging           | boolean | false    | `false`    | `true`        |
+
+> [!Note]
+> When `recurse` is enabled, symbolic links are followed automatically on PowerShell Core 6+. On Windows PowerShell 5.1, symbolic links are not followed because the underlying `Get-ChildItem -FollowSymlink` parameter is not available.
 
 ## Outputs
 
