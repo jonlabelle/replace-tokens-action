@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.43.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.43.0...v1.43.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* improve robustness and correctness ([#27](https://github.com/jonlabelle/replace-tokens-action/issues/27)) ([6e0d003](https://github.com/jonlabelle/replace-tokens-action/commit/6e0d003990bc5be4cca3a39d679fde061cace303))
+* semantic release by pinning lodash-es to 4.17.23 to avoid ReferenceError from 4.18.0 regression ([94614b1](https://github.com/jonlabelle/replace-tokens-action/commit/94614b1ab7cbf4199f8e9c665614b6e4b62a6d09))
+
 # [1.43.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.42.1...v1.43.0) (2026-03-30)
 
 
