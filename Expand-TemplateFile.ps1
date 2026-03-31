@@ -893,11 +893,15 @@ function Expand-TemplateFile
             }
             catch
             {
+                $tokensReplaced = $script:tokensInFile
+                $tokensSkipped = $script:skippedInFile
+                $wouldModify = ($tokensReplaced -gt 0)
+
                 $script:fileResults.Add([PSCustomObject]@{
                     FilePath = $File
-                    TokensReplaced = 0
-                    TokensSkipped = 0
-                    WouldModify = $false
+                    TokensReplaced = $tokensReplaced
+                    TokensSkipped = $tokensSkipped
+                    WouldModify = $wouldModify
                     Modified = $false
                     Error = $_.Exception.Message
                 })
