@@ -139,7 +139,7 @@ Describe 'Expand-TemplateFile Function' {
             'NAME', '_NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
             'ENV_VAR', '123VAR', 'BRACKET_VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
-            '1INVALID'
+            '1INVALID', 'SYMLINK_VAR', 'NOSYM', 'LOCKED_VAR', 'WHITESPACE_VAR'
         )
     }
 
@@ -205,6 +205,25 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Your ID: {{ID}}' # Should remain unchanged with a warning
+    }
+
+    It 'Replaces a token with a whitespace-only environment variable value' {
+        # Arrange - a value of ' ' is not empty, so IsNullOrEmpty returns false and the
+        # token should be replaced (not skipped) with the literal whitespace characters.
+        $testFile = Join-Path -Path $testDir -ChildPath 'whitespace-only-env-var.txt'
+        Write-Utf8Content -Path $testFile -Value 'prefix {{WHITESPACE_VAR}} suffix' -NoNewline
+
+        $env:WHITESPACE_VAR = ' '
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $content | Should -Be 'prefix   suffix'
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].TokensSkipped | Should -Be 0
+        $result[0].Modified | Should -Be $true
     }
 
     It 'Applies correct encoding options' {
@@ -302,9 +321,12 @@ Describe 'Expand-TemplateFile Function' {
         $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8' -NoNewline -ErrorAction SilentlyContinue
         $content = [System.IO.File]::ReadAllText($testFile, $unicodeEncoding)
 
-        # Assert
+        # Assert - explicit utf8 does not follow the detected UTF-16 encoding; the token
+        # pattern does not match the garbled UTF-8-over-UTF-16 content, so the file is
+        # returned in results but has no tokens replaced and is not written.
         $content | Should -Be 'Hello, {{NAME}}!'
-        $result | Should -BeNullOrEmpty
+        $result | Should -Not -BeNullOrEmpty
+        $result.Modified | Should -Be $false
         (Test-FileStartsWithPrefix -Path $testFile -Prefix ([byte[]](0xFF, 0xFE))) | Should -Be $true
     }
 
@@ -1104,6 +1126,53 @@ Describe 'Expand-TemplateFile Function' {
         # Assert
         $content = Get-Content -Path $testFile -Raw
         $content | Should -Be 'Test Zero'
+    }
+
+    It 'Produces no results when the path does not exist' {
+        # Arrange - the target path does not exist, so nothing is processed
+        $missingFile = Join-Path -Path $testDir -ChildPath 'does-not-exist.txt'
+
+        # Act
+        $result = Expand-TemplateFile -Path $missingFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -ErrorAction SilentlyContinue
+
+        # Assert - no result entries are produced for missing paths
+        $result | Should -BeNullOrEmpty
+    }
+
+    It 'Records an error result when reading an existing file fails' -Skip:(-not $script:isWindowsPlatform) {
+        # Arrange - create a file then hold it open with an exclusive lock (Windows only)
+        $lockedFile = Join-Path -Path $testDir -ChildPath 'locked-file.txt'
+        $env:LOCKED_VAR = 'value'
+        Write-Utf8Content -Path $lockedFile -Value '{{LOCKED_VAR}}' -NoNewline
+
+        $fileStream = $null
+        try
+        {
+            $fileStream = [System.IO.File]::Open(
+                $lockedFile,
+                [System.IO.FileMode]::Open,
+                [System.IO.FileAccess]::Read,
+                [System.IO.FileShare]::None
+            )
+
+            # Act - with SilentlyContinue, a result object with an Error field should be emitted
+            $result = @(Expand-TemplateFile -Path $lockedFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -ErrorAction SilentlyContinue)
+
+            # Assert - one result with an Error for the locked file
+            $result.Count | Should -Be 1
+            $result[0].FilePath | Should -Be $lockedFile
+            $result[0].Error | Should -Not -BeNullOrEmpty
+
+            # Assert - with -ErrorAction Stop, the read failure should surface as a terminating error
+            { Expand-TemplateFile -Path $lockedFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -ErrorAction Stop } | Should -Throw
+        }
+        finally
+        {
+            if ($null -ne $fileStream)
+            {
+                $fileStream.Dispose()
+            }
+        }
     }
 
     It 'Follows symlinks by default during recursive traversal when supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {

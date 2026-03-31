@@ -735,13 +735,13 @@ function Expand-TemplateFile
                     {
                         $newlineSequence = Get-PreferredNewlineSequence -Content $OriginalContent
 
-                        if ([string]::IsNullOrEmpty($NewlineSequence))
+                        if ([string]::IsNullOrEmpty($newlineSequence))
                         {
                             $finalContent += [Environment]::NewLine
                         }
                         else
                         {
-                            $finalContent += $NewlineSequence
+                            $finalContent += $newlineSequence
                         }
                     }
                 }
@@ -849,7 +849,7 @@ function Expand-TemplateFile
                         }
 
                         $replacement = $EnvironmentVars[$varName]
-                        if ([string]::IsNullOrWhiteSpace($replacement))
+                        if ([string]::IsNullOrEmpty($replacement))
                         {
                             Write-Warning "[$File] Environment variable '$varName' exists but has empty value - token will not be replaced"
                             $script:tokensSkipped++
@@ -893,7 +893,20 @@ function Expand-TemplateFile
             }
             catch
             {
-                Write-Error "Failed to process file ${File}: $_"
+                $tokensReplaced = $script:tokensInFile
+                $tokensSkipped = $script:skippedInFile
+                $wouldModify = ($tokensReplaced -gt 0)
+
+                $script:fileResults.Add([PSCustomObject]@{
+                    FilePath = $File
+                    TokensReplaced = $tokensReplaced
+                    TokensSkipped = $tokensSkipped
+                    WouldModify = $wouldModify
+                    Modified = $false
+                    Error = $_.Exception.Message
+                })
+
+                Write-Error -ErrorRecord $_
             }
         }
     }
