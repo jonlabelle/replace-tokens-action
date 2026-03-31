@@ -33,23 +33,41 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      - name: Install npm global packages
-        run: >-
-          npm install -g
-          semantic-release
-          @semantic-release/commit-analyzer
-          @semantic-release/exec
-          @semantic-release/git
-          @semantic-release/github
-          @semantic-release/release-notes-generator
-          @semantic-release/changelog
+      - name: Install semantic-release
+        working-directory: ${{ runner.temp }}
+        run: |
+          # Install locally (not globally) so npm `overrides` can pin lodash-es.
+          #
+          # Workaround: lodash-es@4.18.0 introduced a regression in template.js —
+          # it replaced `assignInWith` calls with `assignWith` but omitted the
+          # corresponding `import`, causing `ReferenceError: assignWith is not
+          # defined` during semantic-release's config verification step
+          # (lib/verify.js → template(tagFormat)).
+          #
+          # Pinning to 4.17.23 (the last working version) via npm `overrides`
+          # avoids the bug until lodash-es publishes a fix.
+          #
+          # References:
+          #   https://github.com/lodash/lodash/issues/5984
+          #   https://github.com/semantic-release/semantic-release/issues/3847
+          printf '{"private":true,"overrides":{"lodash-es":"4.17.23"}}' > package.json
+          npm install \
+            semantic-release \
+            @semantic-release/commit-analyzer \
+            @semantic-release/exec \
+            @semantic-release/git \
+            @semantic-release/github \
+            @semantic-release/release-notes-generator \
+            @semantic-release/changelog
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           set -o pipefail
-          npx semantic-release --ci 2>&1 | tee "$RUNNER_TEMP/release.log"
+          # Run the locally installed binary so it resolves plugins from the
+          # same node_modules tree that has the lodash-es override applied.
+          "$RUNNER_TEMP/node_modules/.bin/semantic-release" --ci 2>&1 | tee "$RUNNER_TEMP/release.log"
 
       - name: Write release summary
         if: always()
