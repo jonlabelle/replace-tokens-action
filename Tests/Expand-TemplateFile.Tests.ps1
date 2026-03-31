@@ -139,7 +139,7 @@ Describe 'Expand-TemplateFile Function' {
             'NAME', '_NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
             'ENV_VAR', '123VAR', 'BRACKET_VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
-            '1INVALID', 'SYMLINK_VAR', 'NOSYM', 'LOCKED_VAR'
+            '1INVALID', 'SYMLINK_VAR', 'NOSYM', 'LOCKED_VAR', 'WHITESPACE_VAR'
         )
     }
 
@@ -205,6 +205,25 @@ Describe 'Expand-TemplateFile Function' {
 
         # Assert
         $result | Should -Be 'Your ID: {{ID}}' # Should remain unchanged with a warning
+    }
+
+    It 'Replaces a token with a whitespace-only environment variable value' {
+        # Arrange - a value of ' ' is not empty, so IsNullOrEmpty returns false and the
+        # token should be replaced (not skipped) with the literal whitespace characters.
+        $testFile = Join-Path -Path $testDir -ChildPath 'whitespace-only-env-var.txt'
+        Write-Utf8Content -Path $testFile -Value 'prefix {{WHITESPACE_VAR}} suffix' -NoNewline
+
+        $env:WHITESPACE_VAR = ' '
+
+        # Act
+        $result = Expand-TemplateFile -Path $testFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+        $content = Get-Content -Path $testFile -Raw
+
+        # Assert
+        $content | Should -Be 'prefix   suffix'
+        $result[0].TokensReplaced | Should -Be 1
+        $result[0].TokensSkipped | Should -Be 0
+        $result[0].Modified | Should -Be $true
     }
 
     It 'Applies correct encoding options' {
