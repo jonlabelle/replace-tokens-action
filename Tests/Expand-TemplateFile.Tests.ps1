@@ -139,7 +139,7 @@ Describe 'Expand-TemplateFile Function' {
             'NAME', '_NAME', 'ID', 'VALID_NAME', '_TEST_VAR', 'SPECIAL',
             'ENV_VAR', '123VAR', 'BRACKET_VAR', 'HASH_VAR', 'MAKE_VAR', 'MAKE', 'MAKE-VAR',
             'VAR', 'VAR2', 'VAR3', 'USER', 'HOSTNAME', 'TESTVAR',
-            '1INVALID'
+            '1INVALID', 'SYMLINK_VAR', 'NOSYM'
         )
     }
 
@@ -1104,6 +1104,58 @@ Describe 'Expand-TemplateFile Function' {
         # Assert
         $content = Get-Content -Path $testFile -Raw
         $content | Should -Be 'Test Zero'
+    }
+
+    It 'Skips binary files without corrupting them' {
+        # Arrange
+        $binaryFile = Join-Path -Path $testDir -ChildPath 'binary-file.bin'
+        $binaryContent = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00)
+        [System.IO.File]::WriteAllBytes($binaryFile, $binaryContent)
+        $originalHash = (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash
+
+        $env:NAME = 'ShouldNotAppear'
+
+        # Act
+        $result = Expand-TemplateFile -Path $binaryFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert - file must remain untouched
+        (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash | Should -Be $originalHash
+        $result | Should -BeNullOrEmpty
+    }
+
+    It 'Skips binary files in a directory without affecting text files' {
+        # Arrange
+        $mixedBinaryDir = Join-Path -Path $testDir -ChildPath 'mixed-binary-dir'
+        New-Item -Path $mixedBinaryDir -ItemType Directory -Force | Out-Null
+
+        $textFile = Join-Path -Path $mixedBinaryDir -ChildPath 'template.txt'
+        Write-Utf8Content -Path $textFile -Value 'Hello, {{NAME}}!' -NoNewline
+
+        $binaryFile = Join-Path -Path $mixedBinaryDir -ChildPath 'image.bin'
+        [System.IO.File]::WriteAllBytes($binaryFile, [byte[]](0x00, 0x01, 0x02, 0x03))
+        $binaryHash = (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash
+
+        $env:NAME = 'World'
+
+        # Act
+        $result = Expand-TemplateFile -Path $mixedBinaryDir -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
+
+        # Assert
+        (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash | Should -Be $binaryHash
+        (Get-Content -Path $textFile -Raw) | Should -Be 'Hello, World!'
+        $result.Count | Should -Be 1
+        $result[0].FilePath | Should -Be $textFile
+    }
+
+    It 'Records an error result when a file cannot be read' {
+        # Arrange
+        $missingFile = Join-Path -Path $testDir -ChildPath 'does-not-exist.txt'
+
+        # Act
+        $result = Expand-TemplateFile -Path $missingFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline -ErrorAction SilentlyContinue
+
+        # Assert - no result entries are produced for missing files (Get-ChildItem finds nothing)
+        $result | Should -BeNullOrEmpty
     }
 
     It 'Follows symlinks by default during recursive traversal when supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {

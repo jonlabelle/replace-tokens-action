@@ -735,13 +735,13 @@ function Expand-TemplateFile
                     {
                         $newlineSequence = Get-PreferredNewlineSequence -Content $OriginalContent
 
-                        if ([string]::IsNullOrEmpty($NewlineSequence))
+                        if ([string]::IsNullOrEmpty($newlineSequence))
                         {
                             $finalContent += [Environment]::NewLine
                         }
                         else
                         {
-                            $finalContent += $NewlineSequence
+                            $finalContent += $newlineSequence
                         }
                     }
                 }
@@ -762,6 +762,47 @@ function Expand-TemplateFile
                 elseif ($null -ne $fileStream)
                 {
                     $fileStream.Dispose()
+                }
+            }
+        }
+
+        function Test-IsLikelyBinaryFile
+        {
+            param(
+                [string]
+                $File
+            )
+
+            $stream = $null
+
+            try
+            {
+                $stream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
+                $bufferSize = [Math]::Min(8192, $stream.Length)
+
+                if ($bufferSize -eq 0)
+                {
+                    return $false
+                }
+
+                $buffer = New-Object byte[] $bufferSize
+                $bytesRead = $stream.Read($buffer, 0, $bufferSize)
+
+                for ($index = 0; $index -lt $bytesRead; $index++)
+                {
+                    if ($buffer[$index] -eq 0)
+                    {
+                        return $true
+                    }
+                }
+
+                return $false
+            }
+            finally
+            {
+                if ($null -ne $stream)
+                {
+                    $stream.Dispose()
                 }
             }
         }
@@ -824,6 +865,13 @@ function Expand-TemplateFile
         # Function to replace tokens in a file
         function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string, string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
         {
+            # Skip binary files to avoid corruption
+            if (Test-IsLikelyBinaryFile -File $File)
+            {
+                Write-Verbose "[$File] Skipped binary file"
+                return
+            }
+
             # Use script-scoped variables for per-file counters so they work inside scriptblocks
             $script:tokensInFile = 0
             $script:skippedInFile = 0
@@ -849,7 +897,7 @@ function Expand-TemplateFile
                         }
 
                         $replacement = $EnvironmentVars[$varName]
-                        if ([string]::IsNullOrWhiteSpace($replacement))
+                        if ([string]::IsNullOrEmpty($replacement))
                         {
                             Write-Warning "[$File] Environment variable '$varName' exists but has empty value - token will not be replaced"
                             $script:tokensSkipped++
@@ -893,6 +941,15 @@ function Expand-TemplateFile
             }
             catch
             {
+                $script:fileResults.Add([PSCustomObject]@{
+                    FilePath = $File
+                    TokensReplaced = 0
+                    TokensSkipped = 0
+                    WouldModify = $false
+                    Modified = $false
+                    Error = $_.Exception.Message
+                })
+
                 Write-Error "Failed to process file ${File}: $_"
             }
         }
