@@ -788,6 +788,18 @@ function Expand-TemplateFile
                 $buffer = New-Object byte[] $bufferSize
                 $bytesRead = $stream.Read($buffer, 0, $bufferSize)
 
+                # UTF-16 text files contain frequent null bytes between characters;
+                # check for UTF-16 encoding first so they are not treated as binary.
+                if (Test-IsLikelyUtf16 -Bytes $buffer -Count $bytesRead -BigEndian $false)
+                {
+                    return $false
+                }
+
+                if (Test-IsLikelyUtf16 -Bytes $buffer -Count $bytesRead -BigEndian $true)
+                {
+                    return $false
+                }
+
                 for ($index = 0; $index -lt $bytesRead; $index++)
                 {
                     if ($buffer[$index] -eq 0)
@@ -865,19 +877,19 @@ function Expand-TemplateFile
         # Function to replace tokens in a file
         function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string, string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
         {
-            # Skip binary files to avoid corruption
-            if (Test-IsLikelyBinaryFile -File $File)
-            {
-                Write-Verbose "[$File] Skipped binary file"
-                return
-            }
-
             # Use script-scoped variables for per-file counters so they work inside scriptblocks
             $script:tokensInFile = 0
             $script:skippedInFile = 0
 
             try
             {
+                # Skip binary files to avoid corruption; inside try so access errors are handled consistently
+                if (Test-IsLikelyBinaryFile -File $File)
+                {
+                    Write-Verbose "[$File] Skipped binary file"
+                    return
+                }
+
                 $fileState = Read-FileContent -File $File -RequestedEncodingName $RequestedEncodingName
                 $encodingInfo = $fileState.EncodingInfo
                 $content = $fileState.Content
@@ -950,7 +962,7 @@ function Expand-TemplateFile
                     Error = $_.Exception.Message
                 })
 
-                Write-Error "Failed to process file ${File}: $_"
+                Write-Error -ErrorRecord $_
             }
         }
     }

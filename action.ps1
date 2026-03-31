@@ -234,7 +234,7 @@ try
 }
 catch
 {
-    $escapedMessage = $_.Exception.Message -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A' -replace ':', '%3A' -replace ',', '%2C'
+    $escapedMessage = $_.Exception.Message -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
     Write-Output ('::error title=Failed::{0}' -f $escapedMessage)
     exit 1
 }
