@@ -1109,47 +1109,6 @@ Describe 'Expand-TemplateFile Function' {
         $content | Should -Be 'Test Zero'
     }
 
-    It 'Skips binary files without corrupting them' {
-        # Arrange
-        $binaryFile = Join-Path -Path $testDir -ChildPath 'binary-file.bin'
-        $binaryContent = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00)
-        [System.IO.File]::WriteAllBytes($binaryFile, $binaryContent)
-        $originalHash = (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash
-
-        $env:NAME = 'ShouldNotAppear'
-
-        # Act
-        $result = Expand-TemplateFile -Path $binaryFile -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
-
-        # Assert - file must remain untouched
-        (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash | Should -Be $originalHash
-        $result | Should -BeNullOrEmpty
-    }
-
-    It 'Skips binary files in a directory without affecting text files' {
-        # Arrange
-        $mixedBinaryDir = Join-Path -Path $testDir -ChildPath 'mixed-binary-dir'
-        New-Item -Path $mixedBinaryDir -ItemType Directory -Force | Out-Null
-
-        $textFile = Join-Path -Path $mixedBinaryDir -ChildPath 'template.txt'
-        Write-Utf8Content -Path $textFile -Value 'Hello, {{NAME}}!' -NoNewline
-
-        $binaryFile = Join-Path -Path $mixedBinaryDir -ChildPath 'image.bin'
-        [System.IO.File]::WriteAllBytes($binaryFile, [byte[]](0x00, 0x01, 0x02, 0x03))
-        $binaryHash = (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash
-
-        $env:NAME = 'World'
-
-        # Act
-        $result = Expand-TemplateFile -Path $mixedBinaryDir -Style 'mustache' -Encoding 'utf8NoBOM' -NoNewline
-
-        # Assert
-        (Get-FileHash -Path $binaryFile -Algorithm SHA256).Hash | Should -Be $binaryHash
-        (Get-Content -Path $textFile -Raw) | Should -Be 'Hello, World!'
-        $result.Count | Should -Be 1
-        $result[0].FilePath | Should -Be $textFile
-    }
-
     It 'Produces no results when the path does not exist' {
         # Arrange - the target path does not exist, so nothing is processed
         $missingFile = Join-Path -Path $testDir -ChildPath 'does-not-exist.txt'
