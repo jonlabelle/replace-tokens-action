@@ -22,4 +22,6 @@ jobs:
         with:
           config: .markdownlint-cli2.jsonc
           globs: |
-            README.md
+            "**/*.md"
+            "#node_modules"
+            "#CHANGELOG.md"
