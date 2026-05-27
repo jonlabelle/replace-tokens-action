@@ -49,16 +49,11 @@ jobs:
       - name: Auto-update major tag with ${{ env.TARGET }}
         if: ${{ github.event_name != 'workflow_dispatch' }}
         run: |
-          if [[ "${TARGET}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ "${TARGET}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$ ]]; then
             MAJOR_VER="$(echo "${TARGET}" | cut -d. -f1)"
-            if [[ "${TARGET}" != "${MAJOR_VER}" ]]; then
-              git tag -f "${MAJOR_VER}" "${TARGET}"
-              git push origin "${MAJOR_VER}" --force
-              echo "::notice title=Major tag updated::Tagged ${TARGET} with ${MAJOR_VER}"
-            else
-              echo "::warning title=Already tagged::Target is already tagged with ${MAJOR_VER}. Nothing to do."
-              exit 1
-            fi
+            git tag -f "${MAJOR_VER}" "${TARGET}"
+            git push origin "${MAJOR_VER}" --force
+            echo "::notice title=Major tag updated::Tagged ${TARGET} with ${MAJOR_VER}"
           else
             echo "::warning title=Invalid semver::${TARGET} is not a valid semver. Nothing to do."
             exit 1
