@@ -71,4 +71,4 @@ jobs:
           MAJOR_VER: ${{ github.event.inputs.version }}
         run: |
           git push origin "${MAJOR_VER}" --force
-          echo "::notice title=Major tag updated::Tagged "${TARGET}" with "${MAJOR_VER}""
+          echo "::notice title=Major tag updated::Tagged ${TARGET} with ${MAJOR_VER}"
