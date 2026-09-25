@@ -58,3 +58,5 @@ jobs:
         if: ${{ always() }}
         with:
           sarif_file: results.sarif
+          # Keep the Code Scanning configuration stable across workflow and job renames.
+          category: PSScriptAnalyzer
