@@ -31,4 +31,26 @@ Describe 'GitHub Action workflow' {
             $actionContent | Should -Match "(?m)^\s+${_}: \$\{\{"
         }
     }
+
+    It 'removes transport variables before token replacement' {
+        $repositoryPath = (Get-Item -Path $PSScriptRoot).Parent.FullName
+        $actionPath = Join-Path -Path $repositoryPath -ChildPath 'action.ps1'
+        $testPath = Join-Path -Path $TestDrive -ChildPath 'transport-variable.tpl'
+        $originalValue = $env:PATHS_INPUT
+        $env:PATHS_INPUT = 'internal-value'
+        Set-Content -Path $testPath -Value '{{ PATHS_INPUT }}' -NoNewline
+
+        try {
+            & $actionPath -PathsInput $testPath -NoNewline 'true'
+            Get-Content -Path $testPath -Raw | Should -Be '{{ PATHS_INPUT }}'
+        }
+        finally {
+            if ($null -eq $originalValue) {
+                Remove-Item -Path (Join-Path -Path 'Env:' -ChildPath 'PATHS_INPUT') -ErrorAction SilentlyContinue
+            }
+            else {
+                $env:PATHS_INPUT = $originalValue
+            }
+        }
+    }
 }
