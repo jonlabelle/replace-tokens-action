@@ -134,7 +134,7 @@ jobs:
           }
 
       - name: Run Pester Tests
-        run: Invoke-Pester -Path ./Tests/Expand-TemplateFile.Tests.ps1 -Output Detailed
+        run: Invoke-Pester -Path ./Tests -Output Detailed
 
   dry-run:
     name: Dry run on ${{ matrix.os }} (${{ matrix.shell }})
