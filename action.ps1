@@ -146,7 +146,7 @@ param(
     $VerboseInput = 'false'
 )
 
-@(
+$transportEnvironmentVariables = @(
     'ACTION_PATH',
     'PATHS_INPUT',
     'EXCLUDE_INPUT',
@@ -161,9 +161,7 @@ param(
     'FAIL_ON_SKIPPED_INPUT',
     'CASE_INSENSITIVE_INPUT',
     'VERBOSE_INPUT'
-) | ForEach-Object {
-    Remove-Item -Path (Join-Path -Path 'Env:' -ChildPath $_) -ErrorAction SilentlyContinue
-}
+)
 
 function Split-MultilineInput
 {
@@ -222,6 +220,7 @@ $params = @{
     Encoding = $Encoding
     NoNewline = [System.Convert]::ToBoolean($NoNewline)
     Verbose = [System.Convert]::ToBoolean($VerboseInput)
+    ExcludeEnvironmentVariable = $transportEnvironmentVariables
 }
 
 if ($caseInsensitiveEnabled)

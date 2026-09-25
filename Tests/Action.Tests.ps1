@@ -32,7 +32,7 @@ Describe 'GitHub Action workflow' {
         }
     }
 
-    It 'removes transport variables before token replacement' {
+    It 'excludes transport variables without changing the caller environment' {
         $repositoryPath = (Get-Item -Path $PSScriptRoot).Parent.FullName
         $actionPath = Join-Path -Path $repositoryPath -ChildPath 'action.ps1'
         $testPath = Join-Path -Path $TestDrive -ChildPath 'transport-variable.tpl'
@@ -43,6 +43,7 @@ Describe 'GitHub Action workflow' {
         try {
             & $actionPath -PathsInput $testPath -NoNewline 'true'
             Get-Content -Path $testPath -Raw | Should -Be '{{ PATHS_INPUT }}'
+            $env:PATHS_INPUT | Should -Be 'internal-value'
         }
         finally {
             if ($null -eq $originalValue) {

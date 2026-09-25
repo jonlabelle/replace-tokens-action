@@ -36,6 +36,9 @@ function Expand-TemplateFile
     .PARAMETER Exclude
         Specify files or directories to exclude from processing.
 
+    .PARAMETER ExcludeEnvironmentVariable
+        Specify environment variable names to exclude from token replacement.
+
     .EXAMPLE
         Expand-TemplateFile -Path ./config.template -Style mustache
 
@@ -102,7 +105,11 @@ function Expand-TemplateFile
 
         [Parameter(HelpMessage = 'Specify files or directories to exclude')]
         [string[]]
-        $Exclude
+        $Exclude,
+
+        [Parameter(HelpMessage = 'Specify environment variable names to exclude from token replacement')]
+        [string[]]
+        $ExcludeEnvironmentVariable
     )
 
     begin
@@ -819,7 +826,17 @@ function Expand-TemplateFile
         }
 
         $EnvVars = New-Object 'System.Collections.Generic.Dictionary[string,string]' $envComparer
-        Get-ChildItem Env: | ForEach-Object { $EnvVars[$_.Name] = $_.Value }
+        $excludedEnvironmentVariables = New-Object 'System.Collections.Generic.HashSet[string]' $envComparer
+        if ($null -ne $ExcludeEnvironmentVariable)
+        {
+            $ExcludeEnvironmentVariable | ForEach-Object {
+                [void]$excludedEnvironmentVariables.Add($_)
+            }
+        }
+
+        Get-ChildItem Env: |
+            Where-Object { -not $excludedEnvironmentVariables.Contains($_.Name) } |
+            ForEach-Object { $EnvVars[$_.Name] = $_.Value }
 
         # Function to replace tokens in a file
         function ReplaceTokens([string] $File, [System.Text.RegularExpressions.Regex] $TokenRegex, [System.Collections.Generic.Dictionary[string, string]] $EnvironmentVars, [string] $RequestedEncodingName, [bool] $NoNewline)
