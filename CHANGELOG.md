@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.44.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.43.1...v1.44.0) (2026-09-25)
+
+
+### Features
+
+* prevent workflow code injection ([#28](https://github.com/jonlabelle/replace-tokens-action/issues/28)) ([f460140](https://github.com/jonlabelle/replace-tokens-action/commit/f46014083a9edab4f692fe6ab71ee709e64d2e39))
+
 ## [1.43.1](https://github.com/jonlabelle/replace-tokens-action/compare/v1.43.0...v1.43.1) (2026-03-31)
 
 
