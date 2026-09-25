@@ -146,6 +146,23 @@ param(
     $VerboseInput = 'false'
 )
 
+$transportEnvironmentVariables = @(
+    'ACTION_PATH',
+    'PATHS_INPUT',
+    'EXCLUDE_INPUT',
+    'FILTER_INPUT',
+    'STYLE_INPUT',
+    'ENCODING_INPUT',
+    'RECURSE_INPUT',
+    'DEPTH_INPUT',
+    'NO_NEWLINE_INPUT',
+    'DRY_RUN_INPUT',
+    'FAIL_INPUT',
+    'FAIL_ON_SKIPPED_INPUT',
+    'CASE_INSENSITIVE_INPUT',
+    'VERBOSE_INPUT'
+)
+
 function Split-MultilineInput
 {
     param(
@@ -203,6 +220,7 @@ $params = @{
     Encoding = $Encoding
     NoNewline = [System.Convert]::ToBoolean($NoNewline)
     Verbose = [System.Convert]::ToBoolean($VerboseInput)
+    ExcludeEnvironmentVariable = $transportEnvironmentVariables
 }
 
 if ($caseInsensitiveEnabled)
