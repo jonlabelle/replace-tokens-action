@@ -134,6 +134,7 @@ jobs:
           }
 
       - name: Run Pester Tests
+        timeout-minutes: 5
         run: Invoke-Pester -Path ./Tests -Output Detailed
 
   dry-run:

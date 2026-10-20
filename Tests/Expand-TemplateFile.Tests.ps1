@@ -1175,7 +1175,7 @@ Describe 'Expand-TemplateFile Function' {
         }
     }
 
-    It 'Follows symlinks by default during recursive traversal when supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
+    It 'Follows symlinks during recursive traversal when explicitly enabled and supported' -Skip:(-not (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')) {
         # Arrange
         $symlinkDir = Join-Path -Path $testDir -ChildPath 'symlink-auto'
         New-Item -Path $symlinkDir -ItemType Directory -Force | Out-Null
@@ -1191,7 +1191,7 @@ Describe 'Expand-TemplateFile Function' {
         New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetDir -Force | Out-Null
 
         # Act
-        $result = @(Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -Recurse -Encoding 'utf8NoBOM' -NoNewline)
+        $result = @(Expand-TemplateFile -Path $symlinkDir -Style 'mustache' -Recurse -FollowSymlinks -Encoding 'utf8NoBOM' -NoNewline)
 
         # Assert - the file behind the symlink should be processed
         $result.Count | Should -BeGreaterThan 0

@@ -22,7 +22,28 @@ function Expand-TemplateFile
         Recurse into subdirectories when processing paths.
 
     .PARAMETER Depth
-        Specify the depth of recursion. Only valid when Recurse is specified.
+        Specify a nonnegative recursion depth. A positive value requires Recurse.
+        A value of 0 means no depth limit.
+
+    .PARAMETER FollowSymlinks
+        Follow directory symbolic links during recursion. Requires Recurse and
+        PowerShell Core 6+. Disabled by default.
+
+    .PARAMETER MaxEntries
+        Maximum enumerated files and directories before filtering or exclusions.
+        Defaults to 100000. A value of 0 disables this limit.
+
+    .PARAMETER MaxFiles
+        Maximum matching files across all input paths. Defaults to 10000.
+        A value of 0 disables this limit.
+
+    .PARAMETER MaxFileSize
+        Maximum input bytes per matching file, including its BOM.
+        Defaults to 10485760 (10 MiB). A value of 0 disables this limit.
+
+    .PARAMETER MaxTotalSize
+        Maximum total input bytes across all matching files, including BOMs.
+        Defaults to 104857600 (100 MiB). A value of 0 disables this limit.
 
     .PARAMETER Encoding
         Specify the file encoding. Default: auto
@@ -87,8 +108,33 @@ function Expand-TemplateFile
         $Recurse,
 
         [Parameter(HelpMessage = 'Specify the depth of recursion')]
+        [ValidateRange(0, 2147483647)]
         [int]
         $Depth,
+
+        [Parameter(HelpMessage = 'Follow directory symbolic links during recursion')]
+        [switch]
+        $FollowSymlinks,
+
+        [Parameter(HelpMessage = 'Maximum enumerated entries; 0 disables the limit')]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long]
+        $MaxEntries = 100000,
+
+        [Parameter(HelpMessage = 'Maximum matching files; 0 disables the limit')]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long]
+        $MaxFiles = 10000,
+
+        [Parameter(HelpMessage = 'Maximum input bytes per file; 0 disables the limit')]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long]
+        $MaxFileSize = 10485760,
+
+        [Parameter(HelpMessage = 'Maximum total input bytes; 0 disables the limit')]
+        [ValidateRange(0, [long]::MaxValue)]
+        [long]
+        $MaxTotalSize = 104857600,
 
         [Parameter(HelpMessage = 'Specify the file encoding')]
         [ValidateSet('auto', 'utf8', 'utf-8', 'utf8NoBOM', 'utf8BOM', 'ascii', 'ansi', 'bigendianunicode', 'bigendianutf32', 'oem', 'unicode', 'utf32', IgnoreCase = $true)]
@@ -612,6 +658,37 @@ function Expand-TemplateFile
             }
         }
 
+        function Assert-FileSizeBudget
+        {
+            param(
+                [string]
+                $File,
+
+                [long]
+                $Size,
+
+                [long]
+                $ProcessedBytes
+            )
+
+            $message = $null
+            if ($budgetState.FileSizeLimit -gt 0 -and $Size -gt $budgetState.FileSizeLimit)
+            {
+                $message = "The -MaxFileSize limit of $($budgetState.FileSizeLimit) bytes was exceeded by '$File' ($Size bytes)."
+            }
+            elseif ($MaxTotalSize -gt 0 -and $Size -gt ($MaxTotalSize - $ProcessedBytes))
+            {
+                $message = "The -MaxTotalSize limit of $MaxTotalSize bytes was exceeded while processing '$File'."
+            }
+
+            if ($null -ne $message)
+            {
+                $exception = New-Object -TypeName System.IO.InvalidDataException -ArgumentList $message
+                $exception.Data['ResourceLimitExceeded'] = $true
+                throw $exception
+            }
+        }
+
         function Read-FileContent
         {
             param(
@@ -628,26 +705,48 @@ function Expand-TemplateFile
             try
             {
                 $fileStream = New-Object -TypeName System.IO.FileStream -ArgumentList $File, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
+                Assert-FileSizeBudget -File $File -Size $fileStream.Length -ProcessedBytes $budgetState.ReadBytes
                 $encodingInfo = Get-FileEncodingInfo -Stream $fileStream -RequestedEncodingName $RequestedEncodingName
+                Assert-FileSizeBudget -File $File -Size $fileStream.Position -ProcessedBytes $budgetState.ReadBytes
                 $fileStream.Position = $encodingInfo.BomLengthToSkip
 
                 $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $fileStream, $encodingInfo.ReadEncoding, $false
-                $content = $reader.ReadToEnd()
+                $buffer = New-Object char[] 4096
+                $content = New-Object -TypeName System.Text.StringBuilder
+                while (($charactersRead = $reader.Read($buffer, 0, $buffer.Length)) -gt 0)
+                {
+                    Assert-FileSizeBudget -File $File -Size $fileStream.Position -ProcessedBytes $budgetState.ReadBytes
+                    [void]$content.Append($buffer, 0, $charactersRead)
+                }
 
                 return [PSCustomObject]@{
-                    Content = $content
+                    Content = $content.ToString()
                     EncodingInfo = $encodingInfo
                 }
             }
             finally
             {
-                if ($null -ne $reader)
+                try
                 {
-                    $reader.Dispose()
+                    if ($null -ne $fileStream)
+                    {
+                        Assert-FileSizeBudget -File $File -Size $fileStream.Position -ProcessedBytes $budgetState.ReadBytes
+                        if ($MaxTotalSize -gt 0)
+                        {
+                            $budgetState.ReadBytes += $fileStream.Position
+                        }
+                    }
                 }
-                elseif ($null -ne $fileStream)
+                finally
                 {
-                    $fileStream.Dispose()
+                    if ($null -ne $reader)
+                    {
+                        $reader.Dispose()
+                    }
+                    elseif ($null -ne $fileStream)
+                    {
+                        $fileStream.Dispose()
+                    }
                 }
             }
         }
@@ -783,11 +882,26 @@ function Expand-TemplateFile
 
         # Check whether Get-ChildItem supports -FollowSymlink (not available on Windows PowerShell 5.1)
         $followSymlinkSupported = (Get-Command Get-ChildItem).Parameters.ContainsKey('FollowSymlink')
+        if ($FollowSymlinks -and -not $Recurse)
+        {
+            throw 'The -FollowSymlinks parameter can only be used when -Recurse is specified.'
+        }
+        if ($FollowSymlinks -and -not $followSymlinkSupported)
+        {
+            throw 'The -FollowSymlinks parameter requires PowerShell Core 6+.'
+        }
 
         # Initialize tracking variables
         $script:fileResults = New-Object System.Collections.Generic.List[PSCustomObject]
         $script:tokensReplaced = 0
         $script:tokensSkipped = 0
+        $files = New-Object 'System.Collections.Generic.List[System.IO.FileInfo]'
+        $budgetState = @{
+            FileSizeLimit = $MaxFileSize
+            Entries = [long]0
+            DiscoveredBytes = [long]0
+            ReadBytes = [long]0
+        }
 
         # Define token patterns with validation for environment variable names
         $mustachePattern = '\{\{[ \t]*([a-zA-Z_][a-zA-Z0-9_]*)[ \t]*\}\}' # handlebars/mustache pattern, e.g. {{VARIABLE}}; allow horizontal whitespace, but not newlines
@@ -910,6 +1024,11 @@ function Expand-TemplateFile
             }
             catch
             {
+                if ($_.Exception.Data.Contains('ResourceLimitExceeded'))
+                {
+                    throw
+                }
+
                 $tokensReplaced = $script:tokensInFile
                 $tokensSkipped = $script:skippedInFile
                 $wouldModify = ($tokensReplaced -gt 0)
@@ -930,31 +1049,81 @@ function Expand-TemplateFile
 
     process
     {
-        # Build parameters for Get-ChildItem
         $params = @{
             Path = $Path
-            File = $true
             ErrorAction = 'Continue'
         }
 
-        if (-not [string]::IsNullOrWhiteSpace($Filter)) { $params.Add('Filter', $Filter) }
         if ($Recurse) { $params.Add('Recurse', $true) }
         if ($Depth -gt 0) { $params.Add('Depth', $Depth) }
-        if ($followSymlinkSupported) { $params.Add('FollowSymlink', $true) }
-        if ($Exclude) { $params.Add('Exclude', $Exclude) }
+        if ($FollowSymlinks) { $params.Add('FollowSymlink', $true) }
 
-        # Get files to process
-        $files = Get-ChildItem @params
-
-        # Process each file
-        foreach ($file in $files)
+        # Provider filters hide discovery work, so count unfiltered entries first.
+        if ($MaxEntries -gt 0)
         {
-            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -RequestedEncodingName $Encoding -NoNewline $NoNewline
+            Get-ChildItem @params | ForEach-Object -Process {
+                if ($budgetState.Entries -ge $MaxEntries)
+                {
+                    throw "The -MaxEntries limit of $MaxEntries entries was exceeded."
+                }
+                $budgetState.Entries++
+            }
+        }
+
+        $params.File = $true
+        if (-not [string]::IsNullOrWhiteSpace($Filter)) { $params.Filter = $Filter }
+        if ($Exclude) { $params.Exclude = $Exclude }
+
+        Get-ChildItem @params | ForEach-Object -Process {
+            $file = $_
+            if ($MaxFiles -gt 0 -and $files.Count -ge $MaxFiles)
+            {
+                throw "The -MaxFiles limit of $MaxFiles matching files was exceeded."
+            }
+
+            $fileSize = $file.Length
+            if (($MaxFileSize -gt 0 -or $MaxTotalSize -gt 0) -and ($file.Attributes -band [System.IO.FileAttributes]::ReparsePoint))
+            {
+                # Unix metadata reports the link length, not the target's input size.
+                $sizeStream = $null
+                try
+                {
+                    $sizeStream = New-Object -TypeName System.IO.FileStream -ArgumentList $file.FullName, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
+                    $fileSize = $sizeStream.Length
+                }
+                catch [System.IO.IOException], [System.UnauthorizedAccessException], [System.Security.SecurityException], [System.NotSupportedException]
+                {
+                    Write-Verbose "[$($file.FullName)] Preflight size check deferred to reading: $($_.Exception.Message)"
+                    $fileSize = $null
+                }
+                finally
+                {
+                    if ($null -ne $sizeStream)
+                    {
+                        $sizeStream.Dispose()
+                    }
+                }
+            }
+
+            if ($null -ne $fileSize)
+            {
+                Assert-FileSizeBudget -File $file.FullName -Size $fileSize -ProcessedBytes $budgetState.DiscoveredBytes
+                if ($MaxTotalSize -gt 0)
+                {
+                    $budgetState.DiscoveredBytes += $fileSize
+                }
+            }
+            $files.Add($file)
         }
     }
 
     end
     {
+        foreach ($file in $files)
+        {
+            ReplaceTokens -File $file.FullName -TokenRegex $CompiledRegex -EnvironmentVars $EnvVars -RequestedEncodingName $Encoding -NoNewline $NoNewline
+        }
+
         # Count modified files
         $modifiedCount = ($script:fileResults | Where-Object { $_.Modified }).Count
         $wouldModifyCount = ($script:fileResults | Where-Object { $_.WouldModify }).Count

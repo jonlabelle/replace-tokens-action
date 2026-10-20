@@ -10,6 +10,7 @@ permissions:
   actions: read
   contents: read
   security-events: write
+  pull-requests: read
 
 jobs:
   codeql:
@@ -31,6 +32,10 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
+          config: |
+            threat-models:
+              - remote
+              - local
 
       - name: Auto-build
         uses: github/codeql-action/autobuild@main

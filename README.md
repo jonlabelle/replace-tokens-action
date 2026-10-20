@@ -22,6 +22,7 @@
   - [Fail on unresolved tokens](#fail-on-unresolved-tokens)
   - [Custom file encoding](#custom-file-encoding)
   - [No newline at EOF](#no-newline-at-eof)
+- [Traversal and resource limits](#traversal-and-resource-limits)
 - [Outputs](#outputs)
 - [Token style](#token-style)
 - [File encoding](#file-encoding)
@@ -34,21 +35,26 @@ Add the action after your checkout step. It updates files in place using values 
 
 All inputs are optional. See [action.yml](action.yml) for the action definition.
 
-| Input              | Description                                                     | Default    |
-| ------------------ | --------------------------------------------------------------- | ---------- |
-| `paths`            | File or directory paths, one per line. Wildcards are supported. | `.`        |
-| `style`            | [Token style](#token-style) to match                            | `mustache` |
-| `filter`           | Filename filter supporting `*` and `?` wildcards                | none       |
-| `exclude`          | Names or wildcard patterns to exclude, one per line             | none       |
-| `recurse`          | Search subdirectories                                           | `false`    |
-| `depth`            | Maximum recursion depth with `recurse` (`0` = no limit)         | `0`        |
-| `dry-run`          | Report which files would change without modifying them          | `false`    |
-| `fail`             | Fail if no files change (or would change in dry-run mode)       | `false`    |
-| `fail-on-skipped`  | Fail if any token has a missing or empty environment variable   | `false`    |
-| `case-insensitive` | Match environment variable names regardless of case             | `false`    |
-| `encoding`         | [File encoding](#file-encoding) for reads and writes            | `auto`     |
-| `no-newline`       | Do not append a final newline                                   | `false`    |
-| `verbose`          | Enable verbose logging                                          | `false`    |
+| Input              | Description                                                     | Default     |
+| ------------------ | --------------------------------------------------------------- | ----------- |
+| `paths`            | File or directory paths, one per line. Wildcards are supported. | `.`         |
+| `style`            | [Token style](#token-style) to match                            | `mustache`  |
+| `filter`           | Filename filter supporting `*` and `?` wildcards                | none        |
+| `exclude`          | Names or wildcard patterns to exclude, one per line             | none        |
+| `recurse`          | Search subdirectories                                           | `false`     |
+| `depth`            | Maximum recursion depth with `recurse` (`0` = no limit)         | `0`         |
+| `follow-symlinks`  | Follow directory symlinks with `recurse` (PowerShell Core 6+)   | `false`     |
+| `max-entries`      | Enumerated entries before filtering (`0` = no limit)            | `100000`    |
+| `max-files`        | Matching files across all paths (`0` = no limit)                | `10000`     |
+| `max-file-size`    | Input bytes per matching file (`0` = no limit)                  | `10485760`  |
+| `max-total-size`   | Total input bytes across matching files (`0` = no limit)        | `104857600` |
+| `dry-run`          | Report which files would change without modifying them          | `false`     |
+| `fail`             | Fail if no files change (or would change in dry-run mode)       | `false`     |
+| `fail-on-skipped`  | Fail if any token has a missing or empty environment variable   | `false`     |
+| `case-insensitive` | Match environment variable names regardless of case             | `false`     |
+| `encoding`         | [File encoding](#file-encoding) for reads and writes            | `auto`      |
+| `no-newline`       | Do not append a final newline                                   | `false`     |
+| `verbose`          | Enable verbose logging                                          | `false`     |
 
 ## Examples
 
@@ -124,6 +130,7 @@ Replace tokens in `*.json` files in the specified directories and up to two subd
 steps:
   - name: Replace tokens in subdirectories
     uses: jonlabelle/replace-tokens-action@v1
+    timeout-minutes: 2
     with:
       paths: |
         ./first/path/to/search
@@ -135,7 +142,13 @@ steps:
       NAME: jon
 ```
 
-Recursive searches follow symbolic links on PowerShell Core 6+, but not on Windows PowerShell 5.1.
+Recursion is opt-in. `depth` must be nonnegative; positive values require `recurse: true`.
+The action's `depth: 0` means unlimited depth, unlike native `Get-ChildItem -Depth 0`, which does not descend into subdirectories.
+
+Discovered directory symbolic links are not followed by default.
+Set `follow-symlinks: true` to follow them on PowerShell Core 6+.
+This requires `recurse: true` and fails explicitly on Windows PowerShell 5.1.
+Explicitly supplied paths and file symbolic links can still refer outside the search directory; these options are not a filesystem sandbox.
 
 ### Replace other token styles
 
@@ -276,6 +289,37 @@ steps:
     env:
       NAME: jon
 ```
+
+## Traversal and resource limits
+
+Depth alone does not bound workload. These limits apply across all paths, including dry runs:
+
+| Budget           | Default       |
+| ---------------- | ------------- |
+| `max-entries`    | 100,000       |
+| `max-files`      | 10,000        |
+| `max-file-size`  | 10 MiB/file   |
+| `max-total-size` | 100 MiB total |
+
+Override the defaults with action inputs (sizes are in bytes):
+
+```yaml
+steps:
+  - uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./templates
+      max-entries: 200000
+      max-files: 20000
+      max-file-size: 20971520 # 20 MiB
+      max-total-size: 209715200 # 200 MiB
+```
+
+Limits are inclusive; `max-entries` counts entries before filtering and exclusions. Set a budget to `0` to disable it.
+Discovery budget failures stop before writes; other discovery errors may be non-terminating.
+Read-time failures may leave earlier files modified.
+
+For untrusted input, use narrow `paths`, a positive `depth`, a step-level `timeout-minutes`, and an isolated runner.
+Input limits do not bound output expansion or all PowerShell filesystem work.
 
 ## Outputs
 

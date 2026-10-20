@@ -48,11 +48,47 @@ inputs:
 
   depth:
     description: >-
-      Maximum recursion depth.
-      Valid only when `recurse` is enabled.
+      Nonnegative maximum recursion depth.
+      Positive values require `recurse` to be enabled.
       A value of `0` means no depth limit.
     required: false
     default: '0'
+
+  follow-symlinks:
+    description: >-
+      Follow directory symbolic links during recursion.
+      Requires `recurse` and PowerShell Core 6+; unsupported requests fail.
+      Defaults to `false`.
+    required: false
+    default: 'false'
+
+  max-entries:
+    description: >-
+      Maximum enumerated files and directories across all paths, before filtering or exclusions.
+      Defaults to `100000`. A value of `0` disables this limit.
+    required: false
+    default: '100000'
+
+  max-files:
+    description: >-
+      Maximum matching files across all paths.
+      Defaults to `10000`. A value of `0` disables this limit.
+    required: false
+    default: '10000'
+
+  max-file-size:
+    description: >-
+      Maximum input bytes per matching file, including its BOM.
+      Defaults to `10485760` (10 MiB). A value of `0` disables this limit.
+    required: false
+    default: '10485760'
+
+  max-total-size:
+    description: >-
+      Maximum total input bytes across all matching files, including BOMs.
+      Defaults to `104857600` (100 MiB). A value of `0` disables this limit.
+    required: false
+    default: '104857600'
 
   encoding:
     description: >-
@@ -136,6 +172,11 @@ runs:
         ENCODING_INPUT: ${{ inputs.encoding }}
         RECURSE_INPUT: ${{ inputs.recurse }}
         DEPTH_INPUT: ${{ inputs.depth }}
+        FOLLOW_SYMLINKS_INPUT: ${{ inputs.follow-symlinks }}
+        MAX_ENTRIES_INPUT: ${{ inputs.max-entries }}
+        MAX_FILES_INPUT: ${{ inputs.max-files }}
+        MAX_FILE_SIZE_INPUT: ${{ inputs.max-file-size }}
+        MAX_TOTAL_SIZE_INPUT: ${{ inputs.max-total-size }}
         NO_NEWLINE_INPUT: ${{ inputs.no-newline }}
         DRY_RUN_INPUT: ${{ inputs.dry-run }}
         FAIL_INPUT: ${{ inputs.fail }}
@@ -157,6 +198,11 @@ runs:
           -ExcludeInput $excludeInput `
           -Recurse $env:RECURSE_INPUT `
           -Depth $env:DEPTH_INPUT `
+          -FollowSymlinks $env:FOLLOW_SYMLINKS_INPUT `
+          -MaxEntries $env:MAX_ENTRIES_INPUT `
+          -MaxFiles $env:MAX_FILES_INPUT `
+          -MaxFileSize $env:MAX_FILE_SIZE_INPUT `
+          -MaxTotalSize $env:MAX_TOTAL_SIZE_INPUT `
           -Encoding $encodingInput `
           -NoNewline $env:NO_NEWLINE_INPUT `
           -DryRun $env:DRY_RUN_INPUT `
