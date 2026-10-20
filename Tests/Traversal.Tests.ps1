@@ -366,7 +366,8 @@ Describe 'Traversal and resource budgets' {
         }
         finally
         {
-            Remove-Item -LiteralPath $link -Force -ErrorAction Stop
+            # Remove-Item can fail on directory symlinks in Windows PowerShell 5.1.
+            [System.IO.Directory]::Delete($link)
         }
     }
 
@@ -383,7 +384,7 @@ Describe 'Traversal and resource budgets' {
         }
         finally
         {
-            Remove-Item -LiteralPath $link -Force -ErrorAction Stop
+            [System.IO.Directory]::Delete($link)
         }
     }
 
