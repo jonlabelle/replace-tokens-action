@@ -58,6 +58,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read # Match the reusable CodeQL workflow's permissions.
       security-events: write
 
   devskim:
