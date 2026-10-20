@@ -131,6 +131,7 @@ Replace tokens in `*.json` files in the specified directories and up to two subd
 steps:
   - name: Replace tokens in subdirectories
     uses: jonlabelle/replace-tokens-action@v2
+    timeout-minutes: 2
     with:
       paths: |
         ./first/path/to/search
@@ -292,61 +293,25 @@ steps:
 
 ## Traversal and resource limits
 
-Depth alone does not prevent resource exhaustion: even one directory can contain too many files, and one file can be too large.
-The action and standalone PowerShell function apply these finite defaults:
+Depth alone does not bound workload. These limits apply across all paths, including dry runs:
 
-| Budget           | Default                     | Counts                                                       |
-| ---------------- | --------------------------- | ------------------------------------------------------------ |
-| `max-entries`    | 100,000 entries             | Files and directories emitted by discovery, before filtering |
-| `max-files`      | 10,000 files                | Matching files, including files with no tokens to replace    |
-| `max-file-size`  | 10 MiB (`10485760` bytes)   | Input bytes per matching file, including its BOM             |
-| `max-total-size` | 100 MiB (`104857600` bytes) | Total input bytes across matching files, including BOMs      |
+| Budget           | Default       |
+| ---------------- | ------------- |
+| `max-entries`    | 100,000       |
+| `max-files`      | 10,000        |
+| `max-file-size`  | 10 MiB/file   |
+| `max-total-size` | 100 MiB total |
 
-Budgets are inclusive, apply across all input paths (including pipeline input to `Expand-TemplateFile`), and accept nonnegative 64-bit integers.
-Set an individual budget to `0` to disable it.
-Repeated or overlapping paths count again because they repeat discovery and processing work.
-The entry budget includes nonmatching and excluded entries emitted by PowerShell; it does not count the starting directory itself or entries the provider does not emit.
-Existing filename-filter and exclusion matching is preserved.
+Limits are inclusive; `max-entries` counts entries before filtering and exclusions. Set a budget to `0` to disable it.
+Discovery failures stop before writes; read-time failures may leave earlier files modified.
 
-Discovery checks budgets as entries arrive rather than collecting an unlimited file list first.
-When `max-entries` is enabled, an unfiltered counting pass precedes native file selection for each input path; setting it to `0` skips that extra pass.
-If discovery exceeds a budget, the action fails before modifying any file.
-File sizes are also checked on opening and during bounded reads so a file growing after discovery cannot bypass the byte limits.
-A failure during processing may leave earlier files modified; changes are not rolled back.
-The same budgets apply in dry-run mode.
-
-For untrusted content, scope `paths` narrowly, specify a positive depth, and set a timeout on the calling workflow step:
-
-```yaml
-steps:
-  - name: Replace tokens with bounded traversal
-    uses: jonlabelle/replace-tokens-action@v2
-    timeout-minutes: 2
-    with:
-      paths: ./config
-      filter: '*.json'
-      recurse: true
-      depth: 4
-      follow-symlinks: false
-      max-entries: 10000
-      max-files: 1000
-      max-file-size: 1048576
-      max-total-size: 10485760
-    env:
-      NAME: jon
-```
-
-These are input-workload safeguards, not a hard memory or execution-time guarantee.
-PowerShell can perform wildcard resolution and buffer directory contents before yielding entries, and replacement values can expand the output beyond the input byte budgets.
-Concurrent filesystem changes can also alter the tree between enumeration passes.
-Use a step timeout and an appropriately isolated runner as additional safeguards.
+For untrusted input, use narrow `paths`, a positive `depth`, a step-level `timeout-minutes`, and an isolated runner.
+Input limits do not bound output expansion or all PowerShell filesystem work.
 
 ### Migrating from v1
 
-The finite budgets and opt-in directory-symlink traversal are breaking changes.
-Adjust budgets for larger trusted workloads, or explicitly set the relevant budgets to `0`.
-On PowerShell Core 6+, restore the previous recursive directory-link behavior with both `recurse: true` and `follow-symlinks: true`.
-Keep recursion disabled when it is not needed.
+v2 enables finite budgets and disables directory-symlink following by default.
+Adjust budgets for trusted workloads; restore link traversal with `recurse: true` and `follow-symlinks: true` on PowerShell Core 6+.
 
 ## Outputs
 
