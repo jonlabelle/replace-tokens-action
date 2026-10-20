@@ -23,7 +23,6 @@
   - [Custom file encoding](#custom-file-encoding)
   - [No newline at EOF](#no-newline-at-eof)
 - [Traversal and resource limits](#traversal-and-resource-limits)
-  - [Migrating from v1](#migrating-from-v1)
 - [Outputs](#outputs)
 - [Token style](#token-style)
 - [File encoding](#file-encoding)
@@ -67,7 +66,7 @@ For example, `{"name": "{{ NAME }}"}` becomes `{"name": "jon"}`.
 ```yaml
 steps:
   - name: Replace tokens in a file
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/template.json
     env:
@@ -82,7 +81,7 @@ Set `case-insensitive: true` to replace a token such as `{{ name }}` using `NAME
 ```yaml
 steps:
   - name: Replace tokens regardless of variable name casing
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/template.json
       case-insensitive: true
@@ -97,7 +96,7 @@ Replace tokens in `*.json` files directly inside `./path/to/search`.
 ```yaml
 steps:
   - name: Replace tokens in JSON files
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -112,7 +111,7 @@ Process `*.json` files in each directory. List paths on separate lines using `|`
 ```yaml
 steps:
   - name: Replace tokens in multiple paths
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: |
         ./first/path
@@ -130,7 +129,7 @@ Replace tokens in `*.json` files in the specified directories and up to two subd
 ```yaml
 steps:
   - name: Replace tokens in subdirectories
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     timeout-minutes: 2
     with:
       paths: |
@@ -158,7 +157,7 @@ Set `style` to match the tokens in your file. For example, replace `${NAME}` wit
 ```yaml
 steps:
   - name: Replace envsubst tokens
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/template.json
       style: envsubst
@@ -176,7 +175,7 @@ Pass sensitive values through GitHub secrets:
 ```yaml
 steps:
   - name: Replace API settings
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./src
       filter: '*.env'
@@ -193,7 +192,7 @@ Use a wildcard path (`./src/*`) so [exclusions](https://learn.microsoft.com/powe
 ```yaml
 steps:
   - name: Exclude local configuration files
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./src/*
       filter: '*.env'
@@ -212,7 +211,7 @@ Report which files would change without modifying them.
 ```yaml
 steps:
   - name: Preview token replacement
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -230,7 +229,7 @@ Fail the step if no files were changed.
 ```yaml
 steps:
   - name: Fail if no files change
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -247,7 +246,7 @@ Set `fail-on-skipped: true` to also fail the step. Resolved tokens are still rep
 ```yaml
 steps:
   - name: Fail on unresolved tokens
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -264,7 +263,7 @@ Leave it as `auto` to detect the existing encoding; see [File encoding](#file-en
 ```yaml
 steps:
   - name: Read and write UTF-16 files
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -282,7 +281,7 @@ By default, changed files without a trailing newline get one using the file's ex
 ```yaml
 steps:
   - name: Do not append a final newline
-    uses: jonlabelle/replace-tokens-action@v2
+    uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
       filter: '*.json'
@@ -307,11 +306,6 @@ Discovery failures stop before writes; read-time failures may leave earlier file
 
 For untrusted input, use narrow `paths`, a positive `depth`, a step-level `timeout-minutes`, and an isolated runner.
 Input limits do not bound output expansion or all PowerShell filesystem work.
-
-### Migrating from v1
-
-v2 enables finite budgets and disables directory-symlink following by default.
-Adjust budgets for trusted workloads; restore link traversal with `recurse: true` and `follow-symlinks: true` on PowerShell Core 6+.
 
 ## Outputs
 
