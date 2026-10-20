@@ -338,7 +338,7 @@ Describe 'Traversal and resource budgets' {
             $writer = [System.IO.File]::Open($file, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite)
             try
             {
-                $writer.WriteByte(255)
+                $writer.Write([byte[]]@(255), 0, 1)
             }
             finally
             {
@@ -356,21 +356,35 @@ Describe 'Traversal and resource budgets' {
         New-Item -Path $target -ItemType Directory | Out-Null
         $file = New-TraversalTestFile -Name 'linked.tpl' -Directory $target
         $link = Join-Path -Path $testRoot -ChildPath 'link'
-        New-Item -Path $link -ItemType SymbolicLink -Target $target | Out-Null
+        New-Item -Path $link -ItemType SymbolicLink -Target $target -ErrorAction Stop | Out-Null
 
-        $result = @(Expand-TemplateFile -Path $testRoot -Recurse)
-        $result.Count | Should -Be 0
-        Get-Content -LiteralPath $file -Raw | Should -Be $template
+        try
+        {
+            $result = @(Expand-TemplateFile -Path $testRoot -Recurse)
+            $result.Count | Should -Be 0
+            Get-Content -LiteralPath $file -Raw | Should -Be $template
+        }
+        finally
+        {
+            Remove-Item -LiteralPath $link -Force -ErrorAction Stop
+        }
     }
 
     It 'retains native cycle protection when following directory symlinks' -Skip:(-not $script:canFollowSymlinks) {
         $file = New-TraversalTestFile -Name 'cycle.tpl'
         $link = Join-Path -Path $testRoot -ChildPath 'cycle'
-        New-Item -Path $link -ItemType SymbolicLink -Target $testRoot | Out-Null
+        New-Item -Path $link -ItemType SymbolicLink -Target $testRoot -ErrorAction Stop | Out-Null
 
-        $result = @(Expand-TemplateFile -Path $testRoot -Recurse -FollowSymlinks -MaxEntries 10 -NoNewline -WarningAction SilentlyContinue)
-        $result.Count | Should -Be 1
-        Get-Content -LiteralPath $file -Raw | Should -Be 'replaced'
+        try
+        {
+            $result = @(Expand-TemplateFile -Path $testRoot -Recurse -FollowSymlinks -MaxEntries 10 -NoNewline -WarningAction SilentlyContinue)
+            $result.Count | Should -Be 1
+            Get-Content -LiteralPath $file -Raw | Should -Be 'replaced'
+        }
+        finally
+        {
+            Remove-Item -LiteralPath $link -Force -ErrorAction Stop
+        }
     }
 
     It 'rejects link following without recursion' {

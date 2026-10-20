@@ -1061,7 +1061,7 @@ function Expand-TemplateFile
         # Provider filters hide discovery work, so count unfiltered entries first.
         if ($MaxEntries -gt 0)
         {
-            Get-ChildItem @params | ForEach-Object {
+            Get-ChildItem @params | ForEach-Object -Process {
                 if ($budgetState.Entries -ge $MaxEntries)
                 {
                     throw "The -MaxEntries limit of $MaxEntries entries was exceeded."
@@ -1074,7 +1074,7 @@ function Expand-TemplateFile
         if (-not [string]::IsNullOrWhiteSpace($Filter)) { $params.Filter = $Filter }
         if ($Exclude) { $params.Exclude = $Exclude }
 
-        Get-ChildItem @params | ForEach-Object {
+        Get-ChildItem @params | ForEach-Object -Process {
             $file = $_
             if ($MaxFiles -gt 0 -and $files.Count -ge $MaxFiles)
             {
