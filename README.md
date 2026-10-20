@@ -301,6 +301,19 @@ Depth alone does not bound workload. These limits apply across all paths, includ
 | `max-file-size`  | 10 MiB/file   |
 | `max-total-size` | 100 MiB total |
 
+Override the defaults with action inputs (sizes are in bytes):
+
+```yaml
+steps:
+  - uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./templates
+      max-entries: 200000
+      max-files: 20000
+      max-file-size: 20971520 # 20 MiB
+      max-total-size: 209715200 # 200 MiB
+```
+
 Limits are inclusive; `max-entries` counts entries before filtering and exclusions. Set a budget to `0` to disable it.
 Discovery budget failures stop before writes; other discovery errors may be non-terminating.
 Read-time failures may leave earlier files modified.
