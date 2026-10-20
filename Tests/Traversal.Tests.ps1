@@ -351,6 +351,94 @@ Describe 'Traversal and resource budgets' {
             Should -Throw -ExpectedMessage '*-MaxFileSize limit*'
     }
 
+    It 'checks file-symlink target bytes against <Name> before modifying any file' -TestCases @(
+        @{ Name = 'MaxFileSize' }
+        @{ Name = 'MaxTotalSize' }
+    ) {
+        param($Name)
+
+        $first = New-TraversalTestFile -Name 'first.tpl'
+        $targetContent = $template + ('x' * 8192)
+        $target = New-TraversalTestFile -Name 'target.tpl' -Content $targetContent
+        $link = Join-Path -Path $testRoot -ChildPath 'link.tpl'
+        New-Item -Path $link -ItemType SymbolicLink -Target $target -ErrorAction Stop | Out-Null
+
+        try
+        {
+            $parameters = @{ Path = @($first, $link); NoNewline = $true }
+            $parameters[$Name] = 4096
+
+            { Expand-TemplateFile @parameters -ErrorAction SilentlyContinue } |
+                Should -Throw -ExpectedMessage "*-$Name limit*"
+            Get-Content -LiteralPath $first -Raw | Should -Be $template
+            Get-Content -LiteralPath $target -Raw | Should -Be $targetContent
+        }
+        finally
+        {
+            [System.IO.File]::Delete($link)
+        }
+    }
+
+    It 'accepts long file symlinks at the inclusive <Name> target-byte limit' -TestCases @(
+        @{ Name = 'MaxFileSize' }
+        @{ Name = 'MaxTotalSize' }
+    ) {
+        param($Name)
+
+        $first = New-TraversalTestFile -Name 'first.tpl'
+        $target = New-TraversalTestFile -Name ('long-target-' + ('x' * 40) + '.tpl')
+        $link = Join-Path -Path $testRoot -ChildPath 'link.tpl'
+        New-Item -Path $link -ItemType SymbolicLink -Target $target -ErrorAction Stop | Out-Null
+
+        try
+        {
+            $parameters = @{ Path = @($first, $link); NoNewline = $true }
+            $parameters[$Name] = if ($Name -eq 'MaxTotalSize') { $script:traversalTemplateSize * 2 } else { $script:traversalTemplateSize }
+
+            $result = @(Expand-TemplateFile @parameters)
+            $result.Count | Should -Be 2
+            @($result | Where-Object { $_.Modified }).Count | Should -Be 2
+            Get-Content -LiteralPath $first -Raw | Should -Be 'replaced'
+            Get-Content -LiteralPath $target -Raw | Should -Be 'replaced'
+        }
+        finally
+        {
+            [System.IO.File]::Delete($link)
+        }
+    }
+
+    It 'preserves per-file errors for file symlinks with <ExceptionType>' -TestCases @(
+        @{ ExceptionType = 'System.IO.IOException' }
+        @{ ExceptionType = 'System.UnauthorizedAccessException' }
+        @{ ExceptionType = 'System.Security.SecurityException' }
+        @{ ExceptionType = 'System.NotSupportedException' }
+    ) {
+        param($ExceptionType)
+
+        $target = New-TraversalTestFile -Name 'target.tpl'
+        $first = New-TraversalTestFile -Name 'readable.tpl'
+        $link = Join-Path -Path $testRoot -ChildPath 'link.tpl'
+        New-Item -Path $link -ItemType SymbolicLink -Target $target -ErrorAction Stop | Out-Null
+
+        try
+        {
+            $failure = New-Object -TypeName $ExceptionType -ArgumentList 'Cannot open file symlink target.'
+            Mock New-Object { & $script:traversalOriginalNewObject @PesterBoundParameters }
+            Mock New-Object { throw $failure } -ParameterFilter { $TypeName -eq 'System.IO.FileStream' -and $ArgumentList[0] -eq $link }
+
+            $result = @(Expand-TemplateFile -Path $link, $first -NoNewline -ErrorAction SilentlyContinue)
+            $result.Count | Should -Be 2
+            $result[0].Error | Should -Match 'Cannot open file symlink target'
+            $result[1].Modified | Should -BeTrue
+            Get-Content -LiteralPath $target -Raw | Should -Be $template
+            Get-Content -LiteralPath $first -Raw | Should -Be 'replaced'
+        }
+        finally
+        {
+            [System.IO.File]::Delete($link)
+        }
+    }
+
     It 'does not follow discovered directory symlinks by default' -Skip:(-not $script:canFollowSymlinks) {
         $target = Join-Path -Path $TestDrive -ChildPath ([guid]::NewGuid().ToString())
         New-Item -Path $target -ItemType Directory | Out-Null

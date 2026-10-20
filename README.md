@@ -302,7 +302,8 @@ Depth alone does not bound workload. These limits apply across all paths, includ
 | `max-total-size` | 100 MiB total |
 
 Limits are inclusive; `max-entries` counts entries before filtering and exclusions. Set a budget to `0` to disable it.
-Discovery failures stop before writes; read-time failures may leave earlier files modified.
+Discovery budget failures stop before writes; other discovery errors may be non-terminating.
+Read-time failures may leave earlier files modified.
 
 For untrusted input, use narrow `paths`, a positive `depth`, a step-level `timeout-minutes`, and an isolated runner.
 Input limits do not bound output expansion or all PowerShell filesystem work.

@@ -1081,10 +1081,37 @@ function Expand-TemplateFile
                 throw "The -MaxFiles limit of $MaxFiles matching files was exceeded."
             }
 
-            Assert-FileSizeBudget -File $file.FullName -Size $file.Length -ProcessedBytes $budgetState.DiscoveredBytes
-            if ($MaxTotalSize -gt 0)
+            $fileSize = $file.Length
+            if (($MaxFileSize -gt 0 -or $MaxTotalSize -gt 0) -and ($file.Attributes -band [System.IO.FileAttributes]::ReparsePoint))
             {
-                $budgetState.DiscoveredBytes += $file.Length
+                # Unix metadata reports the link length, not the target's input size.
+                $sizeStream = $null
+                try
+                {
+                    $sizeStream = New-Object -TypeName System.IO.FileStream -ArgumentList $file.FullName, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::ReadWrite)
+                    $fileSize = $sizeStream.Length
+                }
+                catch [System.IO.IOException], [System.UnauthorizedAccessException], [System.Security.SecurityException], [System.NotSupportedException]
+                {
+                    Write-Verbose "[$($file.FullName)] Preflight size check deferred to reading: $($_.Exception.Message)"
+                    $fileSize = $null
+                }
+                finally
+                {
+                    if ($null -ne $sizeStream)
+                    {
+                        $sizeStream.Dispose()
+                    }
+                }
+            }
+
+            if ($null -ne $fileSize)
+            {
+                Assert-FileSizeBudget -File $file.FullName -Size $fileSize -ProcessedBytes $budgetState.DiscoveredBytes
+                if ($MaxTotalSize -gt 0)
+                {
+                    $budgetState.DiscoveredBytes += $fileSize
+                }
             }
             $files.Add($file)
         }
