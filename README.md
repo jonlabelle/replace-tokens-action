@@ -3,79 +3,63 @@
 [![ci](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/ci.yml/badge.svg)](https://github.com/jonlabelle/replace-tokens-action/actions/workflows/ci.yml)
 [![latest release](https://img.shields.io/github/v/tag/jonlabelle/replace-tokens-action.svg?label=version&sort=semver)](https://github.com/jonlabelle/replace-tokens-action/releases)
 
-> A GitHub Action that replaces tokens in files, similar to envsubst.
+> A GitHub Action that replaces tokens in files with environment variable values.
 
 ## Table of contents
 
 - [Usage](#usage)
-- [Outputs](#outputs)
-- [Platform support](#platform-support)
 - [Examples](#examples)
   - [Replace tokens in a file](#replace-tokens-in-a-file)
+  - [Case-insensitive environment variable matching](#case-insensitive-environment-variable-matching)
   - [Using a path filter](#using-a-path-filter)
   - [Search multiple paths](#search-multiple-paths)
-  - [Case-insensitive environment variable matching](#case-insensitive-environment-variable-matching)
-  - [Replace other token styles](#replace-other-token-styles)
   - [Search paths recursively](#search-paths-recursively)
-  - [Replace an API key and URL in .env files](#replace-an-api-key-and-url-in-env-files)
+  - [Replace other token styles](#replace-other-token-styles)
+  - [Replace an API key and URL](#replace-an-api-key-and-url)
   - [Exclude items and patterns](#exclude-items-and-patterns)
   - [Preview changes with dry-run](#preview-changes-with-dry-run)
   - [Fail on no-op](#fail-on-no-op)
   - [Fail on unresolved tokens](#fail-on-unresolved-tokens)
   - [Custom file encoding](#custom-file-encoding)
   - [No newline at EOF](#no-newline-at-eof)
+- [Outputs](#outputs)
 - [Token style](#token-style)
 - [File encoding](#file-encoding)
+- [Platform support](#platform-support)
 - [License](#license)
 
 ## Usage
 
-See [action.yml](action.yml).
+Add the action after your checkout step. It updates files in place using values passed through `env`.
 
-| name               | description                      | type    | required | default    | example       |
-| ------------------ | -------------------------------- | ------- | -------- | ---------- | ------------- |
-| `paths`            | File paths to process [^1]       | string  | false    | `.`        | `./prod.json` |
-| `style`            | [Token style](#token-style)      | string  | false    | `mustache` | `envsubst`    |
-| `filter`           | Filename filter [^2]             | string  | false    | none       | `*.json`      |
-| `exclude`          | Exclude patterns [^3]            | string  | false    | none       | `*dev*.json`  |
-| `recurse`          | Search subdirectories            | boolean | false    | `false`    | `true`        |
-| `depth`            | Recursion depth (`0` = no limit) | number  | false    | `0`        | `2`           |
-| `dry-run`          | Preview without modifying files  | boolean | false    | `false`    | `true`        |
-| `fail`             | Fail if nothing changes [^4]     | boolean | false    | `false`    | `true`        |
-| `fail-on-skipped`  | Fail if any token is unresolved  | boolean | false    | `false`    | `true`        |
-| `case-insensitive` | Ignore env variable casing       | boolean | false    | `false`    | `true`        |
-| `encoding`         | [File encoding](#file-encoding)  | string  | false    | `auto`     | `unicode`     |
-| `no-newline`       | Skip the final newline           | boolean | false    | `false`    | `true`        |
-| `verbose`          | Enable verbose logging           | boolean | false    | `false`    | `true`        |
+All inputs are optional. See [action.yml](action.yml) for the action definition.
 
-> [!Note]
-> When `recurse` is enabled, symbolic links are followed automatically on PowerShell Core 6+. On Windows PowerShell 5.1, symbolic links are not followed because the underlying `Get-ChildItem -FollowSymlink` parameter is not available.
-
-## Outputs
-
-- `tokens-replaced`: Total number of tokens replaced, or that would be replaced in dry-run mode.
-- `tokens-skipped`: Total number of tokens skipped because no matching value was available.
-- `modified-files-count`: Number of files updated by the action.
-- `would-modify-files-count`: Number of files that would be updated in dry-run mode.
-
-## Platform support
-
-- GitHub-hosted runners execute the composite action with PowerShell Core (`pwsh`).
-- On self-hosted Windows runners, GitHub Actions falls back to Windows PowerShell when `pwsh` is not installed, so the action remains usable in both environments.
-- Environment variable name matching follows platform conventions by default: case-insensitive on Windows, case-sensitive on Linux and macOS.
-- Set `case-insensitive: true` to use case-insensitive environment variable name matching on any runner.
-- The `Expand-TemplateFile.ps1` script remains compatible with Windows PowerShell 5.1 and PowerShell Core 6+ for self-hosted fallback and direct script usage.
+| Input              | Description                                                     | Default    |
+| ------------------ | --------------------------------------------------------------- | ---------- |
+| `paths`            | File or directory paths, one per line. Wildcards are supported. | `.`        |
+| `style`            | [Token style](#token-style) to match                            | `mustache` |
+| `filter`           | Filename filter supporting `*` and `?` wildcards                | none       |
+| `exclude`          | Names or wildcard patterns to exclude, one per line             | none       |
+| `recurse`          | Search subdirectories                                           | `false`    |
+| `depth`            | Maximum recursion depth with `recurse` (`0` = no limit)         | `0`        |
+| `dry-run`          | Report which files would change without modifying them          | `false`    |
+| `fail`             | Fail if no files change (or would change in dry-run mode)       | `false`    |
+| `fail-on-skipped`  | Fail if any token has a missing or empty environment variable   | `false`    |
+| `case-insensitive` | Match environment variable names regardless of case             | `false`    |
+| `encoding`         | [File encoding](#file-encoding) for reads and writes            | `auto`     |
+| `no-newline`       | Do not append a final newline                                   | `false`    |
+| `verbose`          | Enable verbose logging                                          | `false`    |
 
 ## Examples
 
 ### Replace tokens in a file
 
-Replace a **mustache** token such as `{{ NAME }}` in `./path/to/template.json`
-with the value of the `NAME` environment variable.
+Replace `{{ NAME }}` in `./path/to/template.json` with the value of `NAME`.
+For example, `{"name": "{{ NAME }}"}` becomes `{"name": "jon"}`.
 
 ```yaml
 steps:
-  - name: Replace tokens in the specified path
+  - name: Replace tokens in a file
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/template.json
@@ -83,16 +67,14 @@ steps:
       NAME: jon
 ```
 
-> [!NOTE]  
-> Environment variable names are matched case-insensitively on Windows, and case-sensitively on Linux and macOS by default. Set `case-insensitive: true` to opt into case-insensitive matching everywhere.
-
 ### Case-insensitive environment variable matching
 
-Use `case-insensitive: true` when token casing does not need to match the environment variable name exactly.
+By default, environment variable names are matched case-insensitively on Windows and case-sensitively on Linux and macOS.
+Set `case-insensitive: true` to replace a token such as `{{ name }}` using `NAME` on any runner.
 
 ```yaml
 steps:
-  - name: Replace tokens with case-insensitive environment variable matching
+  - name: Replace tokens regardless of variable name casing
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/template.json
@@ -103,11 +85,11 @@ steps:
 
 ### Using a path filter
 
-Search `./path/to/search` and replace tokens in all `*.json` files.
+Replace tokens in `*.json` files directly inside `./path/to/search`.
 
 ```yaml
 steps:
-  - name: Replace tokens using a path filter
+  - name: Replace tokens in JSON files
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -118,11 +100,11 @@ steps:
 
 ### Search multiple paths
 
-Search three paths and replace matching tokens in `*.json` files.
+Process `*.json` files in each directory. List paths on separate lines using `|`.
 
 ```yaml
 steps:
-  - name: Search multiple paths
+  - name: Replace tokens in multiple paths
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: |
@@ -134,102 +116,13 @@ steps:
       NAME: jon
 ```
 
-### Replace other token styles
-
-Replace tokens using the **handlebars** style, for example `{{VARIABLE}}`.
-
-```yaml
-steps:
-  - name: Replace handlebars styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: handlebars
-    env:
-      NAME: jon
-```
-
-Replace tokens using the **envsubst** style, for example `${VARIABLE}`.
-
-```yaml
-steps:
-  - name: Replace envsubst styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: envsubst
-    env:
-      NAME: jon
-```
-
-Replace tokens using the **brackets** style, for example `<VARIABLE>`.
-
-```yaml
-steps:
-  - name: Replace brackets styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: brackets
-    env:
-      NAME: jon
-```
-
-> [!WARNING]  
-> The `brackets` style (`<VARIABLE>`) can collide with HTML and XML tags. If an environment variable name matches a tag name (e.g. `div`, `span`), those tags will be replaced unintentionally. Avoid using this style on HTML/XML files, or use the `filter`/`exclude` inputs to restrict processing to non-markup files.
-
-Replace tokens using the **hashes** style, for example `##VARIABLE##`.
-
-```yaml
-steps:
-  - name: Replace hashes styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: hashes
-    env:
-      NAME: jon
-```
-
-Replace tokens using the **underscores** style, for example `__VARIABLE__`.
-
-```yaml
-steps:
-  - name: Replace underscore styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: underscores
-    env:
-      NAME: jon
-```
-
-Replace tokens using the **make** style, for example `$(VARIABLE)`.
-
-```yaml
-steps:
-  - name: Replace make styled tokens
-    uses: jonlabelle/replace-tokens-action@v1
-    with:
-      paths: ./path/to/search
-      filter: '*.json'
-      style: make
-    env:
-      NAME: jon
-```
-
 ### Search paths recursively
 
-Search the specified paths recursively, up to two directories deep, and replace matching tokens.
+Replace tokens in `*.json` files in the specified directories and up to two subdirectory levels.
 
 ```yaml
 steps:
-  - name: Replace tokens using recursion, 2 directories deep
+  - name: Replace tokens in subdirectories
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: |
@@ -242,51 +135,69 @@ steps:
       NAME: jon
 ```
 
-### Replace an API key and URL in .env files
+Recursive searches follow symbolic links on PowerShell Core 6+, but not on Windows PowerShell 5.1.
 
-Replace `API_URL` and `API_KEY` tokens in `.env` files.
+### Replace other token styles
+
+Set `style` to match the tokens in your file. For example, replace `${NAME}` with `jon` using `envsubst`:
 
 ```yaml
 steps:
-  - name: Replace an API key and URL in .env files
+  - name: Replace envsubst tokens
     uses: jonlabelle/replace-tokens-action@v1
     with:
-      # matches: `./src/.env` and `./src/.env.production`
-      paths: ./src
-      filter: '*.env*'
+      paths: ./path/to/template.json
+      style: envsubst
     env:
-      API_KEY: ${{ secrets.api-key }}
+      NAME: jon
+```
+
+See [Token style](#token-style) for all supported formats.
+
+### Replace an API key and URL
+
+Replace `{{ API_URL }}` and `{{ API_KEY }}` in files such as `./src/production.env`.
+Pass sensitive values through GitHub secrets:
+
+```yaml
+steps:
+  - name: Replace API settings
+    uses: jonlabelle/replace-tokens-action@v1
+    with:
+      paths: ./src
+      filter: '*.env'
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
       API_URL: https://example.net/api
 ```
 
 ### Exclude items and patterns
 
-Exclude file or directory patterns from the search results.
+Process `*.env` files in `./src`, but skip `local.env` and `development.env`.
+Use a wildcard path (`./src/*`) so [exclusions](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) apply to the directory's contents.
 
 ```yaml
 steps:
-  - name: Exclude certain items or patterns from results
+  - name: Exclude local configuration files
     uses: jonlabelle/replace-tokens-action@v1
     with:
-      # matches: `./src/.env.local` and `./src/.env.production`,
-      # but not `./src/.env` or `./src/.env.development`
-      paths: ./src
-      filter: '*.env*'
+      paths: ./src/*
+      filter: '*.env'
       exclude: |
-        .env
-        .env.development
+        local.env
+        development.env
     env:
-      API_KEY: ${{ secrets.api-key }}
+      API_KEY: ${{ secrets.API_KEY }}
       API_URL: https://example.net/api
 ```
 
 ### Preview changes with dry-run
 
-Preview the changes without modifying any files.
+Report which files would change without modifying them.
 
 ```yaml
 steps:
-  - name: Preview token replacement without modifying files
+  - name: Preview token replacement
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -296,8 +207,7 @@ steps:
       NAME: jon
 ```
 
-> [!TIP]
-> Use `dry-run` to preview changes before applying them in production. This is especially useful when testing token configurations. When `dry-run: true` and `fail: true` are used together, the action fails only if no files would change.
+When combined with `fail: true`, the action fails only if no files would change.
 
 ### Fail on no-op
 
@@ -305,7 +215,7 @@ Fail the step if no files were changed.
 
 ```yaml
 steps:
-  - name: Fail if no tokens were replaced
+  - name: Fail if no files change
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -315,16 +225,14 @@ steps:
       NAME: jon
 ```
 
-> [!NOTE]  
-> A warning is written to the log when a token does not have a matching environment variable.
-
 ### Fail on unresolved tokens
 
-Fail the step if one or more tokens are skipped because a matching environment variable is missing or empty.
+Missing or empty environment variables leave their tokens unchanged and produce warnings by default.
+Set `fail-on-skipped: true` to also fail the step. Resolved tokens are still replaced before the step fails.
 
 ```yaml
 steps:
-  - name: Fail when a token cannot be resolved
+  - name: Fail on unresolved tokens
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -336,13 +244,12 @@ steps:
 
 ### Custom file encoding
 
-Specify the encoding used for file reads and writes.
-
-By default, the action uses `auto`, which sniffs a BOM with a minimal read, applies lightweight UTF-16/UTF-8 heuristics when no BOM is present, and then writes the file back using the detected encoding.
+Use `encoding: unicode` to read and write UTF-16 little-endian files.
+Leave it as `auto` to detect the existing encoding; see [File encoding](#file-encoding) for other choices.
 
 ```yaml
 steps:
-  - name: Set a non-default encoding option for reading/writing files
+  - name: Read and write UTF-16 files
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -354,13 +261,13 @@ steps:
 
 ### No newline at EOF
 
-Do not append a trailing newline after token replacement.
+Set `no-newline: true` to avoid appending a newline after replacement. Existing trailing newlines are preserved, not removed.
 
-By default, the action preserves an existing trailing newline, avoids appending a duplicate newline when the file already ends with one, and reuses the file's detected line ending style when a trailing newline needs to be added. If no existing line ending can be inferred, it falls back to the runner environment newline.
+By default, changed files without a trailing newline get one using the file's existing line ending style, or the runner's newline if no style can be detected.
 
 ```yaml
 steps:
-  - name: Don't insert a newline at the end of the file
+  - name: Do not append a final newline
     uses: jonlabelle/replace-tokens-action@v1
     with:
       paths: ./path/to/search
@@ -370,47 +277,52 @@ steps:
       NAME: jon
 ```
 
+## Outputs
+
+- `tokens-replaced`: Total number of tokens replaced, or that would be replaced in dry-run mode.
+- `tokens-skipped`: Total number of tokens left unchanged because an environment variable was missing or empty.
+- `modified-files-count`: Number of files updated (`0` in dry-run mode).
+- `would-modify-files-count`: Number of files that would be updated, including in dry-run mode.
+
 ## Token style
 
-Use one of the following token formats:
+Choose the style that matches your file's tokens. Each example below uses the environment variable `NAME`.
+Token names must start with a letter or underscore and contain only letters, digits, and underscores.
 
-| name                 | style            | examples                   |
-| -------------------- | ---------------- | -------------------------- |
-| `mustache` (default) | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
-| `handlebars`         | `{{ VARIABLE }}` | `{{TOKEN}}`, `{{ TOKEN }}` |
-| `brackets`           | `< VARIABLE >`   | `<TOKEN>`, `< TOKEN >`     |
-| `hashes`             | `## VARIABLE ##` | `##TOKEN##`, `## TOKEN ##` |
-| `underscores`        | `__ VARIABLE __` | `__TOKEN__`, `__ TOKEN __` |
-| `envsubst`           | `${VARIABLE}`    | `${TOKEN}`                 |
-| `make`               | `$(VARIABLE)`    | `$(TOKEN)`                 |
+| Style                | Token examples           |
+| -------------------- | ------------------------ |
+| `mustache` (default) | `{{NAME}}`, `{{ NAME }}` |
+| `handlebars`         | `{{NAME}}`, `{{ NAME }}` |
+| `brackets`           | `<NAME>`, `< NAME >`     |
+| `hashes`             | `##NAME##`, `## NAME ##` |
+| `underscores`        | `__NAME__`, `__ NAME __` |
+| `envsubst`           | `${NAME}`                |
+| `make`               | `$(NAME)`                |
 
-If an environment variable named `VARIABLE` exists, its value is used for replacement. This behavior is similar to [envsubst\(1\)](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html).
+> [!WARNING]
+> Avoid `brackets` style in HTML/XML files: tags such as `<div>` are replaced if a matching environment variable exists. Use another style or restrict the files with `filter`/`exclude`.
 
 ## File encoding
 
-The default encoding for file reads and writes is `auto`. In auto mode, the action first checks for a BOM, then uses lightweight heuristics for common no-BOM UTF-16 and UTF-8 files, and finally falls back to the Windows ANSI code page on Windows or UTF-8 without BOM on Linux and macOS. The following explicit `encoding` values are also supported.
+The default, `auto`, detects common encodings and preserves them when writing changes. It checks for a byte order mark (BOM), then common UTF-16 and UTF-8 patterns. If detection is inconclusive, it falls back to Windows ANSI on Windows or UTF-8 without BOM on Linux and macOS.
 
-- `auto`: Detects the existing file encoding and writes the updated file back using that encoding when possible
+For an explicit encoding, choose:
+
 - `utf8`: Encodes as UTF-8 without a byte order mark (BOM)
 - `utf8BOM`: Encodes as UTF-8 with a byte order mark (BOM)
 - `ascii`: Uses the ASCII (7-bit) character set
-- `ansi`: Uses the current culture's ANSI code page
+- `ansi`: Uses the current culture's ANSI code page on Windows; UTF-8 without BOM on Linux and macOS
 - `bigendianunicode`: Encodes as UTF-16 using big-endian byte order
 - `bigendianutf32`: Encodes as UTF-32 using big-endian byte order
-- `oem`: Uses the default encoding for MS-DOS and console programs
+- `oem`: Uses the console's code page on Windows; UTF-8 without BOM on Linux and macOS
 - `unicode`: Encodes as UTF-16 using little-endian byte order
-- `utf32`: Encodes as UTF-32
+- `utf32`: Encodes as UTF-32 using little-endian byte order
 
-On Windows PowerShell 5.1, the action uses explicit .NET encodings internally so `auto`, `utf8`, and `utf8BOM` behave consistently with PowerShell Core while still preserving Windows ANSI fallback behavior when auto-detecting no-BOM files.
+## Platform support
+
+Supports Linux, macOS, and Windows with PowerShell Core 6+, and Windows with Windows PowerShell 5.1.
+GitHub-hosted runners use `pwsh`. On self-hosted Windows runners, GitHub Actions falls back to Windows PowerShell if `pwsh` is unavailable.
 
 ## License
 
 [MIT](LICENSE)
-
-[^1]: One or more file or directory paths. Wildcards are supported. If omitted, the action defaults to the current directory (`.`). Specify multiple paths on separate lines using a multiline string `|`.
-
-[^2]: `filter` only supports `*` and `?` wildcards.
-
-[^3]: One or more names or patterns to exclude from the results. Wildcards are supported. Specify multiple exclusions on separate lines using a multiline string `|`. See Microsoft's [Get-ChildItem -Exclude](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem#-exclude) documentation for more information.
-
-[^4]: When `dry-run` is enabled, `fail` checks whether any files would change instead of whether any files were written.
