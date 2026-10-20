@@ -30,7 +30,27 @@
         A string boolean value that controls recursive directory traversal.
 
     .PARAMETER Depth
-        A string integer value that sets the recursion depth when Recurse is true.
+        A nonnegative string integer that sets recursion depth when Recurse is true.
+        A value of 0 means no depth limit.
+
+    .PARAMETER FollowSymlinks
+        A string boolean that enables directory symbolic-link traversal.
+        Requires Recurse and PowerShell Core 6+. Defaults to false.
+
+    .PARAMETER MaxEntries
+        Maximum enumerated entries before filtering. Defaults to 100000.
+        A value of 0 disables this limit.
+
+    .PARAMETER MaxFiles
+        Maximum matching files. Defaults to 10000. A value of 0 disables this limit.
+
+    .PARAMETER MaxFileSize
+        Maximum input bytes per file. Defaults to 10485760 (10 MiB).
+        A value of 0 disables this limit.
+
+    .PARAMETER MaxTotalSize
+        Maximum total input bytes. Defaults to 104857600 (100 MiB).
+        A value of 0 disables this limit.
 
     .PARAMETER Encoding
         The file encoding passed to Expand-TemplateFile.ps1 for read and write
@@ -125,6 +145,21 @@ param(
     $Depth = '0',
 
     [string]
+    $FollowSymlinks = 'false',
+
+    [string]
+    $MaxEntries = '100000',
+
+    [string]
+    $MaxFiles = '10000',
+
+    [string]
+    $MaxFileSize = '10485760',
+
+    [string]
+    $MaxTotalSize = '104857600',
+
+    [string]
     $Encoding = 'auto',
 
     [string]
@@ -155,6 +190,11 @@ $transportEnvironmentVariables = @(
     'ENCODING_INPUT',
     'RECURSE_INPUT',
     'DEPTH_INPUT',
+    'FOLLOW_SYMLINKS_INPUT',
+    'MAX_ENTRIES_INPUT',
+    'MAX_FILES_INPUT',
+    'MAX_FILE_SIZE_INPUT',
+    'MAX_TOTAL_SIZE_INPUT',
     'NO_NEWLINE_INPUT',
     'DRY_RUN_INPUT',
     'FAIL_INPUT',
@@ -207,47 +247,53 @@ if ($paths.Count -eq 0)
 }
 
 $exclude = Split-MultilineInput -Value $ExcludeInput
-$dryRunEnabled = [System.Convert]::ToBoolean($DryRun)
-$failEnabled = [System.Convert]::ToBoolean($Fail)
-$failOnSkippedEnabled = [System.Convert]::ToBoolean($FailOnSkipped)
-$caseInsensitiveEnabled = [System.Convert]::ToBoolean($CaseInsensitive)
-
-$params = @{
-    Path = $paths
-    Style = $Style
-    Recurse = [System.Convert]::ToBoolean($Recurse)
-    Depth = [System.Convert]::ToInt32($Depth)
-    Encoding = $Encoding
-    NoNewline = [System.Convert]::ToBoolean($NoNewline)
-    Verbose = [System.Convert]::ToBoolean($VerboseInput)
-    ExcludeEnvironmentVariable = $transportEnvironmentVariables
-}
-
-if ($caseInsensitiveEnabled)
-{
-    $params.CaseInsensitive = $true
-}
-
-if (-not [string]::IsNullOrWhiteSpace($Filter))
-{
-    $params.Filter = $Filter
-}
-
-if ($exclude.Count -gt 0)
-{
-    $params.Exclude = $exclude
-}
-
-if ($dryRunEnabled)
-{
-    $params.WhatIf = $true
-}
-
-$functionPath = Join-Path -Path $PSScriptRoot -ChildPath 'Expand-TemplateFile.ps1'
-. $functionPath
 
 try
 {
+    $dryRunEnabled = [System.Convert]::ToBoolean($DryRun)
+    $failEnabled = [System.Convert]::ToBoolean($Fail)
+    $failOnSkippedEnabled = [System.Convert]::ToBoolean($FailOnSkipped)
+    $caseInsensitiveEnabled = [System.Convert]::ToBoolean($CaseInsensitive)
+
+    $params = @{
+        Path = $paths
+        Style = $Style
+        Recurse = [System.Convert]::ToBoolean($Recurse)
+        Depth = [System.Convert]::ToInt32($Depth)
+        FollowSymlinks = [System.Convert]::ToBoolean($FollowSymlinks)
+        MaxEntries = [System.Convert]::ToInt64($MaxEntries)
+        MaxFiles = [System.Convert]::ToInt64($MaxFiles)
+        MaxFileSize = [System.Convert]::ToInt64($MaxFileSize)
+        MaxTotalSize = [System.Convert]::ToInt64($MaxTotalSize)
+        Encoding = $Encoding
+        NoNewline = [System.Convert]::ToBoolean($NoNewline)
+        Verbose = [System.Convert]::ToBoolean($VerboseInput)
+        ExcludeEnvironmentVariable = $transportEnvironmentVariables
+    }
+
+    if ($caseInsensitiveEnabled)
+    {
+        $params.CaseInsensitive = $true
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Filter))
+    {
+        $params.Filter = $Filter
+    }
+
+    if ($exclude.Count -gt 0)
+    {
+        $params.Exclude = $exclude
+    }
+
+    if ($dryRunEnabled)
+    {
+        $params.WhatIf = $true
+    }
+
+    $functionPath = Join-Path -Path $PSScriptRoot -ChildPath 'Expand-TemplateFile.ps1'
+    . $functionPath
+
     $result = @(Expand-TemplateFile @params -ErrorAction Stop)
 }
 catch
