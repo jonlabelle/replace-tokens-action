@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.46.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.45.0...v1.46.0) (2026-10-20)
+
+
+### Features
+
+* bound traversal and file processing ([#29](https://github.com/jonlabelle/replace-tokens-action/issues/29)) ([471c893](https://github.com/jonlabelle/replace-tokens-action/commit/471c893846a7094cb919dbfcf0fb565635d71882))
+
 # [1.45.0](https://github.com/jonlabelle/replace-tokens-action/compare/v1.44.0...v1.45.0) (2026-10-20)
 
 
