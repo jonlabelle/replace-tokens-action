@@ -43,7 +43,7 @@ All inputs are optional. See [action.yml](action.yml) for the action definition.
 | `exclude`          | Names or wildcard patterns to exclude, one per line             | none        |
 | `recurse`          | Search subdirectories                                           | `false`     |
 | `depth`            | Maximum recursion depth with `recurse` (`0` = no limit)         | `0`         |
-| `follow-symlinks`  | Follow directory symlinks with `recurse` (PowerShell Core 6+)   | `false`     |
+| `follow-symlinks`  | Follow directory symlinks with `recurse` (PowerShell Core)      | `false`     |
 | `max-entries`      | Enumerated entries before filtering (`0` = no limit)            | `100000`    |
 | `max-files`        | Matching files across all paths (`0` = no limit)                | `10000`     |
 | `max-file-size`    | Input bytes per matching file (`0` = no limit)                  | `10485760`  |
@@ -143,10 +143,10 @@ steps:
 ```
 
 Recursion is opt-in. `depth` must be nonnegative; positive values require `recurse: true`.
-The action's `depth: 0` means unlimited depth, unlike native `Get-ChildItem -Depth 0`, which does not descend into subdirectories.
+The action's `depth: 0` means unlimited depth.
 
 Discovered directory symbolic links are not followed by default.
-Set `follow-symlinks: true` to follow them on PowerShell Core 6+.
+Set `follow-symlinks: true` to follow them on PowerShell Core.
 This requires `recurse: true` and fails explicitly on Windows PowerShell 5.1.
 Explicitly supplied paths and file symbolic links can still refer outside the search directory; these options are not a filesystem sandbox.
 
@@ -292,6 +292,8 @@ steps:
 
 ## Traversal and resource limits
 
+As a security measure, the action imposes traversal and resource limits to prevent excessive workload and potential denial-of-service scenarios.
+
 Depth alone does not bound workload. These limits apply across all paths, including dry runs:
 
 | Budget           | Default       |
@@ -364,7 +366,7 @@ For an explicit encoding, choose:
 
 ## Platform support
 
-Supports Linux, macOS, and Windows with PowerShell Core 6+, and Windows with Windows PowerShell 5.1.
+Supports Linux, macOS, and Windows with PowerShell Core, and Windows with Windows PowerShell 5.1.
 GitHub-hosted runners use `pwsh`. On self-hosted Windows runners, GitHub Actions falls back to Windows PowerShell if `pwsh` is unavailable.
 
 ## License
