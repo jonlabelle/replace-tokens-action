@@ -27,6 +27,7 @@
 - [Token style](#token-style)
 - [File encoding](#file-encoding)
 - [Platform support](#platform-support)
+- [Testing](Tests/README.md)
 - [License](#license)
 
 ## Usage

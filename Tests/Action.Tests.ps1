@@ -1,5 +1,85 @@
 # Usage: Invoke-Pester -Path ./Tests/Action.Tests.ps1 -Output Detailed
 
+Describe 'Action token style fixtures' {
+    BeforeAll {
+        $repositoryPath = (Get-Item -Path $PSScriptRoot).Parent.FullName
+        $script:fixtureActionPath = Join-Path -Path $repositoryPath -ChildPath 'action.ps1'
+        $stubsPath = Join-Path -Path $PSScriptRoot -ChildPath stubs
+        $script:fixtureExpectedPath = Join-Path -Path (Join-Path -Path $stubsPath -ChildPath expected) -ChildPath replaced.tpl
+    }
+
+    BeforeEach {
+        $script:fixtureSavedEnvironment = @(
+            foreach ($name in @('NAME', '_NAME', 'GITHUB_OUTPUT')) {
+                @{ Name = $name; Value = [Environment]::GetEnvironmentVariable($name) }
+            }
+        )
+        $env:NAME = 'jon'
+        $env:_NAME = 'shadow'
+        $env:GITHUB_OUTPUT = Join-Path -Path $TestDrive -ChildPath 'action-output.txt'
+    }
+
+    AfterEach {
+        foreach ($entry in $script:fixtureSavedEnvironment) {
+            $environmentPath = Join-Path -Path 'Env:' -ChildPath $entry.Name
+            if ($null -eq $entry.Value) {
+                Remove-Item -Path $environmentPath
+            }
+            else {
+                Set-Item -Path $environmentPath -Value $entry.Value
+            }
+        }
+    }
+
+    It 'processes <Style> fixtures with dry-run <DryRun>' -TestCases @(
+        foreach ($case in @(
+            @{ Style = 'mustache'; Skipped = '2' }
+            @{ Style = 'handlebars'; Skipped = '2' }
+            @{ Style = 'brackets'; Skipped = '0' }
+            @{ Style = 'hashes'; Skipped = '1' }
+            @{ Style = 'underscores'; Skipped = '1' }
+            @{ Style = 'envsubst'; Skipped = '1' }
+            @{ Style = 'make'; Skipped = '1' }
+        )) {
+            foreach ($dryRun in @('false', 'true')) {
+                @{ Style = $case.Style; Skipped = $case.Skipped; DryRun = $dryRun }
+            }
+        }
+    ) {
+        param($Style, $Skipped, $DryRun)
+
+        $subject = Join-Path -Path $TestDrive -ChildPath ($Style + '-' + $DryRun + '.tpl')
+        $pristine = Join-Path -Path (Join-Path -Path $stubsPath -ChildPath pristine) -ChildPath ($Style + '.tpl')
+        $untouched = Join-Path -Path $TestDrive -ChildPath 'untouched.tpl'
+        Copy-Item -Path $pristine -Destination $subject -Force
+        Copy-Item -Path (Join-Path -Path (Join-Path -Path $stubsPath -ChildPath untouched) -ChildPath no-matches.tpl) -Destination $untouched -Force
+        $subjectHash = (Get-FileHash -Path $subject -Algorithm SHA256).Hash
+        $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
+        Set-Content -Path $env:GITHUB_OUTPUT -Value '' -NoNewline
+
+        & $script:fixtureActionPath -PathsInput ($subject + "`n" + $untouched) -Style $Style -DryRun $DryRun -Fail 'true' -NoNewline 'true'
+
+        (Get-FileHash -Path $untouched -Algorithm SHA256).Hash | Should -BeExactly $untouchedHash
+        $outputs = @{}
+        foreach ($line in (Get-Content -Path $env:GITHUB_OUTPUT)) {
+            $name, $value = $line -split '=', 2
+            $outputs[$name] = $value
+        }
+        $outputs['tokens-replaced'] | Should -BeExactly '6'
+        $outputs.Count | Should -Be 4
+        $outputs['tokens-skipped'] | Should -BeExactly $Skipped
+        $outputs['would-modify-files-count'] | Should -BeExactly '1'
+        if ($DryRun -eq 'true') {
+            (Get-FileHash -Path $subject -Algorithm SHA256).Hash | Should -BeExactly $subjectHash
+            $outputs['modified-files-count'] | Should -BeExactly '0'
+        }
+        else {
+            Get-Content -Path $subject -Raw | Should -BeExactly (Get-Content -Path $script:fixtureExpectedPath -Raw)
+            $outputs['modified-files-count'] | Should -BeExactly '1'
+        }
+    }
+}
+
 Describe 'GitHub Action workflow' {
     It 'does not interpolate dynamic values into the PowerShell source' {
         $actionPath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'action.yml'
