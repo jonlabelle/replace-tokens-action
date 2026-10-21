@@ -120,3 +120,4 @@ scratch.*
 # !.vscode/tasks.json
 
 Tests/TokenReplaceTest/
+testResults.xml

@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 #
-# Reusable test gate: token replacement matrix across all styles, platforms,
-# and shells, plus dry-run validation.
+# Reusable test gate: one full Pester run per platform/shell combination.
+# Token styles are test cases, not matrix jobs. Composite action smoke tests
+# share these runners with the helper's cross-platform compatibility tests.
 
 name: Test
 
@@ -14,7 +15,7 @@ permissions:
 
 jobs:
   test:
-    name: ${{ matrix.style }} on ${{ matrix.os }} (${{ matrix.shell }})
+    name: ${{ matrix.os }} (${{ matrix.shell }})
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -22,75 +23,54 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        style:
-          [mustache, handlebars, brackets, hashes, underscores, envsubst, make]
         os: [ubuntu-latest, windows-latest, macos-latest]
         shell: [pwsh]
         include:
-          # Add PowerShell 5.1 tests on Windows for each style
           - os: windows-latest
-            style: mustache
-            shell: powershell
-          - os: windows-latest
-            style: handlebars
-            shell: powershell
-          - os: windows-latest
-            style: brackets
-            shell: powershell
-          - os: windows-latest
-            style: hashes
-            shell: powershell
-          - os: windows-latest
-            style: underscores
-            shell: powershell
-          - os: windows-latest
-            style: envsubst
-            shell: powershell
-          - os: windows-latest
-            style: make
             shell: powershell
     steps:
-      - name: Checkout repository for ${{ matrix.style }} test on ${{ matrix.os }}
+      - name: Checkout repository
         uses: actions/checkout@main
 
-      - name: Setup ${{ matrix.style }} test on ${{ matrix.os }}
-        id: test-setup
+      - name: Install Pester
         run: |
-          # Use explicit parameter names for PowerShell 5.1 compatibility
-          $expected = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs) -ChildPath expected) -ChildPath replaced.tpl
-          $subject = Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath subject-${{ matrix.style }}.tpl
-          $pristine = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs) -ChildPath pristine) -ChildPath ${{ matrix.style }}.tpl
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
 
-          $untouched = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs) -ChildPath untouched) -ChildPath no-matches.tpl
-          $untouchedHash = (Get-FileHash -Path $untouched -Algorithm SHA256).Hash
+      - name: Run Pester tests
+        timeout-minutes: 5
+        run: |
+          Import-Module -Name Pester -RequiredVersion 5.7.1
+          Invoke-Pester -Path ./Tests -Output Detailed -CI
 
+      - name: Set up composite action smoke tests
+        id: setup
+        run: |
+          $stubs = Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs
+          $pristine = Join-Path -Path (Join-Path -Path $stubs -ChildPath pristine) -ChildPath mustache.tpl
+          $subject = Join-Path -Path $env:RUNNER_TEMP -ChildPath subject.tpl
+          $dryRunSubject = Join-Path -Path $env:RUNNER_TEMP -ChildPath dry-run-subject.tpl
+          $untouched = Join-Path -Path $env:RUNNER_TEMP -ChildPath untouched.tpl
           Copy-Item -Path $pristine -Destination $subject
+          Copy-Item -Path $pristine -Destination $dryRunSubject
+          Copy-Item -Path (Join-Path -Path (Join-Path -Path $stubs -ChildPath untouched) -ChildPath no-matches.tpl) -Destination $untouched
 
-          # Use Add-Content for PowerShell 5.1 compatibility (Out-File utf8NoBOM not available in PS 5.1)
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "expected-path=$expected" -Encoding UTF8
           Add-Content -Path $env:GITHUB_OUTPUT -Value "subject-path=$subject" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "dry-run-path=$dryRunSubject" -Encoding UTF8
           Add-Content -Path $env:GITHUB_OUTPUT -Value "untouched-path=$untouched" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "untouched-hash=$untouchedHash" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "original-hash=$((Get-FileHash -Path $dryRunSubject -Algorithm SHA256).Hash)" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "untouched-hash=$((Get-FileHash -Path $untouched -Algorithm SHA256).Hash)" -Encoding UTF8
 
-      - name: Show ${{ matrix.style }} test subject before replacement on ${{ matrix.os }}
-        run: cat "${{ steps.test-setup.outputs.subject-path }}"
-
-      - name: Show expected output for ${{ matrix.style }} test on ${{ matrix.os }}
-        run: cat "${{ steps.test-setup.outputs.expected-path }}"
-
-      - name: Show untouched ${{ matrix.style }} test subject before replacement on ${{ matrix.os }}
-        run: cat "${{ steps.test-setup.outputs.untouched-path }}"
-
-      - name: Show expected hash for untouched ${{ matrix.style }} test on ${{ matrix.os }}
-        run: echo "${{ steps.test-setup.outputs.untouched-hash }}"
-
-      - name: Perform ${{ matrix.style }} test on ${{ matrix.os }}
+      # The composite action always uses pwsh; Pester above tests action.ps1
+      # directly under the selected shell, including Windows PowerShell 5.1.
+      - name: Perform token replacement through the composite action
+        id: replace
         uses: ./
         with:
           paths: |
-            ${{ steps.test-setup.outputs.subject-path }}
-            ${{ steps.test-setup.outputs.untouched-path }}
-          style: ${{ matrix.style }}
+            ${{ steps.setup.outputs.subject-path }}
+            ${{ steps.setup.outputs.untouched-path }}
+          style: mustache
           fail: true
           no-newline: true
           verbose: true
@@ -98,80 +78,11 @@ jobs:
           NAME: jon
           _NAME: shadow
 
-      - name: Show actual result for ${{ matrix.style }} test on ${{ matrix.os }}
-        run: cat "${{ steps.test-setup.outputs.subject-path }}"
-
-      - name: Assert ${{ matrix.style }} replacement test on ${{ matrix.os }}
-        id: assert-replacement
-        run: |
-          $expected = "${{ steps.test-setup.outputs.expected-path }}"
-          $subject = "${{ steps.test-setup.outputs.subject-path }}"
-
-          $expectedContent = Get-Content -Path $expected -Raw
-          $actualContent = Get-Content -Path $subject -Raw
-
-          if ($expectedContent -ne $actualContent) {
-            Write-Host "::error title=FAIL Token replacement test failed::You probably want to fix this."
-            exit 1
-          } else {
-            Write-Host "PASS: Token replacement test passed"
-          }
-
-      - name: Show actual result of untouched ${{ matrix.style }} test on ${{ matrix.os }}
-        run: cat "${{ steps.test-setup.outputs.untouched-path }}"
-
-      - name: Assert ${{ matrix.style }} untouched test on ${{ matrix.os }}
-        id: assert-untouched
-        run: |
-          $expected = "${{ steps.test-setup.outputs.untouched-hash }}"
-          $actual = (Get-FileHash -Path "${{ steps.test-setup.outputs.untouched-path }}" -Algorithm SHA256).Hash
-
-          if ($expected -ne $actual) {
-            Write-Host "::error title=FAIL Token untouched test failed::You probably want to fix this."
-            exit 1
-          } else {
-            Write-Host "PASS: Token untouched test passed"
-          }
-
-      - name: Run Pester Tests
-        timeout-minutes: 5
-        run: Invoke-Pester -Path ./Tests -Output Detailed
-
-  dry-run:
-    name: Dry run on ${{ matrix.os }} (${{ matrix.shell }})
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        shell: [pwsh]
-        include:
-          - os: windows-latest
-            shell: powershell
-    steps:
-      - name: Checkout repository for dry-run test on ${{ matrix.os }}
-        uses: actions/checkout@main
-
-      - name: Setup dry-run subject on ${{ matrix.os }}
-        id: dry-run-setup
-        run: |
-          $subject = Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath dry-run-subject.tpl
-          $pristine = Join-Path -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs) -ChildPath pristine) -ChildPath mustache.tpl
-          $originalHash = (Get-FileHash -Path $pristine -Algorithm SHA256).Hash
-
-          Copy-Item -Path $pristine -Destination $subject -Force
-
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "subject-path=$subject" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "original-hash=$originalHash" -Encoding UTF8
-
-      - name: Perform dry-run action on ${{ matrix.os }}
-        id: dry-run-action
+      - name: Perform dry-run through the composite action
+        id: dry-run
         uses: ./
         with:
-          paths: ${{ steps.dry-run-setup.outputs.subject-path }}
+          paths: ${{ steps.setup.outputs.dry-run-path }}
           style: mustache
           dry-run: true
           fail: true
@@ -180,33 +91,36 @@ jobs:
           NAME: jon
           _NAME: shadow
 
-      - name: Assert dry-run file is unchanged on ${{ matrix.os }}
+      - name: Assert composite action results and outputs
+        env:
+          SUBJECT_PATH: ${{ steps.setup.outputs.subject-path }}
+          DRY_RUN_PATH: ${{ steps.setup.outputs.dry-run-path }}
+          UNTOUCHED_PATH: ${{ steps.setup.outputs.untouched-path }}
+          ORIGINAL_HASH: ${{ steps.setup.outputs.original-hash }}
+          UNTOUCHED_HASH: ${{ steps.setup.outputs.untouched-hash }}
+          MODIFIED_COUNT: ${{ steps.replace.outputs.modified-files-count }}
+          WOULD_MODIFY_COUNT: ${{ steps.replace.outputs.would-modify-files-count }}
+          REPLACED_COUNT: ${{ steps.replace.outputs.tokens-replaced }}
+          SKIPPED_COUNT: ${{ steps.replace.outputs.tokens-skipped }}
+          DRY_RUN_MODIFIED_COUNT: ${{ steps.dry-run.outputs.modified-files-count }}
+          DRY_RUN_WOULD_MODIFY_COUNT: ${{ steps.dry-run.outputs.would-modify-files-count }}
+          DRY_RUN_REPLACED_COUNT: ${{ steps.dry-run.outputs.tokens-replaced }}
+          DRY_RUN_SKIPPED_COUNT: ${{ steps.dry-run.outputs.tokens-skipped }}
         run: |
-          $expected = "${{ steps.dry-run-setup.outputs.original-hash }}"
-          $actual = (Get-FileHash -Path "${{ steps.dry-run-setup.outputs.subject-path }}" -Algorithm SHA256).Hash
-
-          if ($expected -ne $actual) {
-            Write-Host '::error title=FAIL Dry-run mutated the file::Dry-run should not write any file changes.'
-            exit 1
-          } else {
-            Write-Host 'PASS: Dry-run left the file unchanged'
+          $stubs = Join-Path -Path (Join-Path -Path $pwd -ChildPath Tests) -ChildPath stubs
+          $expected = Join-Path -Path (Join-Path -Path $stubs -ChildPath expected) -ChildPath replaced.tpl
+          if ((Get-Content -Path $expected -Raw) -cne (Get-Content -Path $env:SUBJECT_PATH -Raw)) {
+            throw 'Token replacement did not match the expected fixture.'
           }
-
-      - name: Assert dry-run outputs on ${{ matrix.os }}
-        run: |
-          if ('${{ steps.dry-run-action.outputs.modified-files-count }}' -ne '0') {
-            Write-Host '::error title=FAIL Dry-run modified count mismatch::Expected modified-files-count to be 0.'
-            exit 1
+          if ((Get-FileHash -Path $env:UNTOUCHED_PATH -Algorithm SHA256).Hash -ne $env:UNTOUCHED_HASH) {
+            throw 'Token replacement modified the untouched fixture.'
           }
-
-          if ('${{ steps.dry-run-action.outputs.would-modify-files-count }}' -ne '1') {
-            Write-Host '::error title=FAIL Dry-run candidate count mismatch::Expected would-modify-files-count to be 1.'
-            exit 1
+          if ((Get-FileHash -Path $env:DRY_RUN_PATH -Algorithm SHA256).Hash -ne $env:ORIGINAL_HASH) {
+            throw 'Dry-run modified the input file.'
           }
-
-          if ('${{ steps.dry-run-action.outputs.tokens-replaced }}' -ne '6') {
-            Write-Host '::error title=FAIL Dry-run replacement count mismatch::Expected tokens-replaced to be 6.'
-            exit 1
+          if ($env:MODIFIED_COUNT -ne '1' -or $env:WOULD_MODIFY_COUNT -ne '1' -or $env:REPLACED_COUNT -ne '6' -or $env:SKIPPED_COUNT -ne '2') {
+            throw 'Token replacement returned unexpected counts.'
           }
-
-          Write-Host 'PASS: Dry-run outputs are correct'
+          if ($env:DRY_RUN_MODIFIED_COUNT -ne '0' -or $env:DRY_RUN_WOULD_MODIFY_COUNT -ne '1' -or $env:DRY_RUN_REPLACED_COUNT -ne '6' -or $env:DRY_RUN_SKIPPED_COUNT -ne '0') {
+            throw 'Dry-run returned unexpected counts.'
+          }
