@@ -1,11 +1,5 @@
 # Usage: Invoke-Pester -Path ./Tests/Expand-TemplateFile.Tests.ps1 -Output Detailed
 
-# Check if Pester is installed, if not, install it
-if (-not (Get-Module -Name Pester -ListAvailable))
-{
-    Install-Module -Name Pester -Force -SkipPublisherCheck
-}
-
 $script:isWindowsPlatform = if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue)
 {
     [bool]$IsWindows

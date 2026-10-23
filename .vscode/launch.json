@@ -30,7 +30,7 @@
       "name": "Run Pester tests",
       "type": "PowerShell",
       "request": "launch",
-      "script": ".${pathSeparator}Tests${pathSeparator}Expand-TemplateFile.Tests.ps1",
+      "script": "Import-Module -Name Pester -MinimumVersion '6.2.0' -MaximumVersion '6.999.999'; Invoke-Pester -Path .${pathSeparator}Tests -Output Detailed -CI",
       "cwd": "${workspaceFolder}"
     },
     {

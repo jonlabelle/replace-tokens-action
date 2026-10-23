@@ -35,12 +35,12 @@ jobs:
       - name: Install Pester
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module -Name Pester -MinimumVersion '6.2.0' -MaximumVersion '6.999.999' -Scope CurrentUser -Force -SkipPublisherCheck
 
       - name: Run Pester tests
         timeout-minutes: 5
         run: |
-          Import-Module -Name Pester -RequiredVersion 5.7.1
+          Import-Module -Name Pester -MinimumVersion '6.2.0' -MaximumVersion '6.999.999'
           Invoke-Pester -Path ./Tests -Output Detailed -CI
 
       - name: Set up composite action smoke tests
